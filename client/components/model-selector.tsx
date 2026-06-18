@@ -69,13 +69,14 @@ export const ModelSelector = ({
       
       <div className="flex bg-neutral-900 border border-neutral-800 rounded-xl p-0.5 gap-0.5 w-full max-w-sm">
         {/* Auto Tab */}
+        {/* Auto Tab */}
         <button
           type="button"
           onClick={() => handleModeChange("auto")}
           className={cn(
             "flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-semibold flex-1 transition-all cursor-pointer",
             mode === "auto"
-              ? "bg-violet-600/10 text-violet-400 border border-violet-500/20"
+              ? "bg-neutral-800 text-neutral-200 border border-neutral-700"
               : "text-neutral-500 hover:text-neutral-300 border border-transparent"
           )}
         >
@@ -90,7 +91,7 @@ export const ModelSelector = ({
           className={cn(
             "flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-semibold flex-1 transition-all cursor-pointer",
             mode === "pinned"
-              ? "bg-violet-600/10 text-violet-400 border border-violet-500/20"
+              ? "bg-neutral-800 text-neutral-200 border border-neutral-700"
               : "text-neutral-500 hover:text-neutral-300 border border-transparent"
           )}
         >
@@ -135,7 +136,7 @@ export const ModelSelector = ({
                       className={cn(
                         "flex items-center justify-between text-left px-3 py-2 rounded-xl text-xs w-full transition-colors cursor-pointer",
                         pinnedModel === m.id
-                          ? "bg-neutral-800/80 text-violet-400"
+                          ? "bg-neutral-800/80 text-neutral-200"
                           : "text-neutral-400 hover:bg-neutral-950 hover:text-neutral-200"
                       )}
                     >
@@ -145,7 +146,7 @@ export const ModelSelector = ({
                           {m.is_free ? "Free" : `Prompt $${m.pricing?.prompt} / Completion $${m.pricing?.completion}`}
                         </span>
                       </div>
-                      {pinnedModel === m.id && <Check className="w-3.5 h-3.5 text-violet-400" />}
+                      {pinnedModel === m.id && <Check className="w-3.5 h-3.5 text-neutral-300" />}
                     </button>
                   ))
               )}

@@ -32,12 +32,12 @@ export const MultiStepLoader = ({
   }
 
   return (
-    <div className="flex flex-col space-y-6 max-w-md w-full mx-auto p-8 rounded-3xl bg-neutral-900/30 border border-neutral-800/80 backdrop-blur-md">
+    <div className="flex flex-col space-y-6 max-w-md w-full mx-auto p-8 rounded-2xl bg-neutral-900 border border-neutral-800/80 backdrop-blur-md">
       <div className="flex flex-col mb-4">
         <h3 className="text-xl font-bold text-neutral-100 flex items-center gap-2">
           Processing Content
           {activeIndex < loadingStates.length && (
-            <Loader2 className="w-5 h-5 animate-spin text-violet-500" />
+            <Loader2 className="w-5 h-5 animate-spin text-neutral-400" />
           )}
         </h3>
         <p className="text-xs text-neutral-400 mt-1">
@@ -63,15 +63,15 @@ export const MultiStepLoader = ({
             >
               <div className="relative flex items-center justify-center">
                 {isCompleted ? (
-                  <div className="w-6 h-6 rounded-full bg-violet-600/20 border border-violet-500 flex items-center justify-center text-violet-400">
+                  <div className="w-6 h-6 rounded-full bg-neutral-800 border border-neutral-700 flex items-center justify-center text-neutral-300">
                     <Check className="w-3.5 h-3.5" />
                   </div>
                 ) : isActive ? (
-                  <div className="w-6 h-6 rounded-full bg-violet-500/10 border border-violet-500/50 flex items-center justify-center text-violet-400">
+                  <div className="w-6 h-6 rounded-full bg-neutral-800 border border-neutral-700 flex items-center justify-center text-neutral-200">
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
                   </div>
                 ) : (
-                  <div className="w-6 h-6 rounded-full bg-neutral-800/50 border border-neutral-700/50 flex items-center justify-center text-neutral-600">
+                  <div className="w-6 h-6 rounded-full bg-neutral-900/50 border border-neutral-850 flex items-center justify-center text-neutral-600">
                     <div className="w-1.5 h-1.5 rounded-full bg-neutral-600" />
                   </div>
                 )}
@@ -80,7 +80,7 @@ export const MultiStepLoader = ({
               <div className="flex flex-col">
                 <span className={cn(
                   "text-sm",
-                  isActive ? "text-violet-400 font-semibold" : "text-neutral-300"
+                  isActive ? "text-neutral-200 font-semibold" : "text-neutral-400"
                 )}>
                   {state.text}
                 </span>

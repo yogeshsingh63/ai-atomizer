@@ -8,6 +8,7 @@ import { HoverBorderGradient } from "@/components/ui/hover-border-gradient";
 import { Dropzone } from "@/components/dropzone";
 import { ModelSelector } from "@/components/model-selector";
 import { createProject, SourceType } from "@/lib/api";
+import { BackgroundBeams } from "@/components/ui/background-beams";
 
 export default function NewProjectPage() {
   const router = useRouter();
@@ -66,7 +67,7 @@ export default function NewProjectPage() {
     {
       title: "YouTube Link",
       value: "youtube",
-      icon: <Youtube className="w-4 h-4" />,
+      icon: <Youtube className="w-3.5 h-3.5" />,
       content: (
         <div className="flex flex-col gap-2 mt-2">
           <label className="text-xs font-semibold text-neutral-400">YouTube URL</label>
@@ -79,7 +80,7 @@ export default function NewProjectPage() {
               setArticleText("");
             }}
             placeholder="https://www.youtube.com/watch?v=..."
-            className="w-full bg-neutral-900/60 border border-neutral-800 focus:border-violet-500 rounded-xl px-4 py-3 text-sm text-neutral-200 outline-none transition-colors duration-200"
+            className="w-full bg-[#121215] border border-[#1f1f23] focus:border-neutral-500 rounded-lg px-4 py-3 text-xs text-neutral-200 outline-none transition-colors duration-200"
           />
         </div>
       ),
@@ -87,7 +88,7 @@ export default function NewProjectPage() {
     {
       title: "Upload File",
       value: "upload",
-      icon: <Upload className="w-4 h-4" />,
+      icon: <Upload className="w-3.5 h-3.5" />,
       content: (
         <Dropzone
           selectedFile={selectedFile}
@@ -103,7 +104,7 @@ export default function NewProjectPage() {
     {
       title: "Paste Text",
       value: "text",
-      icon: <FileText className="w-4 h-4" />,
+      icon: <FileText className="w-3.5 h-3.5" />,
       content: (
         <div className="flex flex-col gap-2 mt-2">
           <label className="text-xs font-semibold text-neutral-400">Article or Transcript Text</label>
@@ -116,7 +117,7 @@ export default function NewProjectPage() {
             }}
             placeholder="Paste your long-form article, lecture transcript, or notes here..."
             rows={5}
-            className="w-full bg-neutral-900/60 border border-neutral-800 focus:border-violet-500 rounded-xl px-4 py-3 text-sm text-neutral-200 outline-none transition-colors duration-200 resize-none no-scrollbar"
+            className="w-full bg-[#121215] border border-[#1f1f23] focus:border-neutral-500 rounded-lg px-4 py-3 text-xs text-neutral-200 outline-none transition-colors duration-200 resize-none no-scrollbar"
           />
         </div>
       ),
@@ -125,21 +126,20 @@ export default function NewProjectPage() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen px-4 py-12 bg-neutral-950 relative overflow-hidden">
-      {/* Background radial glow */}
-      <div className="absolute top-[-20%] left-[-10%] w-[120%] h-[120%] bg-[radial-gradient(circle_at_center,rgba(99,102,241,0.05)_0%,transparent_50%)] pointer-events-none -z-10" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[100%] h-[100%] bg-[radial-gradient(circle_at_center,rgba(236,72,153,0.02)_0%,transparent_50%)] pointer-events-none -z-10" />
+      {/* Grid Pattern */}
+      <BackgroundBeams />
 
-      <div className="w-full max-w-xl glass-panel p-8 sm:p-10 rounded-[32px] flex flex-col gap-8 shadow-2xl">
+      <div className="w-full max-w-lg bg-[#121215] border border-[#1f1f23] p-8 sm:p-10 rounded-2xl flex flex-col gap-8 shadow-xl relative z-10">
         <div className="flex flex-col items-center text-center gap-2">
-          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-violet-600/10 border border-violet-500/20 text-xs font-semibold text-violet-400">
+          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-neutral-900 border border-neutral-800 text-[10px] font-semibold text-neutral-350 uppercase tracking-wider">
             <Sparkles className="w-3.5 h-3.5" />
-            AI Content Repurposing Engine
+            Repurposing Engine
           </div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-neutral-100 mt-2 sm:text-4xl bg-gradient-to-r from-neutral-100 via-neutral-200 to-neutral-400 bg-clip-text text-transparent">
-            AI Atomizer
+          <h1 className="text-2xl font-extrabold tracking-tight text-neutral-100 mt-2">
+            Create Project
           </h1>
-          <p className="text-sm text-neutral-400 max-w-sm">
-            Upload your source file or paste text to split it into viral articles, threads, LinkedIn posts, and shorts.
+          <p className="text-xs text-neutral-500 max-w-xs">
+            Submit your source file or transcript to produce blog posts, tweet threads, and LinkedIn updates.
           </p>
         </div>
 
@@ -151,7 +151,7 @@ export default function NewProjectPage() {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g. Scaling AI Startups Panel"
-              className="w-full bg-neutral-900/60 border border-neutral-800 focus:border-violet-500 rounded-xl px-4 py-3 text-sm text-neutral-200 outline-none transition-colors duration-200"
+              className="w-full bg-neutral-950 border border-neutral-850 focus:border-neutral-500 rounded-lg px-4 py-3 text-xs text-neutral-200 outline-none transition-colors duration-200"
             />
           </div>
 
@@ -177,7 +177,7 @@ export default function NewProjectPage() {
             className="w-full flex items-center justify-center gap-2"
           >
             {loading ? "Processing..." : "Atomize Content"}
-            {!loading && <ArrowRight className="w-4 h-4 text-violet-400" />}
+            {!loading && <ArrowRight className="w-3.5 h-3.5" />}
           </HoverBorderGradient>
         </form>
       </div>

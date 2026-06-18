@@ -66,7 +66,7 @@ export const Tabs = ({
 
             <span className={cn(
               "relative z-20 flex items-center gap-2",
-              active.value === tab.value ? "text-violet-400 font-semibold" : "text-neutral-400 hover:text-neutral-200"
+              active.value === tab.value ? "text-neutral-100 font-semibold" : "text-neutral-400 hover:text-neutral-200"
             )}>
               {tab.icon}
               {tab.title}
