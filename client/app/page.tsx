@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { 
   Sparkles, ArrowRight, Zap, Share2, Flame, Cpu, 
-  Play, Clock, Clipboard, CheckCircle, ExternalLink,
+  Play, Clock, Clipboard, CheckCircle,
   Youtube, Linkedin, FileText, ListCollapse
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -136,10 +136,9 @@ export default function LandingPage() {
               </div>
               <div className="flex flex-col min-w-0 flex-1">
                 <span className="text-xs text-neutral-400 font-semibold uppercase tracking-wider">Source YouTube Video</span>
-                <a href={MOCK_SOURCE_VIDEO.url} target="_blank" rel="noreferrer" className="text-sm font-bold text-neutral-200 hover:text-brand flex flex-wrap items-center gap-1.5 w-full">
-                  <span className="text-neutral-200 hover:text-brand leading-snug break-words">{MOCK_SOURCE_VIDEO.title}</span>
-                  <ExternalLink className="w-3 h-3 inline shrink-0 text-neutral-400" />
-                </a>
+                <span className="text-sm font-bold text-neutral-200 leading-snug break-words">
+                  {MOCK_SOURCE_VIDEO.title}
+                </span>
               </div>
             </div>
             
