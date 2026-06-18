@@ -70,7 +70,56 @@ export interface Model {
 }
 
 // API Configurations
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
+const BACKEND_BASE = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
+const BACKEND_URL = `${BACKEND_BASE}/api`;
+
+// Authentication helpers
+export function redirectToGoogleLogin() {
+  if (typeof window !== 'undefined') {
+    window.location.href = `${BACKEND_URL}/auth/google`;
+  }
+}
+
+export async function loginAsGuest(): Promise<{ access_token: string; user: any }> {
+  const res = await fetch(`${BACKEND_URL}/auth/guest`, {
+    method: 'POST',
+  });
+  if (!res.ok) {
+    throw new Error('Failed to login as guest');
+  }
+  const data = await res.json();
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('prism_token', data.access_token);
+  }
+  return data;
+}
+
+export function getStoredToken(): string | null {
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem('prism_token');
+  }
+  return null;
+}
+
+export function logout() {
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem('prism_token');
+  }
+}
+
+function getAuthHeaders(contentType?: string): HeadersInit {
+  const headers: Record<string, string> = {};
+  if (contentType) {
+    headers['Content-Type'] = contentType;
+  }
+  if (typeof window !== 'undefined') {
+    const token = localStorage.getItem('prism_token');
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+  }
+  return headers;
+}
 
 // In-memory mock database state for frontend-only demo
 let mockProjects: Project[] = [];
@@ -92,7 +141,7 @@ const MOCK_MODELS: Model[] = [
 // Helper to check if backend is running
 async function isBackendOnline(): Promise<boolean> {
   try {
-    const res = await fetch(`${BACKEND_URL}/health`, { signal: AbortSignal.timeout(1000) });
+    const res = await fetch(`${BACKEND_BASE}/health`, { signal: AbortSignal.timeout(1000) });
     return res.status === 200;
   } catch {
     return false;
@@ -102,7 +151,9 @@ async function isBackendOnline(): Promise<boolean> {
 export async function getModels(): Promise<Model[]> {
   if (await isBackendOnline()) {
     try {
-      const res = await fetch(`${BACKEND_URL}/models`);
+      const res = await fetch(`${BACKEND_URL}/models`, {
+        headers: getAuthHeaders(),
+      });
       if (res.ok) return await res.json();
     } catch (e) {
       console.warn('Failed to fetch models from backend, falling back to mock:', e);
@@ -132,13 +183,14 @@ export async function createProject(data: {
 
         const res = await fetch(`${BACKEND_URL}/projects`, {
           method: 'POST',
+          headers: getAuthHeaders(),
           body: formData,
         });
         if (res.ok) return await res.json();
       } else {
         const res = await fetch(`${BACKEND_URL}/projects`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: getAuthHeaders('application/json'),
           body: JSON.stringify({
             title: data.title,
             source_type: data.source_type,
@@ -178,7 +230,9 @@ export async function createProject(data: {
 export async function getProject(id: number): Promise<Project> {
   if (await isBackendOnline()) {
     try {
-      const res = await fetch(`${BACKEND_URL}/projects/${id}`);
+      const res = await fetch(`${BACKEND_URL}/projects/${id}`, {
+        headers: getAuthHeaders(),
+      });
       if (res.ok) return await res.json();
     } catch (e) {
       console.warn(`Failed to fetch project ${id} from backend, using mock:`, e);
@@ -208,7 +262,9 @@ export async function getProject(id: number): Promise<Project> {
 export async function getHighlights(id: number): Promise<Highlight[]> {
   if (await isBackendOnline()) {
     try {
-      const res = await fetch(`${BACKEND_URL}/projects/${id}/highlights`);
+      const res = await fetch(`${BACKEND_URL}/projects/${id}/highlights`, {
+        headers: getAuthHeaders(),
+      });
       if (res.ok) return await res.json();
     } catch (e) {
       console.warn('Failed to fetch highlights from backend, using mock:', e);
@@ -220,7 +276,9 @@ export async function getHighlights(id: number): Promise<Highlight[]> {
 export async function getAssets(id: number): Promise<GeneratedAsset[]> {
   if (await isBackendOnline()) {
     try {
-      const res = await fetch(`${BACKEND_URL}/projects/${id}/assets`);
+      const res = await fetch(`${BACKEND_URL}/projects/${id}/assets`, {
+        headers: getAuthHeaders(),
+      });
       if (res.ok) return await res.json();
     } catch (e) {
       console.warn('Failed to fetch assets from backend, using mock:', e);
@@ -234,7 +292,7 @@ export async function regenerateAsset(id: number, assetId: number, model: string
     try {
       const res = await fetch(`${BACKEND_URL}/projects/${id}/assets/${assetId}/regenerate`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders('application/json'),
         body: JSON.stringify({ model }),
       });
       if (res.ok) return await res.json();
@@ -276,7 +334,8 @@ export function subscribeToEvents(
   isBackendOnline().then(online => {
     if (online) {
       isMock = false;
-      eventSource = new EventSource(`${BACKEND_URL}/projects/${id}/events`);
+      const token = getStoredToken() || '';
+      eventSource = new EventSource(`${BACKEND_URL}/projects/${id}/events?token=${encodeURIComponent(token)}`);
       eventSource.onmessage = (e) => {
         const data = JSON.parse(e.data);
         onEvent(data);
