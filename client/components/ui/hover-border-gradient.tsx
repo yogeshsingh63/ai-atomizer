@@ -13,7 +13,7 @@ export function HoverBorderGradient({
   duration = 1,
   clockwise = true,
   ...props
-}: React.HTMLAttributes<HTMLElement> & {
+}: React.ComponentPropsWithoutRef<"button"> & {
   containerClassName?: string;
   className?: string;
   as?: React.ElementType;
