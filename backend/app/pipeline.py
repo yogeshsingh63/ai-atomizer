@@ -265,7 +265,12 @@ async def run_pipeline(project_id: int):
 
             # Formulate text formats prompts
             blog_sys = "Write a long-form blog post (600-900 words) based on this transcript. Include an H1 title and H2 section headers. Do not use generic filler phrases like 'in today's world' or 'let's dive in'. Write in a direct, no-fluff tone."
-            thread_sys = "Write a 5-8 tweet thread based on this transcript. Tweet 1 must be a hook. End with a one-line takeaway. Number each tweet (1/, 2/, etc.)."
+            thread_sys = (
+                "Write a 5-8 tweet thread based on this transcript. "
+                "Tweet 1 must be a hook. End with a one-line takeaway. "
+                "Number each tweet clearly (e.g., 1/, 2/, etc.). "
+                "CRITICAL: Each individual tweet (including its number prefix) MUST be strictly under 280 characters so it fits the X free-tier limit. Keep them punchy."
+            )
             linkedin_sys = "Write a LinkedIn post (150-250 words) based on this transcript. Open with a one-line hook. Professional but not corporate-speak tone. End with one concrete takeaway."
 
             highlights_summary = "\n".join([f"- Quote: \"{h.quote}\" (Reason: {h.reason})" for h in highlights_list])
@@ -304,7 +309,8 @@ async def run_pipeline(project_id: int):
                     "Your job is to audit and rewrite it to make it sound human and grounded.\n"
                     "1. Cut any sentences that are generic filler or could apply to any general topic.\n"
                     "2. Verify all facts, claims, and figures against the provided source transcript. If the draft claims something not in the transcript, delete or correct it.\n"
-                    "3. Preserve the native formatting layout (e.g. keep blog markdown or tweet numbers)."
+                    "3. Preserve the native formatting layout (e.g. keep blog markdown or tweet numbers).\n"
+                    "4. If the draft is a Twitter thread, make sure each individual numbered tweet remains strictly under 280 characters. Trim or split any tweet that exceeds 280 characters."
                 )
                 user_msg = f"Source Transcript:\n{full_text}\n\nDraft Draft ({asset_type}):\n{draft}"
                 # Pinned paid model call

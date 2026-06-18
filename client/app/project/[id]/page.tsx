@@ -80,6 +80,15 @@ export default function ProjectDashboardPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const parseThreadIntoTweets = (text: string): string[] => {
+    const regex = /(?:^|\n+)(?=\d+[\/\.]\s*)/g;
+    const parts = text.split(regex).map(p => p.trim()).filter(Boolean);
+    if (parts.length > 1) {
+      return parts;
+    }
+    return text.split(/\n\n+/).map(p => p.trim()).filter(Boolean);
+  };
+
   const handleExport = (asset: GeneratedAsset) => {
     if (asset.asset_type === "thumbnail") {
       const a = document.createElement("a");
@@ -535,9 +544,41 @@ export default function ProjectDashboardPage() {
                           )}
                         </>
                       ) : (
-                        <div className="whitespace-pre-wrap leading-relaxed text-sm text-neutral-350 bg-neutral-950 border border-neutral-900 rounded-2xl p-6 font-mono text-xs">
-                          <TextGenerateEffect words={selectedAsset.content} />
-                        </div>
+                        selectedAsset.asset_type === "thread" ? (
+                          <div className="flex flex-col gap-4">
+                            {parseThreadIntoTweets(selectedAsset.content).map((tweet, idx) => {
+                              const charCount = tweet.length;
+                              const isOverLimit = charCount > 280;
+                              return (
+                                <div key={idx} className="p-5 rounded-2xl bg-neutral-950 border border-neutral-900 flex flex-col gap-3 relative overflow-hidden group/tweet">
+                                  <div className="flex justify-between items-center text-[10px] text-neutral-500 border-b border-neutral-900 pb-2">
+                                    <span className="font-bold text-neutral-400 uppercase tracking-wider">Tweet #{idx + 1}</span>
+                                    <span className={cn(
+                                      "font-mono font-bold px-1.5 py-0.5 rounded",
+                                      isOverLimit ? "text-red-400 bg-red-950/20" : "text-neutral-500 bg-neutral-900"
+                                    )}>
+                                      {charCount} / 280 chars
+                                    </span>
+                                  </div>
+                                  <div className="text-xs text-neutral-300 whitespace-pre-wrap leading-relaxed">
+                                    {tweet}
+                                  </div>
+                                  <button
+                                    onClick={() => handleCopy(tweet)}
+                                    className="self-end flex items-center gap-1 py-1.5 px-3 rounded-lg border border-neutral-800 hover:border-neutral-700 bg-neutral-900 hover:bg-neutral-950 text-[10px] font-bold text-neutral-300 cursor-pointer active:scale-95 transition-all"
+                                  >
+                                    <Clipboard className="w-3 h-3" />
+                                    Copy Tweet
+                                  </button>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        ) : (
+                          <div className="whitespace-pre-wrap leading-relaxed text-sm text-neutral-350 bg-neutral-950 border border-neutral-900 rounded-2xl p-6 font-mono text-xs">
+                            <TextGenerateEffect words={selectedAsset.content} />
+                          </div>
+                        )
                       )}
                     </motion.div>
                   </AnimatePresence>
