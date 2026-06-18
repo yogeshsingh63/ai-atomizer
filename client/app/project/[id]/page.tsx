@@ -4,7 +4,8 @@ import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { 
   FileText, Twitter, Linkedin, Video, Image as ImageIcon, 
-  Copy, Download, RefreshCw, ArrowLeft, Check, Sparkles, Pin, Clock, AlertCircle, Eye, EyeOff
+  Copy, Download, RefreshCw, ArrowLeft, Check, Sparkles, Pin, Clock, AlertCircle, Eye, EyeOff,
+  MessageCircle, Repeat2, Heart
 } from "lucide-react";
 import { BentoGrid, BentoGridItem } from "@/components/ui/bento-grid";
 import { Button as MovingBorderButton } from "@/components/ui/moving-border";
@@ -129,24 +130,36 @@ export default function ProjectDashboardPage() {
       type: "blog",
       title: "Blog Post Article",
       description: blogAsset?.content || "Generates a fully structured long-form blog post.",
-      icon: <FileText className="w-4 h-4 text-neutral-400" />,
+      icon: <FileText className="w-4 h-4 text-brand" />,
       asset: blogAsset,
       className: "md:col-span-2 row-span-2",
       header: (
-        <div className="h-44 bg-neutral-955 rounded-xl flex flex-col justify-between p-6 border border-neutral-850 relative overflow-hidden">
-          <div className="flex justify-between items-start">
-            <span className="text-[9px] uppercase font-bold text-neutral-400 tracking-wider">Draft Generation</span>
-            <span className="text-[9px] text-neutral-500 flex items-center gap-1 font-semibold">
-              <Sparkles className="w-3 h-3 text-neutral-400" />
+        <div className="h-44 bg-neutral-950 rounded-xl flex flex-col justify-between p-5 border border-neutral-900 relative overflow-hidden group/header">
+          {/* Subtle brand background gradient */}
+          <div className="absolute inset-0 bg-gradient-to-br from-brand-muted/20 via-transparent to-transparent opacity-50 group-hover/header:opacity-80 transition-opacity" />
+          
+          <div className="flex justify-between items-start relative z-10">
+            <span className="text-[9px] uppercase font-bold text-brand tracking-widest brand-badge px-2.5 py-0.5 rounded-full">Editorial Article</span>
+            <span className="text-[10px] text-neutral-400 flex items-center gap-1 font-semibold">
+              <Sparkles className="w-3.5 h-3.5 text-brand" />
               {blogAsset?.model_used ? blogAsset.model_used.split("/").pop() : "Auto"}
             </span>
           </div>
-          <div className="flex flex-col gap-1.5 mt-auto">
-            <h4 className="text-sm font-bold text-neutral-200 truncate">
+          
+          {/* Styled Document Lines */}
+          <div className="flex flex-col gap-2 mt-4 relative z-10 grow justify-center">
+            <div className="w-3/4 h-2 bg-brand-border/80 rounded-full" />
+            <div className="w-full h-1.5 bg-neutral-900 rounded-full" />
+            <div className="w-5/6 h-1.5 bg-neutral-900 rounded-full" />
+            <div className="w-2/3 h-1.5 bg-neutral-900 rounded-full" />
+          </div>
+
+          <div className="flex flex-col gap-1.5 mt-auto relative z-10">
+            <h4 className="text-sm font-bold text-neutral-200 truncate group-hover/header:text-brand transition-colors">
               {project?.title || "Repurposed Blog Article"}
             </h4>
-            <p className="text-[11px] text-neutral-500 line-clamp-2">
-              Ready-to-publish long-form post structured with headers, quotes, and actionable sections.
+            <p className="text-[11px] text-neutral-500 line-clamp-1">
+              Ready-to-publish long-form post structured with headers, quotes, and highlights.
             </p>
           </div>
         </div>
@@ -156,12 +169,28 @@ export default function ProjectDashboardPage() {
       type: "thread",
       title: "Twitter/X Thread",
       description: threadAsset?.content || "Writes a multi-tweet thread layout.",
-      icon: <Twitter className="w-4 h-4 text-neutral-400" />,
+      icon: <Twitter className="w-4 h-4 text-[#1d9bf0]" />,
       asset: threadAsset,
       className: "md:col-span-1",
       header: (
-        <div className="h-32 bg-neutral-955 rounded-xl flex items-center justify-center p-6 border border-neutral-850 relative overflow-hidden">
-          <Twitter className="w-8 h-8 text-neutral-700" />
+        <div className="h-32 bg-neutral-950 rounded-xl flex flex-col p-4 border border-neutral-900 relative overflow-hidden text-left justify-center select-none text-[11px] text-[#71767b]">
+          <div className="flex gap-2 items-start">
+            <div className="w-6 h-6 rounded-full bg-neutral-800 border border-[#2f3336] shrink-0" />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-1 flex-wrap">
+                <span className="font-bold text-[#e7e9ea] text-[10.5px]">Puneet</span>
+                <span className="truncate">@system</span>
+              </div>
+              <p className="text-[#e7e9ea] leading-tight line-clamp-2 mt-0.5">
+                1/ We built the world's fastest database by breaking assumption...
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-4 text-[9px] text-[#71767b] mt-3 pl-8">
+            <span className="flex items-center gap-0.5"><MessageCircle className="w-3 h-3" /> 12</span>
+            <span className="flex items-center gap-0.5"><Repeat2 className="w-3 h-3" /> 8</span>
+            <span className="flex items-center gap-0.5"><Heart className="w-3 h-3" /> 42</span>
+          </div>
         </div>
       )
     },
@@ -169,12 +198,21 @@ export default function ProjectDashboardPage() {
       type: "linkedin",
       title: "LinkedIn Post",
       description: linkedinAsset?.content || "Creates a professional LinkedIn post update.",
-      icon: <Linkedin className="w-4 h-4 text-neutral-400" />,
+      icon: <Linkedin className="w-4 h-4 text-[#0a66c2]" />,
       asset: linkedinAsset,
       className: "md:col-span-1",
       header: (
-        <div className="h-32 bg-neutral-955 rounded-xl flex items-center justify-center p-6 border border-neutral-850 relative overflow-hidden">
-          <Linkedin className="w-8 h-8 text-neutral-700" />
+        <div className="h-32 bg-neutral-950 rounded-xl flex flex-col p-4 border border-neutral-900 relative overflow-hidden text-left justify-center select-none text-[11px] text-neutral-450">
+          <div className="flex gap-2 items-center">
+            <div className="w-6 h-6 rounded-full bg-neutral-800 border border-neutral-900 shrink-0" />
+            <div className="flex flex-col min-w-0">
+              <span className="font-bold text-neutral-200 text-[10.5px]">Puneet Patwari</span>
+              <span className="text-[9px] text-[#71767b] truncate">Systems Engineer</span>
+            </div>
+          </div>
+          <p className="text-neutral-300 leading-tight line-clamp-2 mt-2">
+            Building a high-throughput system isn't about hardware. It's about designing...
+          </p>
         </div>
       )
     },
@@ -182,13 +220,25 @@ export default function ProjectDashboardPage() {
       type: "clip",
       title: "Short Clip Suggestions",
       description: `${clipAssets.length} clip suggestions generated with captions and timestamps.`,
-      icon: <Video className="w-4 h-4 text-neutral-400" />,
+      icon: <Video className="w-4 h-4 text-brand" />,
       asset: clipAssets[0],
       className: "md:col-span-1",
       header: (
-        <div className="h-32 bg-neutral-955 rounded-xl flex flex-col justify-between p-6 border border-neutral-850 relative overflow-hidden">
-          <div className="text-2xl font-bold text-neutral-200 tracking-tight">{clipAssets.length}</div>
-          <span className="text-[9px] uppercase font-bold text-neutral-500 tracking-wider">Timestamp Suggestions</span>
+        <div className="h-32 bg-neutral-950 rounded-xl flex flex-col justify-between p-5 border border-neutral-900 relative overflow-hidden">
+          <div className="flex justify-between items-center">
+            <span className="text-[9px] uppercase font-bold text-neutral-450 tracking-wider">TIMESTAMPS</span>
+            <span className="brand-badge text-[9px] font-bold px-2 py-0.5 rounded-full">{clipAssets.length} Clips</span>
+          </div>
+          
+          <div className="flex gap-1.5 items-center my-2">
+            <span className="text-[10px] font-mono bg-neutral-900 border border-neutral-800 px-1.5 py-0.5 rounded text-neutral-400">00:45</span>
+            <span className="text-neutral-700">&rarr;</span>
+            <span className="text-[10px] font-mono bg-neutral-900 border border-neutral-800 px-1.5 py-0.5 rounded text-neutral-400">03:10</span>
+          </div>
+
+          <div className="w-full bg-neutral-900 h-1 rounded-full overflow-hidden">
+            <div className="bg-brand h-full w-[65%]" />
+          </div>
         </div>
       )
     },
@@ -196,22 +246,22 @@ export default function ProjectDashboardPage() {
       type: "thumbnail",
       title: "AI Thumbnail Images",
       description: `${thumbnailAssets.length} image thumbnails created for cover layouts.`,
-      icon: <ImageIcon className="w-4 h-4 text-neutral-400" />,
+      icon: <ImageIcon className="w-4 h-4 text-brand" />,
       asset: thumbnailAssets[0],
       className: "md:col-span-1",
       header: (
-        <div className="h-32 bg-neutral-955 rounded-xl overflow-hidden border border-neutral-850 relative">
+        <div className="h-32 bg-neutral-950 rounded-xl overflow-hidden border border-neutral-900 relative group/thumb">
           {thumbnailAssets[0]?.content ? (
             <>
               <img 
                 src={thumbnailAssets[0].content} 
                 alt="Thumbnail" 
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover group-hover/thumb:scale-105 transition-transform duration-300"
               />
-              <div className="absolute inset-0 bg-black/40" />
+              <div className="absolute inset-0 bg-neutral-950/40 group-hover/thumb:bg-neutral-950/20 transition-colors" />
             </>
           ) : (
-            <div className="w-full h-full bg-neutral-955 flex items-center justify-center">
+            <div className="w-full h-full bg-neutral-950 flex items-center justify-center">
               <ImageIcon className="w-6 h-6 text-neutral-700" />
             </div>
           )}
@@ -229,32 +279,34 @@ export default function ProjectDashboardPage() {
       <div className="max-w-7xl mx-auto w-full flex flex-col gap-6 mb-10 relative z-10">
         <button
           onClick={() => router.push("/")}
-          className="flex items-center gap-2 text-xs font-semibold text-neutral-500 hover:text-neutral-300 transition-colors w-fit cursor-pointer"
+          className="flex items-center gap-2 text-xs font-semibold text-neutral-500 hover:text-brand transition-all w-fit cursor-pointer group"
         >
-          <ArrowLeft className="w-4 h-4" />
+          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
           Back to Home
         </button>
 
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-neutral-900 pb-8">
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-2">
             <h1 className="text-2xl font-extrabold text-neutral-100 sm:text-3xl tracking-tight">
               {project?.title}
             </h1>
-            <p className="text-[11px] text-neutral-500 flex flex-wrap items-center gap-x-2 gap-y-1 mt-1">
-              <span>Source:</span>
-              <span className="text-neutral-300 font-medium truncate max-w-xs md:max-w-md">{project?.source_ref}</span>
-              <span className="text-neutral-700">•</span>
-              <span>Input:</span>
-              <span className="text-neutral-300 font-medium uppercase">{project?.source_type.replace('_', ' ')}</span>
-              <span className="text-neutral-700">•</span>
-              <span>Model Mode:</span>
-              <span className="text-neutral-300 font-medium uppercase">{project?.default_model_mode}</span>
-            </p>
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-2 mt-1">
+              <span className="text-[10px] text-neutral-550 uppercase font-semibold">Source Ref:</span>
+              <span className="text-xs text-neutral-300 font-mono bg-[#121215] border border-neutral-850 px-2 py-0.5 rounded-lg truncate max-w-xs md:max-w-md">{project?.source_ref}</span>
+              <span className="text-neutral-800">•</span>
+              
+              <span className="text-[10px] text-neutral-550 uppercase font-semibold">Input:</span>
+              <span className="brand-badge text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase">{project?.source_type.replace('_', ' ')}</span>
+              <span className="text-neutral-800">•</span>
+              
+              <span className="text-[10px] text-neutral-550 uppercase font-semibold">Model Routing:</span>
+              <span className="brand-badge text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase">{project?.default_model_mode}</span>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2 bg-neutral-900 border border-neutral-850 px-4 py-2 rounded-lg w-fit">
-            <div className="w-1.5 h-1.5 rounded-full bg-neutral-400" />
-            <span className="text-xs font-semibold text-neutral-350">All Outputs Generated</span>
+          <div className="flex items-center gap-2 bg-brand-muted/30 border border-brand-border px-4 py-2 rounded-xl text-brand text-xs font-bold shadow-sm w-fit">
+            <Check className="w-4 h-4 text-brand shrink-0 animate-pulse" />
+            <span>Pipeline Complete</span>
           </div>
         </div>
       </div>
