@@ -47,7 +47,7 @@ async def transcribe_audio(audio_path: str) -> Tuple[str, List[Dict[str, Any]]]:
             logger.info("Local faster-whisper transcription completed successfully.")
             return full_text, segments
         except Exception as e:
-            logger.error(f"Local faster-whisper failed: {e}. Falling back to cloud APIs...")
+            logger.error("Local faster-whisper failed. Falling back to cloud APIs...", exc_info=True)
 
     # 2. FALLBACK 1: Groq Whisper API
     groq_key = os.getenv("GROQ_API_KEY")
@@ -83,7 +83,7 @@ async def transcribe_audio(audio_path: str) -> Tuple[str, List[Dict[str, Any]]]:
                     else:
                         logger.warning(f"Groq Whisper returned status {res.status_code}: {res.text}")
         except Exception as e:
-            logger.error(f"Groq Whisper transcription exception: {e}")
+            logger.error("Groq Whisper transcription exception", exc_info=True)
 
     # 3. FALLBACK 2: OpenAI Whisper API
     openai_key = os.getenv("OPENAI_API_KEY") or os.getenv("OPENROUTER_API_KEY")
@@ -118,7 +118,7 @@ async def transcribe_audio(audio_path: str) -> Tuple[str, List[Dict[str, Any]]]:
                     else:
                         logger.warning(f"OpenAI Whisper returned status {res.status_code}: {res.text}")
         except Exception as e:
-            logger.error(f"OpenAI Whisper transcription exception: {e}")
+            logger.error("OpenAI Whisper transcription exception", exc_info=True)
 
     # 4. CATCHALL / MOCK: Generate static mock transcription if all providers fail
     # This prevents the app from being bricked during offline/keyless testing

@@ -60,7 +60,7 @@ async def generate_image(prompt: str, project_id: int, asset_label: str) -> Tupl
                             logger.info(f"OpenRouter Image saved successfully to {file_path}")
                             return web_accessible_path, "stabilityai/stable-diffusion-xl"
         except Exception as e:
-            logger.error(f"OpenRouter Image Generation failed: {e}")
+            logger.error("OpenRouter Image Generation failed", exc_info=True)
 
     # 2. FALLBACK 1: Hugging Face Serverless Inference (FLUX.1 Schnell)
     hf_key = os.getenv("HF_API_KEY")
@@ -81,7 +81,7 @@ async def generate_image(prompt: str, project_id: int, asset_label: str) -> Tupl
                 else:
                     logger.warning(f"Hugging Face Image returned status {res.status_code}: {res.text}")
         except Exception as e:
-            logger.error(f"Hugging Face Image fallback exception: {e}")
+            logger.error("Hugging Face Image fallback exception", exc_info=True)
 
     # 3. FALLBACK 2: Pollinations AI (100% Free, No-Key Catchall)
     # This works always and produces high-quality images via URL download
@@ -99,7 +99,7 @@ async def generate_image(prompt: str, project_id: int, asset_label: str) -> Tupl
                 logger.info(f"Pollinations AI Image saved successfully to {file_path}")
                 return web_accessible_path, "pollinations/flux"
     except Exception as e:
-        logger.error(f"Pollinations AI Image fallback exception: {e}")
+        logger.error("Pollinations AI Image fallback exception", exc_info=True)
 
     # 4. LAST RESORT PLACEHOLDER: Returns a high-quality abstract Unsplash placeholder
     # This prevents the app pipeline from crashing if the user is completely offline
