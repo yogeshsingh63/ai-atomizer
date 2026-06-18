@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from app.db import get_db
-from app.models import Project, User
+from app.models import Project, User, Highlight
 from app.schemas import ProjectResponse, HighlightResponse, ProjectCreate
 from app.services.auth import get_current_user, JWT_SECRET, JWT_ALGORITHM
 from app.pipeline import run_pipeline, get_project_queue, remove_project_queue
