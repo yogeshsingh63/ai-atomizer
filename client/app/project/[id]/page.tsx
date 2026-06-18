@@ -4,17 +4,19 @@ import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { 
   FileText, Twitter, Linkedin, Video, Image as ImageIcon, 
-  Copy, Download, RefreshCw, ArrowLeft, Check, Sparkles, Pin, Clock, AlertCircle
+  Copy, Download, RefreshCw, ArrowLeft, Check, Sparkles, Pin, Clock, AlertCircle, Eye, EyeOff
 } from "lucide-react";
 import { BentoGrid, BentoGridItem } from "@/components/ui/bento-grid";
 import { Button as MovingBorderButton } from "@/components/ui/moving-border";
 import { TextGenerateEffect } from "@/components/ui/text-generate-effect";
 import { ModelSelector } from "@/components/model-selector";
 import { BackgroundBeams } from "@/components/ui/background-beams";
+import { TwitterPreview, LinkedInPreview, BlogPreview } from "@/components/post-preview";
 import { 
   Project, GeneratedAsset, Highlight, 
   getProject, getAssets, getHighlights, regenerateAsset 
 } from "@/lib/api";
+import { cn } from "@/lib/utils";
 
 export default function ProjectDashboardPage() {
   const params = useParams();
@@ -26,6 +28,9 @@ export default function ProjectDashboardPage() {
   const [highlights, setHighlights] = useState<Highlight[]>([]);
   const [selectedAsset, setSelectedAsset] = useState<GeneratedAsset | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Preview options tab in details drawer
+  const [previewTab, setPreviewTab] = useState<"preview" | "raw">("preview");
 
   // Asset copy/download state
   const [copied, setCopied] = useState(false);
@@ -128,7 +133,7 @@ export default function ProjectDashboardPage() {
       asset: blogAsset,
       className: "md:col-span-2 row-span-2",
       header: (
-        <div className="h-44 bg-neutral-950 rounded-xl flex flex-col justify-between p-6 border border-neutral-850 relative overflow-hidden">
+        <div className="h-44 bg-neutral-955 rounded-xl flex flex-col justify-between p-6 border border-neutral-850 relative overflow-hidden">
           <div className="flex justify-between items-start">
             <span className="text-[9px] uppercase font-bold text-neutral-400 tracking-wider">Draft Generation</span>
             <span className="text-[9px] text-neutral-500 flex items-center gap-1 font-semibold">
@@ -155,7 +160,7 @@ export default function ProjectDashboardPage() {
       asset: threadAsset,
       className: "md:col-span-1",
       header: (
-        <div className="h-32 bg-neutral-950 rounded-xl flex items-center justify-center p-6 border border-neutral-850 relative overflow-hidden">
+        <div className="h-32 bg-neutral-955 rounded-xl flex items-center justify-center p-6 border border-neutral-850 relative overflow-hidden">
           <Twitter className="w-8 h-8 text-neutral-700" />
         </div>
       )
@@ -168,7 +173,7 @@ export default function ProjectDashboardPage() {
       asset: linkedinAsset,
       className: "md:col-span-1",
       header: (
-        <div className="h-32 bg-neutral-950 rounded-xl flex items-center justify-center p-6 border border-neutral-850 relative overflow-hidden">
+        <div className="h-32 bg-neutral-955 rounded-xl flex items-center justify-center p-6 border border-neutral-850 relative overflow-hidden">
           <Linkedin className="w-8 h-8 text-neutral-700" />
         </div>
       )
@@ -181,7 +186,7 @@ export default function ProjectDashboardPage() {
       asset: clipAssets[0],
       className: "md:col-span-1",
       header: (
-        <div className="h-32 bg-neutral-950 rounded-xl flex flex-col justify-between p-6 border border-neutral-850 relative overflow-hidden">
+        <div className="h-32 bg-neutral-955 rounded-xl flex flex-col justify-between p-6 border border-neutral-850 relative overflow-hidden">
           <div className="text-2xl font-bold text-neutral-200 tracking-tight">{clipAssets.length}</div>
           <span className="text-[9px] uppercase font-bold text-neutral-500 tracking-wider">Timestamp Suggestions</span>
         </div>
@@ -195,7 +200,7 @@ export default function ProjectDashboardPage() {
       asset: thumbnailAssets[0],
       className: "md:col-span-1",
       header: (
-        <div className="h-32 bg-neutral-950 rounded-xl overflow-hidden border border-neutral-850 relative">
+        <div className="h-32 bg-neutral-955 rounded-xl overflow-hidden border border-neutral-850 relative">
           {thumbnailAssets[0]?.content ? (
             <>
               <img 
@@ -206,7 +211,7 @@ export default function ProjectDashboardPage() {
               <div className="absolute inset-0 bg-black/40" />
             </>
           ) : (
-            <div className="w-full h-full bg-neutral-950 flex items-center justify-center">
+            <div className="w-full h-full bg-neutral-955 flex items-center justify-center">
               <ImageIcon className="w-6 h-6 text-neutral-700" />
             </div>
           )}
@@ -266,6 +271,7 @@ export default function ProjectDashboardPage() {
               className={item.className}
               icon={item.icon}
               onClick={() => {
+                setPreviewTab("preview"); // Reset tab on click
                 if (item.type === "clip") {
                   setSelectedAsset(clipAssets[0] || null);
                 } else if (item.type === "thumbnail") {
@@ -306,19 +312,52 @@ export default function ProjectDashboardPage() {
                   </span>
                 </div>
               </div>
-              <button
-                onClick={() => setSelectedAsset(null)}
-                className="text-neutral-400 hover:text-neutral-200 text-xs font-bold bg-neutral-950 border border-neutral-850 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
-              >
-                Close View
-              </button>
+              
+              <div className="flex items-center gap-2">
+                {/* Platform Preview Toggle */}
+                {["blog", "thread", "linkedin"].includes(selectedAsset.asset_type) && (
+                  <div className="flex bg-neutral-950 border border-neutral-850 rounded-lg p-0.5 mr-2">
+                    <button
+                      onClick={() => setPreviewTab("preview")}
+                      className={cn(
+                        "flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold cursor-pointer transition-all",
+                        previewTab === "preview" 
+                          ? "bg-neutral-800 text-neutral-200" 
+                          : "text-neutral-500 hover:text-neutral-350"
+                      )}
+                    >
+                      <Eye className="w-3 h-3" />
+                      Preview
+                    </button>
+                    <button
+                      onClick={() => setPreviewTab("raw")}
+                      className={cn(
+                        "flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold cursor-pointer transition-all",
+                        previewTab === "raw" 
+                          ? "bg-neutral-800 text-neutral-200" 
+                          : "text-neutral-500 hover:text-neutral-350"
+                      )}
+                    >
+                      <EyeOff className="w-3 h-3" />
+                      Raw Editor
+                    </button>
+                  </div>
+                )}
+
+                <button
+                  onClick={() => setSelectedAsset(null)}
+                  className="text-neutral-400 hover:text-neutral-200 text-xs font-bold bg-neutral-950 border border-neutral-850 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
+                >
+                  Close View
+                </button>
+              </div>
             </div>
 
             {/* Content Body */}
             <div className="flex-1 overflow-y-auto p-6 md:p-8 no-scrollbar bg-neutral-900/10">
               {selectedAsset.asset_type === "thumbnail" ? (
                 <div className="flex flex-col gap-6">
-                  <div className="flex items-center gap-2 p-4 rounded-xl bg-neutral-950 border border-neutral-850 text-neutral-400 text-[11px] leading-relaxed">
+                  <div className="flex items-center gap-2 p-4 rounded-xl bg-neutral-955 border border-neutral-850 text-neutral-400 text-[11px] leading-relaxed">
                     <AlertCircle className="w-4 h-4 text-neutral-400 shrink-0" />
                     These images are automatically generated by the multimodal model using detailed composition descriptions derived from your key moments.
                   </div>
@@ -375,8 +414,28 @@ export default function ProjectDashboardPage() {
                   })}
                 </div>
               ) : (
-                <div className="whitespace-pre-wrap leading-relaxed px-2 text-sm text-neutral-350">
-                  <TextGenerateEffect words={selectedAsset.content} />
+                <div className="px-2">
+                  {previewTab === "preview" ? (
+                    <>
+                      {selectedAsset.asset_type === "blog" && (
+                        <BlogPreview 
+                          content={selectedAsset.content} 
+                          title={project?.title} 
+                          coverUrl={thumbnailAssets[0]?.content}
+                        />
+                      )}
+                      {selectedAsset.asset_type === "thread" && (
+                        <TwitterPreview content={selectedAsset.content} />
+                      )}
+                      {selectedAsset.asset_type === "linkedin" && (
+                        <LinkedInPreview content={selectedAsset.content} />
+                      )}
+                    </>
+                  ) : (
+                    <div className="whitespace-pre-wrap leading-relaxed text-sm text-neutral-350 bg-neutral-950 border border-neutral-850 rounded-2xl p-6 font-mono text-xs">
+                      <TextGenerateEffect words={selectedAsset.content} />
+                    </div>
+                  )}
                 </div>
               )}
             </div>
