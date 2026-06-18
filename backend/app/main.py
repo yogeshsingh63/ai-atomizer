@@ -9,6 +9,11 @@ from dotenv import load_dotenv
 # Load env variables first
 load_dotenv()
 
+# Prepend local bin directory to PATH if it exists (for portable ffmpeg/ffprobe)
+bin_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "bin")
+if os.path.exists(bin_path):
+    os.environ["PATH"] = bin_path + os.path.pathsep + os.environ["PATH"]
+
 from app.db import engine, Base
 # Import models to ensure they register on Base metadata
 from app import models
