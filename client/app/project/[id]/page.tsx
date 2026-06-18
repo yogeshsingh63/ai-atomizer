@@ -339,9 +339,9 @@ export default function ProjectDashboardPage() {
 
       {/* Drawer Overlay for single asset details */}
       {selectedAsset && (
-        <div className="fixed inset-0 z-50 flex items-center justify-end bg-black/70 backdrop-blur-xs p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs p-4 sm:p-6" onClick={() => setSelectedAsset(null)}>
           <div 
-            className="w-full max-w-2xl h-full max-h-[95vh] bg-[#121215] border border-[#1f1f23] rounded-2xl shadow-xl flex flex-col overflow-hidden relative"
+            className="w-full max-w-2xl h-full max-h-[85vh] bg-[#121215] border border-neutral-900 rounded-2xl shadow-2xl flex flex-col overflow-hidden relative border-brand-border/20"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Drawer Header */}
