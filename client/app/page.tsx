@@ -243,23 +243,32 @@ export default function LandingPage() {
       <BackgroundBeams />
 
       {/* Navigation Bar */}
-      <header className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-5 flex items-center justify-between z-10 border-b border-neutral-900/80 backdrop-blur-md sticky top-0">
-        <div className="flex items-center gap-2">
-          <PrismLogo size={32} />
-          <span className="font-extrabold text-base tracking-tight text-neutral-200 ml-1">
-            Prism <span className="text-brand">AI</span>
-          </span>
+      <header className="fixed top-0 left-0 right-0 z-50 w-full border-b border-neutral-900/80 bg-neutral-950/80 backdrop-blur-md">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-5 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <PrismLogo size={32} />
+            <span className="font-extrabold text-base tracking-tight text-neutral-200 ml-1">
+              Prism <span className="text-brand">AI</span>
+            </span>
+          </div>
+
+          {/* Navigation links */}
+          <nav className="hidden sm:flex items-center gap-6 text-[10px] font-bold text-neutral-400 uppercase tracking-wider">
+            <a href="#simulator" className="hover:text-brand hover:scale-102 active:scale-98 transition-all duration-150">Interactive Simulator</a>
+            <a href="#features" className="hover:text-brand hover:scale-102 active:scale-98 transition-all duration-150">Features System</a>
+          </nav>
+
+          <Link 
+            href="/new" 
+            className="text-xs font-semibold text-neutral-300 hover:text-white bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 px-4 py-2 rounded-lg transition-all duration-200 active:scale-95"
+          >
+            Launch Engine
+          </Link>
         </div>
-        <Link 
-          href="/new" 
-          className="text-xs font-semibold text-neutral-300 hover:text-white bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 px-4 py-2 rounded-lg transition-all duration-200 active:scale-95"
-        >
-          Launch Engine
-        </Link>
       </header>
 
       {/* Hero Section */}
-      <section className="flex flex-col items-center text-center justify-center max-w-5xl mx-auto px-4 sm:px-6 pt-14 sm:pt-20 pb-12 sm:pb-16 relative z-10 flex-1">
+      <section className="flex flex-col items-center text-center justify-center max-w-5xl mx-auto px-4 sm:px-6 pt-28 sm:pt-36 pb-12 sm:pb-16 relative z-10 flex-1">
         <div className="flex items-center justify-center gap-1.5 px-3 py-1 rounded-full bg-brand-muted border border-brand-border text-[9px] sm:text-[10px] font-bold text-brand mb-5 sm:mb-6 uppercase tracking-wider text-center">
           <Flame className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" />
           <span>Content Repurposing Pipeline</span>
@@ -293,7 +302,7 @@ export default function LandingPage() {
         </div>
 
         {/* Live Simulator Mockup Section */}
-        <div id="simulator" className="w-full max-w-4xl mt-12 sm:mt-20 relative px-1">
+        <div id="simulator" className="w-full max-w-4xl mt-12 sm:mt-20 relative px-1 scroll-mt-24">
           <div className="border border-neutral-900 rounded-2xl overflow-hidden bg-neutral-900/10 backdrop-blur-md p-1 border-brand-border/40 shadow-xl w-full max-w-full min-w-0">
             
             <div className="bg-neutral-950 rounded-xl border border-neutral-900 p-4 sm:p-6 flex flex-col gap-6 w-full max-w-full min-w-0">
@@ -393,8 +402,8 @@ export default function LandingPage() {
       </section>
 
       {/* Features Grid */}
-      <section id="features" className="max-w-7xl mx-auto px-4 sm:px-6 py-16 sm:py-24 border-t border-neutral-900 relative z-10 w-full">
-        <div className="flex flex-col items-center text-center gap-2 mb-10 sm:mb-16">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-16 sm:py-24 border-t border-neutral-900 relative z-10 w-full">
+        <div id="features" className="flex flex-col items-center text-center gap-2 mb-10 sm:mb-16 scroll-mt-24">
           <span className="text-[9px] sm:text-[10px] uppercase font-bold text-brand tracking-widest brand-badge px-2.5 py-1 rounded-full">Features System</span>
           <h2 className="text-lg sm:text-xl md:text-3xl font-extrabold text-neutral-100 tracking-tight mt-3">
             Engineered For Editorial Integrity
@@ -438,8 +447,45 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="w-full border-t border-neutral-900 py-8 text-center text-[9px] text-neutral-600 relative z-10 mt-auto">
-        &copy; {new Date().getFullYear()} Prism AI. Built with Next.js 14 & Aceternity UI. All rights reserved.
+      <footer className="w-full border-t border-neutral-900 bg-neutral-950/40 relative z-10 mt-auto">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 md:py-16 flex flex-col md:flex-row items-center md:items-start justify-between gap-8 sm:gap-10">
+          
+          {/* Logo & Vision Block */}
+          <div className="flex flex-col items-center md:items-start text-center md:text-left gap-3.5 max-w-sm">
+            <div className="flex items-center gap-2">
+              <PrismLogo size={28} />
+              <span className="font-extrabold text-sm tracking-tight text-neutral-200 ml-1">
+                Prism <span className="text-brand">AI</span>
+              </span>
+            </div>
+            <p className="text-[11px] leading-relaxed text-neutral-500 font-medium">
+              Refracting long-form video, audio, and articles into a rich spectrum of platform-native social updates and viral clips in under 90 seconds.
+            </p>
+          </div>
+
+          {/* Designer Signature & Tech details */}
+          <div className="flex flex-col items-center md:items-end text-center md:text-right gap-3">
+            <div className="text-[11px] font-semibold text-neutral-400">
+              Designed & Developed by{" "}
+              <span className="text-brand hover:underline cursor-pointer select-none">
+                Yogesh
+              </span>
+            </div>
+            
+            <div className="flex items-center gap-3 text-[10px] font-bold text-neutral-500 uppercase tracking-wider">
+              <a href="#simulator" className="hover:text-brand transition-colors">Simulator</a>
+              <span className="text-neutral-800 select-none">•</span>
+              <a href="#features" className="hover:text-brand transition-colors">Features</a>
+              <span className="text-neutral-800 select-none">•</span>
+              <Link href="/new" className="hover:text-brand transition-colors">New Project</Link>
+            </div>
+
+            <p className="text-[9px] text-neutral-600 mt-1">
+              &copy; {new Date().getFullYear()} Prism AI. Built with Next.js 14 & Aceternity UI. All rights reserved.
+            </p>
+          </div>
+
+        </div>
       </footer>
     </div>
   );
