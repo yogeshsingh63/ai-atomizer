@@ -344,35 +344,35 @@ export default function ProjectDashboardPage() {
             className="w-full max-w-2xl h-full max-h-[85vh] bg-[#121215] border border-neutral-900 rounded-2xl shadow-2xl flex flex-col overflow-hidden relative border-brand-border/20"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Drawer Header */}
-            <div className="p-6 border-b border-neutral-850 flex items-center justify-between bg-neutral-950/10">
-              <div className="flex items-center gap-3.5">
-                <span className="p-2.5 rounded-xl bg-neutral-950 border border-neutral-850">
-                  {selectedAsset.asset_type === "blog" && <FileText className="w-4 h-4 text-neutral-400" />}
-                  {selectedAsset.asset_type === "thread" && <Twitter className="w-4 h-4 text-neutral-400" />}
-                  {selectedAsset.asset_type === "linkedin" && <Linkedin className="w-4 h-4 text-neutral-400" />}
-                  {selectedAsset.asset_type === "clip" && <Video className="w-4 h-4 text-neutral-400" />}
-                  {selectedAsset.asset_type === "thumbnail" && <ImageIcon className="w-4 h-4 text-neutral-400" />}
+            {/* Modal Header */}
+            <div className="p-4 sm:p-6 border-b border-neutral-850 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-neutral-950/10">
+              <div className="flex items-center gap-3">
+                <span className="p-2.5 rounded-xl bg-neutral-950 border border-neutral-850 shrink-0">
+                  {selectedAsset.asset_type === "blog" && <FileText className="w-4 h-4 text-brand" />}
+                  {selectedAsset.asset_type === "thread" && <Twitter className="w-4 h-4 text-[#1d9bf0]" />}
+                  {selectedAsset.asset_type === "linkedin" && <Linkedin className="w-4 h-4 text-[#0a66c2]" />}
+                  {selectedAsset.asset_type === "clip" && <Video className="w-4 h-4 text-brand" />}
+                  {selectedAsset.asset_type === "thumbnail" && <ImageIcon className="w-4 h-4 text-brand" />}
                 </span>
-                <div className="flex flex-col gap-0.5">
-                  <h3 className="text-sm font-bold text-neutral-100 capitalize">
+                <div className="flex flex-col gap-0.5 min-w-0">
+                  <h3 className="text-sm font-bold text-neutral-100 capitalize truncate">
                     {selectedAsset.asset_type} Output
                   </h3>
-                  <span className="text-[10px] text-neutral-500 flex items-center gap-1.5 font-medium">
-                    <Sparkles className="w-3 h-3 text-neutral-400" />
-                    Model Used: <span className="text-neutral-400">{selectedAsset.model_used}</span>
+                  <span className="text-[10px] text-neutral-500 flex items-center gap-1.5 font-medium truncate">
+                    <Sparkles className="w-3 h-3 text-brand shrink-0" />
+                    Model: <span className="text-neutral-455 truncate font-mono">{selectedAsset.model_used.split("/").pop()}</span>
                   </span>
                 </div>
               </div>
               
-              <div className="flex items-center gap-2">
+              <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
                 {/* Platform Preview Toggle */}
                 {["blog", "thread", "linkedin"].includes(selectedAsset.asset_type) && (
-                  <div className="flex bg-neutral-950 border border-neutral-850 rounded-lg p-0.5 mr-2">
+                  <div className="flex bg-neutral-950 border border-neutral-850 rounded-lg p-0.5">
                     <button
                       onClick={() => setPreviewTab("preview")}
                       className={cn(
-                        "flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold cursor-pointer transition-all",
+                        "flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-bold cursor-pointer transition-all",
                         previewTab === "preview" 
                           ? "bg-neutral-800 text-neutral-200" 
                           : "text-neutral-500 hover:text-neutral-350"
@@ -384,7 +384,7 @@ export default function ProjectDashboardPage() {
                     <button
                       onClick={() => setPreviewTab("raw")}
                       className={cn(
-                        "flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold cursor-pointer transition-all",
+                        "flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-bold cursor-pointer transition-all",
                         previewTab === "raw" 
                           ? "bg-neutral-800 text-neutral-200" 
                           : "text-neutral-500 hover:text-neutral-350"
@@ -398,7 +398,7 @@ export default function ProjectDashboardPage() {
 
                 <button
                   onClick={() => setSelectedAsset(null)}
-                  className="text-neutral-400 hover:text-neutral-200 text-xs font-bold bg-neutral-950 border border-neutral-850 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
+                  className="text-neutral-400 hover:text-neutral-200 text-[11px] font-bold bg-neutral-950 border border-neutral-850 px-3 py-1.5 rounded-lg transition-colors cursor-pointer shrink-0 ml-auto sm:ml-0"
                 >
                   Close View
                 </button>

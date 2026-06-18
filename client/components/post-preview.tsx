@@ -129,44 +129,44 @@ export const TwitterPreview = ({
               </div>
 
               {/* Action Bar */}
-              <div className="flex items-center justify-between text-[#71767b] max-w-md mt-4 pr-4">
-                <button className="flex items-center gap-1.5 hover:text-[#1d9bf0] transition-colors group/btn cursor-pointer">
-                  <span className="p-2 rounded-full group-hover/btn:bg-[#1d9bf0]/10">
-                    <MessageCircle className="w-[17px] h-[17px]" />
+              <div className="flex items-center justify-between text-[#71767b] max-w-md mt-4 pr-1 sm:pr-4 gap-1">
+                <button className="flex items-center gap-0.5 sm:gap-1.5 hover:text-[#1d9bf0] transition-colors group/btn cursor-pointer">
+                  <span className="p-1.5 sm:p-2 rounded-full group-hover/btn:bg-[#1d9bf0]/10">
+                    <MessageCircle className="w-[15px] h-[15px] sm:w-[17px] sm:h-[17px]" />
                   </span>
-                  <span className="text-[11.5px] font-medium">{Math.floor(Math.random() * 15) + 3}</span>
+                  <span className="text-[10px] sm:text-[11.5px] font-medium">{Math.floor(Math.random() * 15) + 3}</span>
                 </button>
                 
-                <button className="flex items-center gap-1.5 hover:text-[#00ba7c] transition-colors group/btn cursor-pointer">
-                  <span className="p-2 rounded-full group-hover/btn:bg-[#00ba7c]/10">
-                    <Repeat2 className="w-[17px] h-[17px]" />
+                <button className="flex items-center gap-0.5 sm:gap-1.5 hover:text-[#00ba7c] transition-colors group/btn cursor-pointer">
+                  <span className="p-1.5 sm:p-2 rounded-full group-hover/btn:bg-[#00ba7c]/10">
+                    <Repeat2 className="w-[15px] h-[15px] sm:w-[17px] sm:h-[17px]" />
                   </span>
-                  <span className="text-[11.5px] font-medium">{Math.floor(Math.random() * 10) + 1}</span>
+                  <span className="text-[10px] sm:text-[11.5px] font-medium">{Math.floor(Math.random() * 10) + 1}</span>
                 </button>
                 
-                <button className="flex items-center gap-1.5 hover:text-[#f91880] transition-colors group/btn cursor-pointer">
-                  <span className="p-2 rounded-full group-hover/btn:bg-[#f91880]/10">
-                    <Heart className="w-[17px] h-[17px]" />
+                <button className="flex items-center gap-0.5 sm:gap-1.5 hover:text-[#f91880] transition-colors group/btn cursor-pointer">
+                  <span className="p-1.5 sm:p-2 rounded-full group-hover/btn:bg-[#f91880]/10">
+                    <Heart className="w-[15px] h-[15px] sm:w-[17px] sm:h-[17px]" />
                   </span>
-                  <span className="text-[11.5px] font-medium">{Math.floor(Math.random() * 80) + 12}</span>
+                  <span className="text-[10px] sm:text-[11.5px] font-medium">{Math.floor(Math.random() * 80) + 12}</span>
                 </button>
                 
-                <button className="flex items-center gap-1.5 hover:text-[#1d9bf0] transition-colors group/btn cursor-pointer">
-                  <span className="p-2 rounded-full group-hover/btn:bg-[#1d9bf0]/10">
-                    <BarChart2 className="w-[17px] h-[17px]" />
+                <button className="flex items-center gap-0.5 sm:gap-1.5 hover:text-[#1d9bf0] transition-colors group/btn cursor-pointer">
+                  <span className="p-1.5 sm:p-2 rounded-full group-hover/btn:bg-[#1d9bf0]/10">
+                    <BarChart2 className="w-[15px] h-[15px] sm:w-[17px] sm:h-[17px]" />
                   </span>
-                  <span className="text-[11.5px] font-medium">{Math.floor(Math.random() * 5) + 1}.{Math.floor(Math.random() * 9)}K</span>
+                  <span className="text-[10px] sm:text-[11.5px] font-medium">{Math.floor(Math.random() * 5) + 1}.{Math.floor(Math.random() * 9)}K</span>
                 </button>
 
                 <button className="hover:text-[#1d9bf0] transition-colors group/btn cursor-pointer">
-                  <span className="p-2 rounded-full group-hover/btn:bg-[#1d9bf0]/10">
-                    <Bookmark className="w-[17px] h-[17px]" />
+                  <span className="p-1.5 sm:p-2 rounded-full group-hover/btn:bg-[#1d9bf0]/10">
+                    <Bookmark className="w-[15px] h-[15px] sm:w-[17px] sm:h-[17px]" />
                   </span>
                 </button>
 
                 <button className="hover:text-[#1d9bf0] transition-colors group/btn cursor-pointer">
-                  <span className="p-2 rounded-full group-hover/btn:bg-[#1d9bf0]/10">
-                    <Share2 className="w-[17px] h-[17px]" />
+                  <span className="p-1.5 sm:p-2 rounded-full group-hover/btn:bg-[#1d9bf0]/10">
+                    <Share2 className="w-[15px] h-[15px] sm:w-[17px] sm:h-[17px]" />
                   </span>
                 </button>
               </div>
@@ -223,21 +223,21 @@ export const LinkedInPreview = ({
       </div>
 
       {/* Action Bar */}
-      <div className="border-t border-[#27272a] p-1.5 bg-[#121214] flex items-center justify-around text-neutral-400 text-xs font-bold">
-        <button className="flex items-center gap-2 py-3 px-3 hover:bg-neutral-800/60 rounded-lg transition-colors cursor-pointer flex-1 justify-center">
-          <ThumbsUp className="w-4 h-4 text-neutral-450" />
+      <div className="border-t border-[#27272a] p-1 bg-[#121214] flex items-center justify-around text-neutral-400 text-[10px] sm:text-xs font-bold">
+        <button className="flex items-center gap-1.5 py-2 px-1 sm:py-3 sm:px-3 hover:bg-neutral-800/60 rounded-lg transition-colors cursor-pointer flex-1 justify-center">
+          <ThumbsUp className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-neutral-450" />
           Like
         </button>
-        <button className="flex items-center gap-2 py-3 px-3 hover:bg-neutral-800/60 rounded-lg transition-colors cursor-pointer flex-1 justify-center">
-          <MessageSquare className="w-4 h-4 text-neutral-450" />
+        <button className="flex items-center gap-1.5 py-2 px-1 sm:py-3 sm:px-3 hover:bg-neutral-800/60 rounded-lg transition-colors cursor-pointer flex-1 justify-center">
+          <MessageSquare className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-neutral-450" />
           Comment
         </button>
-        <button className="flex items-center gap-2 py-3 px-3 hover:bg-neutral-800/60 rounded-lg transition-colors cursor-pointer flex-1 justify-center">
-          <Repeat2 className="w-4 h-4 text-neutral-450" />
+        <button className="flex items-center gap-1.5 py-2 px-1 sm:py-3 sm:px-3 hover:bg-neutral-800/60 rounded-lg transition-colors cursor-pointer flex-1 justify-center">
+          <Repeat2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-neutral-450" />
           Repost
         </button>
-        <button className="flex items-center gap-2 py-3 px-3 hover:bg-neutral-800/60 rounded-lg transition-colors cursor-pointer flex-1 justify-center">
-          <Send className="w-4 h-4 text-neutral-450" />
+        <button className="flex items-center gap-1.5 py-2 px-1 sm:py-3 sm:px-3 hover:bg-neutral-800/60 rounded-lg transition-colors cursor-pointer flex-1 justify-center">
+          <Send className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-neutral-450" />
           Send
         </button>
       </div>
