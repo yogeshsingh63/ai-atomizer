@@ -54,6 +54,13 @@ export default function ProjectDashboardPage() {
           getAssets(projectId),
           getHighlights(projectId),
         ]);
+
+        // If the project is not done yet, redirect to the processing loader/error screen
+        if (p && p.status !== "done") {
+          router.push(`/project/${projectId}/processing`);
+          return;
+        }
+
         setProject(p);
         setAssets(a);
         setHighlights(h);
