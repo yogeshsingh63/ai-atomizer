@@ -11,6 +11,7 @@ interface ModelSelectorProps {
   onChange: (mode: "auto" | "pinned", pinnedModel: string | null) => void;
   className?: string;
   size?: "sm" | "md";
+  dropup?: boolean;
 }
 
 export const ModelSelector = ({
@@ -19,6 +20,7 @@ export const ModelSelector = ({
   onChange,
   className,
   size = "md",
+  dropup = false,
 }: ModelSelectorProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [models, setModels] = useState<Model[]>([]);
@@ -122,7 +124,10 @@ export const ModelSelector = ({
           </button>
 
           {isOpen && (
-            <div className="absolute top-full left-0 z-50 w-full max-w-sm mt-1.5 bg-neutral-900 border border-neutral-800 rounded-2xl shadow-2xl p-1.5 max-h-60 overflow-y-auto no-scrollbar">
+            <div className={cn(
+              "absolute left-0 z-50 w-full max-w-sm bg-neutral-900 border border-neutral-800 rounded-2xl shadow-2xl p-1.5 max-h-60 overflow-y-auto no-scrollbar",
+              dropup ? "bottom-full mb-1.5" : "top-full mt-1.5"
+            )}>
               {loading ? (
                 <div className="text-center py-4 text-xs text-neutral-500">Loading models...</div>
               ) : (
