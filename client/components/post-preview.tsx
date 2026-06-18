@@ -87,23 +87,29 @@ export const TwitterPreview = ({
         <div className="w-2 h-2 rounded-full bg-[#1d9bf0]" />
       </div>
       
-      <div className="flex flex-col p-4 divide-y divide-[#2f3336]">
-        {tweets.map((tweetText, idx) => (
-          <div key={idx} className="flex gap-3 relative pt-4 pb-5 group last:pb-2 first:pt-0">
-            {/* Profile Avatar */}
-            <div className="flex flex-col items-center shrink-0">
+      <div className="flex flex-col p-4">
+        {tweets.map((tweetText, idx) => {
+          const lineTop = idx === 0 ? "top-10" : "top-[56px]";
+          return (
+            <div key={idx} className="flex gap-3 relative pt-4 pb-5 group last:pb-2 first:pt-0">
+              {/* Thread Connector Line (Top part) */}
+              {idx > 0 && (
+                <div className="absolute left-[19px] top-0 h-4 w-[2px] bg-[#2f3336]" />
+              )}
+              {/* Thread Connector Line (Bottom part) */}
+              {idx < tweets.length - 1 && (
+                <div className={cn("absolute left-[19px] bottom-0 w-[2px] bg-[#2f3336]", lineTop)} />
+              )}
+
+              {/* Profile Avatar */}
               <img 
                 src={avatarUrl} 
                 alt={authorName} 
-                className="w-10 h-10 rounded-full object-cover border border-[#2f3336]"
+                className="w-10 h-10 rounded-full object-cover border border-[#2f3336] z-10 shrink-0"
               />
-              {idx < tweets.length - 1 && (
-                <div className="w-[2px] bg-[#2f3336] grow mt-2 mb-[-16px]" />
-              )}
-            </div>
 
-            {/* Tweet Content */}
-            <div className="flex flex-col min-w-0 flex-1">
+              {/* Tweet Content */}
+              <div className="flex flex-col min-w-0 flex-1">
               {/* Header */}
               <div className="flex items-center justify-between text-[15px]">
                 <div className="flex items-center gap-1.5 min-w-0">
@@ -166,7 +172,8 @@ export const TwitterPreview = ({
               </div>
             </div>
           </div>
-        ))}
+        );
+      })}
       </div>
     </div>
   );
