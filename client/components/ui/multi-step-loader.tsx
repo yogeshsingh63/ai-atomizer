@@ -34,7 +34,7 @@ export const MultiStepLoader = ({
   const overallProgress = (activeIndex / loadingStates.length) * 100;
 
   return (
-    <div className="flex flex-col space-y-6 max-w-md w-full mx-auto p-8 rounded-2xl bg-[#121215] border border-neutral-900 shadow-xl relative overflow-hidden">
+    <div className="flex flex-col space-y-6 max-w-md w-full mx-auto p-5 sm:p-8 rounded-2xl bg-[#121215] border border-neutral-900 shadow-xl relative overflow-hidden">
       {/* Top Brand Highlight Strip */}
       <div className="absolute top-0 left-0 right-0 h-[2px] bg-brand/30" />
 

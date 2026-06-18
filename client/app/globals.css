@@ -57,22 +57,30 @@
 }
 
 /* Custom CSS variables & Global resetting */
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   background-color: #09090b;
   color: hsl(var(--foreground));
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* Professional card panel styling */
 .premium-panel {
   background-color: #121215;
   border: 1px solid #1f1f23;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
 }
 
 .premium-panel:hover {
   border-color: hsl(var(--brand-border));
+  transform: translateY(-2px);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.25);
 }
 
 /* Badge highlights */
@@ -82,7 +90,16 @@ body {
   color: hsl(var(--brand));
 }
 
-/* Scrollbar styles */
+/* No-scrollbar utility */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Scrollbar styles (for elements that DO show scrollbars) */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -99,4 +116,11 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: #2d2d34;
+}
+
+/* Smooth focus ring for accessibility */
+*:focus-visible {
+  outline: 2px solid hsl(var(--brand));
+  outline-offset: 2px;
+  border-radius: 4px;
 }

@@ -134,7 +134,7 @@ export default function NewProjectPage() {
       {/* Grid Pattern */}
       <BackgroundBeams />
 
-      <div className="w-full max-w-lg bg-[#121215] border border-[#1f1f23] p-8 sm:p-10 rounded-2xl flex flex-col gap-8 shadow-xl relative z-10">
+      <div className="w-full max-w-lg bg-[#121215] border border-[#1f1f23] p-5 sm:p-8 md:p-10 rounded-2xl flex flex-col gap-6 sm:gap-8 shadow-xl relative z-10">
         <div className="flex flex-col items-center text-center gap-2">
           <div className="flex items-center gap-1.5 px-3 py-1 rounded-full brand-badge text-[10px] font-bold uppercase tracking-wider">
             <Sparkles className="w-3.5 h-3.5 text-brand" />

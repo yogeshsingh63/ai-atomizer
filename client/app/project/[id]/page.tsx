@@ -13,6 +13,7 @@ import { TextGenerateEffect } from "@/components/ui/text-generate-effect";
 import { ModelSelector } from "@/components/model-selector";
 import { BackgroundBeams } from "@/components/ui/background-beams";
 import { TwitterPreview, LinkedInPreview, BlogPreview } from "@/components/post-preview";
+import { motion, AnimatePresence } from "framer-motion";
 import { 
   Project, GeneratedAsset, Highlight, 
   getProject, getAssets, getHighlights, regenerateAsset 
@@ -271,7 +272,7 @@ export default function ProjectDashboardPage() {
   ];
 
   return (
-    <div className="flex flex-col min-h-screen bg-neutral-950 p-6 md:p-10 relative overflow-x-hidden">
+    <div className="flex flex-col min-h-screen bg-neutral-950 p-4 sm:p-6 md:p-10 relative overflow-x-hidden">
       {/* Grid Pattern */}
       <BackgroundBeams />
 
@@ -279,7 +280,7 @@ export default function ProjectDashboardPage() {
       <div className="max-w-7xl mx-auto w-full flex flex-col gap-6 mb-10 relative z-10">
         <button
           onClick={() => router.push("/")}
-          className="flex items-center gap-2 text-xs font-semibold text-neutral-500 hover:text-brand transition-all w-fit cursor-pointer group"
+          className="flex items-center gap-2 text-xs font-semibold text-neutral-500 hover:text-brand transition-all w-fit cursor-pointer group active:scale-95 duration-150"
         >
           <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
           Back to Home
@@ -292,7 +293,7 @@ export default function ProjectDashboardPage() {
             </h1>
             <div className="flex flex-wrap items-center gap-x-2 gap-y-2 mt-1">
               <span className="text-[10px] text-neutral-550 uppercase font-semibold">Source Ref:</span>
-              <span className="text-xs text-neutral-300 font-mono bg-[#121215] border border-neutral-850 px-2 py-0.5 rounded-lg truncate max-w-xs md:max-w-md">{project?.source_ref}</span>
+              <span className="text-xs text-neutral-300 font-mono bg-[#121215] border border-neutral-850 px-2 py-0.5 rounded-lg inline-block truncate max-w-[140px] sm:max-w-xs md:max-w-md align-bottom">{project?.source_ref}</span>
               <span className="text-neutral-800">•</span>
               
               <span className="text-[10px] text-neutral-550 uppercase font-semibold">Input:</span>
@@ -338,11 +339,23 @@ export default function ProjectDashboardPage() {
       </div>
 
       {/* Drawer Overlay for single asset details */}
-      {selectedAsset && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs p-4 sm:p-6" onClick={() => setSelectedAsset(null)}>
-          <div 
-            className="w-full max-w-2xl h-full max-h-[85vh] bg-[#121215] border border-neutral-900 rounded-2xl shadow-2xl flex flex-col overflow-hidden relative border-brand-border/20"
-            onClick={(e) => e.stopPropagation()}
+      <AnimatePresence>
+        {selectedAsset && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs p-4 sm:p-6"
+            onClick={() => setSelectedAsset(null)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 12 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 12 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
+              className="w-full max-w-2xl h-full max-h-[85vh] bg-[#121215] border border-neutral-900 rounded-2xl shadow-2xl flex flex-col overflow-hidden relative border-brand-border/20"
+              onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
             <div className="p-4 sm:p-6 border-b border-neutral-850 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-neutral-950/10">
@@ -547,9 +560,10 @@ export default function ProjectDashboardPage() {
                 </div>
               )}
             </div>
-          </div>
-        </div>
-      )}
+          </motion.div>
+        </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

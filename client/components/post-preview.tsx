@@ -15,6 +15,7 @@ interface PreviewProps {
   authorHandle?: string;
   avatarUrl?: string;
   coverUrl?: string;
+  actions?: React.ReactNode;
 }
 
 // Inline content formatter for rich posts (bolds, hashtags, mentions)
@@ -62,7 +63,8 @@ export const TwitterPreview = ({
   content, 
   authorName = "Yogesh", 
   authorHandle = "yogesh_rajawat", 
-  avatarUrl = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=100&auto=format&fit=crop" 
+  avatarUrl = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=100&auto=format&fit=crop",
+  actions
 }: PreviewProps) => {
   
   // Parse thread: split by tweets (1/, 2/, etc. or standard tweet numbering)
@@ -84,7 +86,10 @@ export const TwitterPreview = ({
     <div className="flex flex-col w-full max-w-lg mx-auto bg-[#000000] border border-[#2f3336] rounded-2xl overflow-hidden font-sans text-[15px] text-[#e7e9ea] text-left">
       <div className="px-4 py-3 border-b border-[#2f3336] bg-[#0c1017]/10 flex items-center justify-between">
         <h4 className="text-[11px] font-bold text-neutral-400 tracking-widest uppercase">Post Preview • X / Twitter</h4>
-        <div className="w-2 h-2 rounded-full bg-[#1d9bf0]" />
+        <div className="flex items-center gap-2">
+          {actions}
+          <div className="w-2 h-2 rounded-full bg-[#1d9bf0]" />
+        </div>
       </div>
       
       <div className="flex flex-col p-4">
@@ -129,44 +134,44 @@ export const TwitterPreview = ({
               </div>
 
               {/* Action Bar */}
-              <div className="flex items-center justify-between text-[#71767b] max-w-md mt-4 pr-1 sm:pr-4 gap-1">
+              <div className="flex items-center justify-between text-[#71767b] max-w-md mt-4 pr-1 sm:pr-4 gap-0.5 sm:gap-1.5">
                 <button className="flex items-center gap-0.5 sm:gap-1.5 hover:text-[#1d9bf0] transition-colors group/btn cursor-pointer">
-                  <span className="p-1.5 sm:p-2 rounded-full group-hover/btn:bg-[#1d9bf0]/10">
-                    <MessageCircle className="w-[15px] h-[15px] sm:w-[17px] sm:h-[17px]" />
+                  <span className="p-1 sm:p-2 rounded-full group-hover/btn:bg-[#1d9bf0]/10">
+                    <MessageCircle className="w-[14px] h-[14px] sm:w-[17px] sm:h-[17px]" />
                   </span>
                   <span className="text-[10px] sm:text-[11.5px] font-medium">{Math.floor(Math.random() * 15) + 3}</span>
                 </button>
                 
                 <button className="flex items-center gap-0.5 sm:gap-1.5 hover:text-[#00ba7c] transition-colors group/btn cursor-pointer">
-                  <span className="p-1.5 sm:p-2 rounded-full group-hover/btn:bg-[#00ba7c]/10">
-                    <Repeat2 className="w-[15px] h-[15px] sm:w-[17px] sm:h-[17px]" />
+                  <span className="p-1 sm:p-2 rounded-full group-hover/btn:bg-[#00ba7c]/10">
+                    <Repeat2 className="w-[14px] h-[14px] sm:w-[17px] sm:h-[17px]" />
                   </span>
                   <span className="text-[10px] sm:text-[11.5px] font-medium">{Math.floor(Math.random() * 10) + 1}</span>
                 </button>
                 
                 <button className="flex items-center gap-0.5 sm:gap-1.5 hover:text-[#f91880] transition-colors group/btn cursor-pointer">
-                  <span className="p-1.5 sm:p-2 rounded-full group-hover/btn:bg-[#f91880]/10">
-                    <Heart className="w-[15px] h-[15px] sm:w-[17px] sm:h-[17px]" />
+                  <span className="p-1 sm:p-2 rounded-full group-hover/btn:bg-[#f91880]/10">
+                    <Heart className="w-[14px] h-[14px] sm:w-[17px] sm:h-[17px]" />
                   </span>
                   <span className="text-[10px] sm:text-[11.5px] font-medium">{Math.floor(Math.random() * 80) + 12}</span>
                 </button>
                 
-                <button className="flex items-center gap-0.5 sm:gap-1.5 hover:text-[#1d9bf0] transition-colors group/btn cursor-pointer">
-                  <span className="p-1.5 sm:p-2 rounded-full group-hover/btn:bg-[#1d9bf0]/10">
-                    <BarChart2 className="w-[15px] h-[15px] sm:w-[17px] sm:h-[17px]" />
+                <button className="hidden sm:flex items-center gap-0.5 sm:gap-1.5 hover:text-[#1d9bf0] transition-colors group/btn cursor-pointer">
+                  <span className="p-1 sm:p-2 rounded-full group-hover/btn:bg-[#1d9bf0]/10">
+                    <BarChart2 className="w-[14px] h-[14px] sm:w-[17px] sm:h-[17px]" />
                   </span>
                   <span className="text-[10px] sm:text-[11.5px] font-medium">{Math.floor(Math.random() * 5) + 1}.{Math.floor(Math.random() * 9)}K</span>
                 </button>
 
-                <button className="hover:text-[#1d9bf0] transition-colors group/btn cursor-pointer">
-                  <span className="p-1.5 sm:p-2 rounded-full group-hover/btn:bg-[#1d9bf0]/10">
-                    <Bookmark className="w-[15px] h-[15px] sm:w-[17px] sm:h-[17px]" />
+                <button className="hidden sm:flex hover:text-[#1d9bf0] transition-colors group/btn cursor-pointer">
+                  <span className="p-1 sm:p-2 rounded-full group-hover/btn:bg-[#1d9bf0]/10">
+                    <Bookmark className="w-[14px] h-[14px] sm:w-[17px] sm:h-[17px]" />
                   </span>
                 </button>
 
                 <button className="hover:text-[#1d9bf0] transition-colors group/btn cursor-pointer">
-                  <span className="p-1.5 sm:p-2 rounded-full group-hover/btn:bg-[#1d9bf0]/10">
-                    <Share2 className="w-[15px] h-[15px] sm:w-[17px] sm:h-[17px]" />
+                  <span className="p-1 sm:p-2 rounded-full group-hover/btn:bg-[#1d9bf0]/10">
+                    <Share2 className="w-[14px] h-[14px] sm:w-[17px] sm:h-[17px]" />
                   </span>
                 </button>
               </div>
@@ -184,13 +189,17 @@ export const LinkedInPreview = ({
   content, 
   authorName = "Yogesh", 
   authorHandle = "AI Content Strategist", 
-  avatarUrl = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=100&auto=format&fit=crop" 
+  avatarUrl = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=100&auto=format&fit=crop",
+  actions
 }: PreviewProps) => {
   return (
     <div className="flex flex-col w-full max-w-lg mx-auto bg-[#18181b] border border-[#27272a] rounded-2xl overflow-hidden font-sans text-[14px] text-neutral-300 shadow-md text-left">
       <div className="px-4 py-3 border-b border-[#27272a] bg-[#0c1017]/10 flex items-center justify-between">
         <h4 className="text-[11px] font-bold text-neutral-400 tracking-widest uppercase">Post Preview • LinkedIn</h4>
-        <div className="w-2.5 h-2.5 rounded bg-[#0a66c2]" />
+        <div className="flex items-center gap-2">
+          {actions}
+          <div className="w-2.5 h-2.5 rounded bg-[#0a66c2]" />
+        </div>
       </div>
 
       <div className="p-4 flex flex-col gap-4">
@@ -203,15 +212,15 @@ export const LinkedInPreview = ({
           />
           <div className="flex flex-col min-w-0">
             <div className="flex items-center gap-1 flex-wrap">
-              <span className="font-bold text-neutral-100 hover:text-brand hover:underline cursor-pointer text-[14.5px]">{authorName}</span>
-              <span className="text-[11px] text-neutral-500 font-semibold">• 1st</span>
+              <span className="font-bold text-neutral-100 hover:text-brand hover:underline cursor-pointer text-[14.5px] truncate">{authorName}</span>
+              <span className="text-[11px] text-neutral-500 font-semibold shrink-0">• 1st</span>
             </div>
             <span className="text-neutral-400 text-xs truncate leading-normal">{authorHandle}</span>
-            <span className="text-neutral-500 text-[10px] flex items-center gap-1 mt-0.5">
+            <span className="text-neutral-500 text-[10px] flex items-center gap-1 mt-0.5 shrink-0">
               2h • <Globe className="w-3.5 h-3.5" />
             </span>
           </div>
-          <button className="ml-auto text-brand hover:text-brand/80 text-[12px] font-bold py-1.5 px-3.5 rounded-full hover:bg-brand-muted border border-brand-border/40 transition-colors cursor-pointer">
+          <button className="ml-auto text-brand hover:text-brand/80 text-[11px] sm:text-[12px] font-bold py-1 sm:py-1.5 px-2.5 sm:px-3.5 rounded-full hover:bg-brand-muted border border-brand-border/40 transition-colors cursor-pointer shrink-0">
             + Follow
           </button>
         </div>
@@ -226,19 +235,19 @@ export const LinkedInPreview = ({
       <div className="border-t border-[#27272a] p-1 bg-[#121214] flex items-center justify-around text-neutral-400 text-[10px] sm:text-xs font-bold">
         <button className="flex items-center gap-1.5 py-2 px-1 sm:py-3 sm:px-3 hover:bg-neutral-800/60 rounded-lg transition-colors cursor-pointer flex-1 justify-center">
           <ThumbsUp className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-neutral-450" />
-          Like
+          <span className="hidden sm:inline">Like</span>
         </button>
         <button className="flex items-center gap-1.5 py-2 px-1 sm:py-3 sm:px-3 hover:bg-neutral-800/60 rounded-lg transition-colors cursor-pointer flex-1 justify-center">
           <MessageSquare className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-neutral-450" />
-          Comment
+          <span className="hidden sm:inline">Comment</span>
         </button>
         <button className="flex items-center gap-1.5 py-2 px-1 sm:py-3 sm:px-3 hover:bg-neutral-800/60 rounded-lg transition-colors cursor-pointer flex-1 justify-center">
           <Repeat2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-neutral-450" />
-          Repost
+          <span className="hidden sm:inline">Repost</span>
         </button>
         <button className="flex items-center gap-1.5 py-2 px-1 sm:py-3 sm:px-3 hover:bg-neutral-800/60 rounded-lg transition-colors cursor-pointer flex-1 justify-center">
           <Send className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-neutral-450" />
-          Send
+          <span className="hidden sm:inline">Send</span>
         </button>
       </div>
     </div>
@@ -250,7 +259,8 @@ export const BlogPreview = ({
   content, 
   title = "Untitled Article",
   authorName = "Yogesh", 
-  coverUrl = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=600&auto=format&fit=crop" 
+  coverUrl = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=600&auto=format&fit=crop",
+  actions
 }: PreviewProps) => {
   
   const formatMarkdown = (text: string) => {
@@ -300,7 +310,10 @@ export const BlogPreview = ({
     <div className="flex flex-col w-full max-w-2xl mx-auto bg-neutral-950 border border-neutral-850 rounded-2xl overflow-hidden shadow-lg text-left">
       <div className="px-4 py-3 border-b border-neutral-850 bg-neutral-900/10 flex items-center justify-between">
         <h4 className="text-[11px] font-bold text-neutral-400 tracking-widest uppercase">Post Preview • Blog Article</h4>
-        <div className="w-2.5 h-2.5 rounded bg-brand" />
+        <div className="flex items-center gap-2">
+          {actions}
+          <div className="w-2.5 h-2.5 rounded bg-brand" />
+        </div>
       </div>
 
       {coverUrl && (
@@ -314,7 +327,7 @@ export const BlogPreview = ({
       )}
 
       <div className="p-6 md:p-8 flex flex-col font-serif">
-        <div className="flex items-center gap-3 text-[10px] text-neutral-500 border-b border-neutral-900 pb-4 mb-4 font-sans">
+        <div className="flex items-center flex-wrap gap-x-3 gap-y-1 text-[10px] text-neutral-500 border-b border-neutral-900 pb-4 mb-4 font-sans">
           <span className="font-semibold text-neutral-400">{authorName}</span>
           <span>•</span>
           <span>5 min read</span>

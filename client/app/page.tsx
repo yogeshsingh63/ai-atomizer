@@ -8,6 +8,7 @@ import {
   Play, Clock, Clipboard, CheckCircle, ExternalLink,
   Youtube, Twitter, Linkedin, FileText, ListCollapse
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { HoverBorderGradient } from "@/components/ui/hover-border-gradient";
 import { BackgroundBeams } from "@/components/ui/background-beams";
 import { LinkedInPreview, TwitterPreview, BlogPreview } from "@/components/post-preview";
@@ -91,11 +92,24 @@ export default function LandingPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const renderCopyButton = (text: string, titleStr: string) => (
+    <button 
+      onClick={(e) => {
+        e.stopPropagation();
+        handleCopy(text);
+      }}
+      className="p-1 hover:bg-neutral-800 rounded-md text-neutral-400 hover:text-neutral-200 transition-all cursor-pointer flex items-center justify-center active:scale-[0.85] duration-150 shrink-0"
+      title={titleStr}
+    >
+      {copied ? <CheckCircle className="w-3.5 h-3.5 text-emerald-500" /> : <Clipboard className="w-3.5 h-3.5" />}
+    </button>
+  );
+
   const getActiveTabContent = () => {
     switch (activeTab) {
       case "input":
         return (
-          <div className="flex flex-col gap-4 p-5 bg-[#0e0e11] border border-neutral-900 rounded-xl max-w-lg mx-auto">
+          <div className="flex flex-col gap-4 p-4 sm:p-5 bg-[#0e0e11] border border-neutral-900 rounded-xl w-full max-w-full sm:max-w-lg mx-auto">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-red-950/40 border border-red-900/30 flex items-center justify-center text-red-500">
                 <Youtube className="w-5 h-5" />
@@ -120,7 +134,7 @@ export default function LandingPage() {
                 {MOCK_SOURCE_VIDEO.duration}
               </div>
             </div>
-
+ 
             <div className="flex flex-col gap-1.5 mt-2">
               <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Transcript Snippet (Auto-Extracted)</span>
               <div className="p-3 bg-neutral-950 border border-neutral-900 rounded-lg text-[11px] font-mono text-neutral-400 leading-relaxed max-h-36 overflow-y-auto no-scrollbar">
@@ -133,47 +147,26 @@ export default function LandingPage() {
         );
       case "linkedin":
         return (
-          <div className="relative">
-            <button 
-              onClick={() => handleCopy(MOCK_LINKEDIN)}
-              className="absolute top-14 right-3 z-10 p-2 bg-neutral-900/90 hover:bg-neutral-800 border border-neutral-800 rounded-lg text-neutral-400 hover:text-neutral-200 transition-colors"
-              title="Copy to clipboard"
-            >
-              {copied ? <CheckCircle className="w-3.5 h-3.5 text-emerald-500" /> : <Clipboard className="w-3.5 h-3.5" />}
-            </button>
-            <LinkedInPreview content={MOCK_LINKEDIN} />
+          <div className="w-full max-w-full overflow-hidden">
+            <LinkedInPreview content={MOCK_LINKEDIN} actions={renderCopyButton(MOCK_LINKEDIN, "Copy text")} />
           </div>
         );
       case "twitter":
         return (
-          <div className="relative">
-            <button 
-              onClick={() => handleCopy(MOCK_TWITTER)}
-              className="absolute top-14 right-3 z-10 p-2 bg-neutral-900/90 hover:bg-neutral-800 border border-neutral-800 rounded-lg text-neutral-400 hover:text-neutral-200 transition-colors"
-              title="Copy thread to clipboard"
-            >
-              {copied ? <CheckCircle className="w-3.5 h-3.5 text-emerald-500" /> : <Clipboard className="w-3.5 h-3.5" />}
-            </button>
-            <TwitterPreview content={MOCK_TWITTER} />
+          <div className="w-full max-w-full overflow-hidden">
+            <TwitterPreview content={MOCK_TWITTER} actions={renderCopyButton(MOCK_TWITTER, "Copy thread")} />
           </div>
         );
       case "blog":
         return (
-          <div className="relative max-h-[480px] overflow-y-auto no-scrollbar border border-neutral-850 rounded-2xl">
-            <button 
-              onClick={() => handleCopy(MOCK_BLOG)}
-              className="absolute top-14 right-3 z-10 p-2 bg-neutral-900/90 hover:bg-neutral-800 border border-neutral-800 rounded-lg text-neutral-400 hover:text-neutral-200 transition-colors"
-              title="Copy blog text"
-            >
-              {copied ? <CheckCircle className="w-3.5 h-3.5 text-emerald-500" /> : <Clipboard className="w-3.5 h-3.5" />}
-            </button>
-            <BlogPreview content={MOCK_BLOG} title="Building the World's Fastest Storage Engine" />
+          <div className="relative max-h-[480px] overflow-y-auto no-scrollbar border border-neutral-850 rounded-2xl w-full max-w-full overflow-hidden">
+            <BlogPreview content={MOCK_BLOG} title="Building the World's Fastest Storage Engine" actions={renderCopyButton(MOCK_BLOG, "Copy blog article")} />
           </div>
         );
       case "highlights":
         return (
-          <div className="flex flex-col gap-3 max-w-lg mx-auto bg-neutral-950 border border-neutral-850 p-5 rounded-2xl">
-            <div className="flex items-center justify-between border-b border-neutral-900 pb-3 mb-2">
+          <div className="flex flex-col gap-3 w-full max-w-full sm:max-w-lg mx-auto bg-neutral-950 border border-neutral-850 p-4 sm:p-5 rounded-2xl overflow-hidden">
+            <div className="flex items-center justify-between border-b border-neutral-900 pb-3 mb-2 flex-wrap gap-2">
               <span className="text-xs font-bold text-neutral-300">Extracted Highlights & Short Clips</span>
               <span className="text-[10px] text-neutral-500">{MOCK_HIGHLIGHTS.length} clips found</span>
             </div>
@@ -185,7 +178,7 @@ export default function LandingPage() {
                     <Clock className="w-4 h-4" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between flex-wrap gap-1">
+                    <div className="flex items-center justify-between flex-wrap gap-2">
                       <span className="text-xs font-bold text-neutral-200 group-hover:text-brand transition-colors truncate">{item.title}</span>
                       <span className="text-[10px] font-mono bg-neutral-900 text-neutral-450 border border-neutral-850 px-1.5 py-0.5 rounded shrink-0">
                         {item.timestamp}
@@ -230,7 +223,7 @@ export default function LandingPage() {
       <BackgroundBeams />
 
       {/* Navigation Bar */}
-      <header className="w-full max-w-7xl mx-auto px-6 py-5 flex items-center justify-between z-10 border-b border-neutral-900/80 backdrop-blur-md sticky top-0">
+      <header className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-5 flex items-center justify-between z-10 border-b border-neutral-900/80 backdrop-blur-md sticky top-0">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg bg-neutral-900 border border-neutral-800 flex items-center justify-center">
             <Sparkles className="w-4 h-4 text-brand" />
@@ -241,28 +234,28 @@ export default function LandingPage() {
         </div>
         <Link 
           href="/new" 
-          className="text-xs font-semibold text-neutral-300 hover:text-neutral-150 bg-neutral-900 hover:bg-neutral-850 border border-neutral-800 px-4 py-2 rounded-lg transition-all duration-200"
+          className="text-xs font-semibold text-neutral-300 hover:text-neutral-150 bg-neutral-900 hover:bg-neutral-850 border border-neutral-800 px-4 py-2 rounded-lg transition-all duration-200 active:scale-95"
         >
           Launch Engine
         </Link>
       </header>
 
       {/* Hero Section */}
-      <section className="flex flex-col items-center text-center justify-center max-w-5xl mx-auto px-6 pt-20 pb-16 relative z-10 flex-1">
+      <section className="flex flex-col items-center text-center justify-center max-w-5xl mx-auto px-4 sm:px-6 pt-14 sm:pt-20 pb-12 sm:pb-16 relative z-10 flex-1">
         <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-muted border border-brand-border text-[10px] font-bold text-brand mb-6 uppercase tracking-wider">
           <Flame className="w-3.5 h-3.5" />
           Premium Content Repurposing Pipeline
         </div>
 
-        <h1 className="text-4xl font-extrabold sm:text-6xl tracking-tight leading-[1.12] text-neutral-100 max-w-4xl">
+        <h1 className="text-3xl font-extrabold sm:text-6xl tracking-tight leading-[1.12] text-neutral-100 max-w-4xl">
           Convert Long Videos & Audio Into <span className="underline decoration-brand/60 decoration-wavy underline-offset-8 text-brand">Structured Social Assets</span>
         </h1>
 
-        <p className="text-xs sm:text-sm text-neutral-400 max-w-2xl mt-6 leading-relaxed">
+        <p className="text-xs sm:text-sm text-neutral-400 max-w-2xl mt-5 sm:mt-6 leading-relaxed">
           Unlock maximum distribution. Supply YouTube links, raw audio/video uploads, or text logs. The system structures transcribing, extracts highlights, writes targeted network updates, and maps post previews.
         </p>
 
-        <div className="flex flex-col sm:flex-row items-center gap-3 mt-10 w-full justify-center">
+        <div className="flex flex-col sm:flex-row items-center gap-3 mt-8 sm:mt-10 w-full max-w-sm sm:max-w-none mx-auto justify-center">
           <HoverBorderGradient
             as="button"
             onClick={() => router.push("/new")}
@@ -275,7 +268,7 @@ export default function LandingPage() {
           
           <a
             href="#simulator"
-            className="text-xs font-semibold text-neutral-450 hover:text-neutral-200 py-3 px-6 rounded-lg border border-neutral-850 bg-neutral-900/40 hover:bg-neutral-900/80 transition-colors w-full sm:w-auto"
+            className="text-xs font-semibold text-neutral-450 hover:text-neutral-200 py-3 px-6 rounded-lg border border-neutral-850 bg-neutral-900/40 hover:bg-neutral-900/80 transition-colors w-full sm:w-auto text-center active:scale-95 duration-150"
           >
             See interactive preview
           </a>
@@ -361,10 +354,19 @@ export default function LandingPage() {
               </div>
 
               {/* Dynamic Tab Pane Wrapper */}
-              <div className="w-full min-h-[300px] flex items-center justify-center">
-                <div className="w-full transition-all duration-300">
-                  {getActiveTabContent()}
-                </div>
+              <div className="w-full min-h-[300px] flex items-center justify-center overflow-hidden">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={activeTab}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.25, ease: "easeInOut" }}
+                    className="w-full max-w-full"
+                  >
+                    {getActiveTabContent()}
+                  </motion.div>
+                </AnimatePresence>
               </div>
 
             </div>
@@ -373,7 +375,7 @@ export default function LandingPage() {
       </section>
 
       {/* Features Grid */}
-      <section id="features" className="max-w-7xl mx-auto px-6 py-24 border-t border-neutral-900 relative z-10 w-full">
+      <section id="features" className="max-w-7xl mx-auto px-4 sm:px-6 py-16 sm:py-24 border-t border-neutral-900 relative z-10 w-full">
         <div className="flex flex-col items-center text-center gap-2 mb-16">
           <span className="text-[10px] uppercase font-bold text-brand tracking-widest brand-badge px-2.5 py-1 rounded-full">Features System</span>
           <h2 className="text-xl font-extrabold text-neutral-100 sm:text-3xl tracking-tight mt-3">
@@ -401,15 +403,15 @@ export default function LandingPage() {
       </section>
 
       {/* Action Banner */}
-      <section className="w-full max-w-4xl mx-auto px-6 pb-24 relative z-10 text-center">
-        <div className="bg-[#0e0e11] border border-neutral-900/60 border-brand-border/20 p-8 sm:p-12 rounded-2xl flex flex-col items-center gap-6">
+      <section className="w-full max-w-4xl mx-auto px-4 sm:px-6 pb-16 sm:pb-24 relative z-10 text-center">
+        <div className="bg-[#0e0e11] border border-neutral-900/60 border-brand-border/20 p-6 sm:p-12 rounded-2xl flex flex-col items-center gap-5 sm:gap-6">
           <h3 className="text-xl sm:text-2xl font-extrabold text-neutral-150">Ready to distribute your voice?</h3>
           <p className="text-xs text-neutral-400 max-w-sm leading-relaxed">
             Stop manually scripting separate updates. Transform your first transcript in less than 90 seconds.
           </p>
           <button 
             onClick={() => router.push("/new")}
-            className="text-xs font-bold text-neutral-950 bg-neutral-100 hover:bg-white px-6 py-3 rounded-lg flex items-center gap-2 transition-all cursor-pointer"
+            className="text-xs font-bold text-neutral-950 bg-neutral-100 hover:bg-white px-6 py-3 rounded-lg flex items-center gap-2 transition-all cursor-pointer active:scale-95 duration-150"
           >
             Create Your First Project
             <ArrowRight className="w-3.5 h-3.5" />
