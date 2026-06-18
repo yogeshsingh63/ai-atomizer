@@ -15,6 +15,36 @@ from app.services.imagegen import generate_image
 
 logger = logging.getLogger(__name__)
 
+def extract_and_parse_json(text: str) -> Any:
+    """Safely extracts and parses a JSON object or list from a potentially wrapped LLM response."""
+    text = text.strip()
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        pass
+
+    # Try extracting JSON object substring
+    first_brace = text.find("{")
+    last_brace = text.rfind("}")
+    if first_brace != -1 and last_brace != -1 and last_brace > first_brace:
+        json_str = text[first_brace:last_brace + 1]
+        try:
+            return json.loads(json_str)
+        except json.JSONDecodeError:
+            pass
+
+    # Try extracting JSON list substring
+    first_bracket = text.find("[")
+    last_bracket = text.rfind("]")
+    if first_bracket != -1 and last_bracket != -1 and last_bracket > first_bracket:
+        json_str = text[first_bracket:last_bracket + 1]
+        try:
+            return json.loads(json_str)
+        except json.JSONDecodeError:
+            pass
+
+    raise json.JSONDecodeError("Could not extract or parse valid JSON from text.", text, 0)
+
 # In-memory queues for SSE events broadcasting
 # Maps project_id -> list of subscriber asyncio.Queues
 project_queues: Dict[int, List[asyncio.Queue]] = {}
@@ -192,7 +222,7 @@ async def run_pipeline(project_id: int):
             
             # Parse highlights JSON safely with retry
             try:
-                highlights_data = json.loads(res_content)
+                highlights_data = extract_and_parse_json(res_content)
             except json.JSONDecodeError:
                 # Simple correction retry on decode fail
                 logger.warning("Failed to decode highlights JSON. Retrying correction prompt...")
@@ -208,7 +238,7 @@ async def run_pipeline(project_id: int):
                     pinned_model=project.default_pinned_model,
                     json_mode=True
                 )
-                highlights_data = json.loads(res_content)
+                highlights_data = extract_and_parse_json(res_content)
 
             # Store Highlights
             highlights_list = []

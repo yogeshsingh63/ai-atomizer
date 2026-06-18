@@ -161,8 +161,12 @@ async def chat_completion(
                 contents.append(f"{m['role'].capitalize()}: {m['content']}")
             
             # Request generation
+            generation_config = None
+            if json_mode:
+                generation_config = {"response_mime_type": "application/json"}
+
             model = genai.GenerativeModel(model_name)
-            response = model.generate_content("\n\n".join(contents))
+            response = model.generate_content("\n\n".join(contents), generation_config=generation_config)
             if response.text:
                 logger.info(f"Gemini fallback success. Model: {model_name}")
                 return response.text, f"gemini/{model_name}"
