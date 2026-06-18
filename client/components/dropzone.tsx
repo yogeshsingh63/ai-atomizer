@@ -69,9 +69,9 @@ export const Dropzone = ({ onFileSelect, selectedFile, className }: DropzoneProp
     if (!selectedFile) return null;
     const isVideo = selectedFile.type.startsWith("video/") || selectedFile.name.endsWith(".mp4");
     return isVideo ? (
-      <FileVideo className="w-8 h-8 text-violet-400" />
+      <FileVideo className="w-8 h-8 text-brand" />
     ) : (
-      <FileAudio className="w-8 h-8 text-violet-400" />
+      <FileAudio className="w-8 h-8 text-brand" />
     );
   };
 
@@ -95,11 +95,11 @@ export const Dropzone = ({ onFileSelect, selectedFile, className }: DropzoneProp
           className={cn(
             "w-full h-48 rounded-2xl border-2 border-dashed flex flex-col items-center justify-center gap-3 p-6 text-center cursor-pointer transition-all duration-300",
             isDragActive
-              ? "border-violet-500 bg-violet-600/5 scale-[0.99]"
+              ? "border-brand bg-brand-muted/25 scale-[0.99]"
               : "border-neutral-800 bg-neutral-900/10 hover:border-neutral-700 hover:bg-neutral-900/20"
           )}
         >
-          <div className="p-3 rounded-full bg-neutral-900/80 border border-neutral-800/80 group-hover:scale-110 transition-transform duration-300">
+          <div className="p-3 rounded-full bg-neutral-900/80 border border-neutral-800/80 group-hover:scale-105 transition-transform duration-300">
             <UploadCloud className="w-6 h-6 text-neutral-400" />
           </div>
           <div className="flex flex-col gap-1">

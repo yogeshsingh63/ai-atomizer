@@ -42,6 +42,7 @@ export const Tabs = ({
         {propTabs.map((tab, idx) => (
           <button
             key={tab.value}
+            type="button"
             onClick={() => moveSelectedTab(idx)}
             onMouseEnter={() => setHovering(true)}
             onMouseLeave={() => setHovering(false)}

@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Youtube, Upload, FileText, ArrowRight, Sparkles } from "lucide-react";
+import { Youtube, Upload, FileText, ArrowRight, Sparkles, AlertCircle } from "lucide-react";
 import { Tabs } from "@/components/ui/tabs";
 import { HoverBorderGradient } from "@/components/ui/hover-border-gradient";
 import { Dropzone } from "@/components/dropzone";
@@ -16,6 +16,7 @@ export default function NewProjectPage() {
   const [title, setTitle] = useState("");
   const [modelMode, setModelMode] = useState<"auto" | "pinned">("auto");
   const [pinnedModel, setPinnedModel] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   // Input fields
   const [youtubeUrl, setYoutubeUrl] = useState("");
@@ -25,6 +26,7 @@ export default function NewProjectPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError(null);
 
     try {
       let sourceType: SourceType = "article_text";
@@ -40,7 +42,7 @@ export default function NewProjectPage() {
         sourceType = "article_text";
         sourceRef = articleText;
       } else {
-        alert("Please provide a source input.");
+        setError("Please provide a YouTube URL, upload a file, or paste text content.");
         setLoading(false);
         return;
       }
@@ -58,7 +60,7 @@ export default function NewProjectPage() {
       router.push(`/project/${res.project_id}/processing`);
     } catch (e) {
       console.error(e);
-      alert("Failed to create project. Check server console.");
+      setError("Failed to create project. Please verify the backend services are running.");
       setLoading(false);
     }
   };
@@ -78,6 +80,7 @@ export default function NewProjectPage() {
               setYoutubeUrl(e.target.value);
               setSelectedFile(null);
               setArticleText("");
+              setError(null);
             }}
             placeholder="https://www.youtube.com/watch?v=..."
             className="w-full bg-[#121215] border border-[#1f1f23] focus:border-brand-border focus:ring-1 focus:ring-brand/30 rounded-lg px-4 py-3 text-xs text-neutral-200 outline-none transition-all duration-200"
@@ -96,6 +99,7 @@ export default function NewProjectPage() {
             setSelectedFile(file);
             setYoutubeUrl("");
             setArticleText("");
+            setError(null);
           }}
           className="mt-2"
         />
@@ -114,6 +118,7 @@ export default function NewProjectPage() {
               setArticleText(e.target.value);
               setYoutubeUrl("");
               setSelectedFile(null);
+              setError(null);
             }}
             placeholder="Paste your long-form article, lecture transcript, or notes here..."
             rows={5}
@@ -131,8 +136,8 @@ export default function NewProjectPage() {
 
       <div className="w-full max-w-lg bg-[#121215] border border-[#1f1f23] p-8 sm:p-10 rounded-2xl flex flex-col gap-8 shadow-xl relative z-10">
         <div className="flex flex-col items-center text-center gap-2">
-          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-neutral-900 border border-neutral-800 text-[10px] font-semibold text-neutral-350 uppercase tracking-wider">
-            <Sparkles className="w-3.5 h-3.5" />
+          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full brand-badge text-[10px] font-bold uppercase tracking-wider">
+            <Sparkles className="w-3.5 h-3.5 text-brand" />
             Repurposing Engine
           </div>
           <h1 className="text-2xl font-extrabold tracking-tight text-neutral-100 mt-2">
@@ -142,6 +147,13 @@ export default function NewProjectPage() {
             Submit your source file or transcript to produce blog posts, tweet threads, and LinkedIn updates.
           </p>
         </div>
+
+        {error && (
+          <div className="w-full p-3.5 bg-red-950/20 border border-red-900/30 rounded-xl text-red-400 text-xs font-semibold flex items-center gap-2 justify-center transition-all duration-300 animate-pulse">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            <span>{error}</span>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-6">
           <div className="flex flex-col gap-2">
