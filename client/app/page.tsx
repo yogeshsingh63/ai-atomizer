@@ -109,15 +109,15 @@ export default function LandingPage() {
     switch (activeTab) {
       case "input":
         return (
-          <div className="flex flex-col gap-4 p-4 sm:p-5 bg-[#0e0e11] border border-neutral-900 rounded-xl w-full max-w-full sm:max-w-lg mx-auto">
+          <div className="flex flex-col gap-4 p-4 sm:p-5 bg-[#0e0e11] border border-neutral-900 rounded-xl w-full max-w-full sm:max-w-lg mx-auto min-w-0">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-red-950/40 border border-red-900/30 flex items-center justify-center text-red-500">
                 <Youtube className="w-5 h-5" />
               </div>
               <div className="flex flex-col min-w-0">
                 <span className="text-xs text-neutral-400 font-semibold uppercase tracking-wider">Source YouTube Video</span>
-                <a href={MOCK_SOURCE_VIDEO.url} target="_blank" rel="noreferrer" className="text-sm font-bold text-neutral-200 hover:text-brand flex items-center gap-1 truncate">
-                  {MOCK_SOURCE_VIDEO.title}
+                <a href={MOCK_SOURCE_VIDEO.url} target="_blank" rel="noreferrer" className="text-sm font-bold text-neutral-200 hover:text-brand flex items-center gap-1 min-w-0 w-full">
+                  <span className="truncate">{MOCK_SOURCE_VIDEO.title}</span>
                   <ExternalLink className="w-3 h-3 inline shrink-0" />
                 </a>
               </div>
@@ -275,10 +275,10 @@ export default function LandingPage() {
         </div>
 
         {/* Live Simulator Mockup Section */}
-        <div id="simulator" className="w-full max-w-4xl mt-12 sm:mt-20 relative">
-          <div className="border border-neutral-850 rounded-2xl overflow-hidden bg-neutral-900/10 backdrop-blur-md p-1 border-brand-border/40 shadow-xl">
+        <div id="simulator" className="w-full max-w-4xl mt-12 sm:mt-20 relative px-1">
+          <div className="border border-neutral-850 rounded-2xl overflow-hidden bg-neutral-900/10 backdrop-blur-md p-1 border-brand-border/40 shadow-xl w-full max-w-full min-w-0">
             
-            <div className="bg-neutral-950 rounded-xl border border-neutral-900 p-4 sm:p-6 flex flex-col gap-6">
+            <div className="bg-neutral-950 rounded-xl border border-neutral-900 p-4 sm:p-6 flex flex-col gap-6 w-full max-w-full min-w-0">
               
               {/* Window Controls & Simulator Tabs */}
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-neutral-900 pb-4 gap-4">
@@ -354,7 +354,7 @@ export default function LandingPage() {
               </div>
 
               {/* Dynamic Tab Pane Wrapper */}
-              <div className="w-full min-h-[300px] flex items-center justify-center overflow-hidden">
+              <div className="w-full min-h-[300px] flex items-center justify-center overflow-hidden min-w-0">
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={activeTab}
@@ -362,7 +362,7 @@ export default function LandingPage() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -8 }}
                     transition={{ duration: 0.25, ease: "easeInOut" }}
-                    className="w-full max-w-full"
+                    className="w-full max-w-full min-w-0"
                   >
                     {getActiveTabContent()}
                   </motion.div>

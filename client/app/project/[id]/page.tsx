@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { 
   FileText, Twitter, Linkedin, Video, Image as ImageIcon, 
   Copy, Download, RefreshCw, ArrowLeft, Check, Sparkles, Pin, Clock, AlertCircle, Eye, EyeOff,
-  MessageCircle, Repeat2, Heart
+  MessageCircle, Repeat2, Heart, X
 } from "lucide-react";
 import { BentoGrid, BentoGridItem } from "@/components/ui/bento-grid";
 import { Button as MovingBorderButton } from "@/components/ui/moving-border";
@@ -41,6 +41,11 @@ export default function ProjectDashboardPage() {
   const [regenMode, setRegenMode] = useState<"auto" | "pinned">("auto");
   const [regenModel, setRegenModel] = useState<string | null>(null);
   const [regenerating, setRegenerating] = useState(false);
+  const [showRegen, setShowRegen] = useState(false);
+
+  useEffect(() => {
+    setShowRegen(false);
+  }, [selectedAsset]);
 
   useEffect(() => {
     if (!projectId) return;
@@ -346,7 +351,7 @@ export default function ProjectDashboardPage() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs p-4 sm:p-6"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs p-0 sm:p-6"
             onClick={() => setSelectedAsset(null)}
           >
             <motion.div
@@ -354,38 +359,46 @@ export default function ProjectDashboardPage() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 12 }}
               transition={{ duration: 0.25, ease: "easeOut" }}
-              className="w-full max-w-2xl h-full max-h-[90vh] bg-[#121215] border border-neutral-900 rounded-2xl shadow-2xl flex flex-col overflow-hidden relative border-brand-border/20"
+              className="w-full max-w-2xl h-full sm:h-auto sm:max-h-[90vh] bg-[#121215] border-0 sm:border border-neutral-900 rounded-none sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden relative border-brand-border/20"
               onClick={(e) => e.stopPropagation()}
-          >
-            {/* Modal Header */}
-            <div className="p-3 sm:p-6 border-b border-neutral-850 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 bg-neutral-950/10">
-              <div className="flex items-center gap-3">
-                <span className="p-2.5 rounded-xl bg-neutral-950 border border-neutral-850 shrink-0">
-                  {selectedAsset.asset_type === "blog" && <FileText className="w-4 h-4 text-brand" />}
-                  {selectedAsset.asset_type === "thread" && <Twitter className="w-4 h-4 text-[#1d9bf0]" />}
-                  {selectedAsset.asset_type === "linkedin" && <Linkedin className="w-4 h-4 text-[#0a66c2]" />}
-                  {selectedAsset.asset_type === "clip" && <Video className="w-4 h-4 text-brand" />}
-                  {selectedAsset.asset_type === "thumbnail" && <ImageIcon className="w-4 h-4 text-brand" />}
-                </span>
-                <div className="flex flex-col gap-0.5 min-w-0">
-                  <h3 className="text-sm font-bold text-neutral-100 capitalize truncate">
-                    {selectedAsset.asset_type} Output
-                  </h3>
-                  <span className="text-[10px] text-neutral-500 flex items-center gap-1.5 font-medium truncate">
-                    <Sparkles className="w-3 h-3 text-brand shrink-0" />
-                    Model: <span className="text-neutral-455 truncate font-mono">{selectedAsset.model_used.split("/").pop()}</span>
+            >
+              {/* Absolute Close Button */}
+              <button
+                onClick={() => setSelectedAsset(null)}
+                className="absolute top-3 right-3 sm:top-4 sm:right-4 text-neutral-400 hover:text-neutral-200 transition-all cursor-pointer z-50 p-1.5 hover:bg-neutral-900 rounded-lg border border-transparent hover:border-neutral-800"
+                title="Close View"
+              >
+                <X className="w-4 h-4" />
+              </button>
+
+              {/* Modal Header */}
+              <div className="p-3.5 sm:p-4 pr-12 border-b border-neutral-850 flex items-center justify-between gap-4 bg-neutral-950/10">
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className="p-2 sm:p-2.5 rounded-xl bg-neutral-950 border border-neutral-850 shrink-0 hidden sm:flex">
+                    {selectedAsset.asset_type === "blog" && <FileText className="w-4 h-4 text-brand" />}
+                    {selectedAsset.asset_type === "thread" && <Twitter className="w-4 h-4 text-[#1d9bf0]" />}
+                    {selectedAsset.asset_type === "linkedin" && <Linkedin className="w-4 h-4 text-[#0a66c2]" />}
+                    {selectedAsset.asset_type === "clip" && <Video className="w-4 h-4 text-brand" />}
+                    {selectedAsset.asset_type === "thumbnail" && <ImageIcon className="w-4 h-4 text-brand" />}
                   </span>
+                  <div className="flex flex-col gap-0.5 min-w-0">
+                    <h3 className="text-sm font-bold text-neutral-100 capitalize truncate">
+                      {selectedAsset.asset_type} Output
+                    </h3>
+                    <span className="text-[10px] text-neutral-500 flex items-center gap-1.5 font-medium truncate">
+                      <Sparkles className="w-3 h-3 text-brand shrink-0" />
+                      <span className="truncate">Model: {selectedAsset.model_used.split("/").pop()}</span>
+                    </span>
+                  </div>
                 </div>
-              </div>
-              
-              <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
+                
                 {/* Platform Preview Toggle */}
                 {["blog", "thread", "linkedin"].includes(selectedAsset.asset_type) && (
-                  <div className="flex bg-neutral-950 border border-neutral-850 rounded-lg p-0.5">
+                  <div className="flex bg-neutral-950 border border-neutral-850 rounded-lg p-0.5 shrink-0 mr-4 sm:mr-0">
                     <button
                       onClick={() => setPreviewTab("preview")}
                       className={cn(
-                        "flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-bold cursor-pointer transition-all",
+                        "flex items-center gap-1 px-2.5 py-1 sm:px-2.5 sm:py-1 rounded-md text-[10px] font-bold cursor-pointer transition-all",
                         previewTab === "preview" 
                           ? "bg-neutral-800 text-neutral-200" 
                           : "text-neutral-500 hover:text-neutral-350"
@@ -397,26 +410,18 @@ export default function ProjectDashboardPage() {
                     <button
                       onClick={() => setPreviewTab("raw")}
                       className={cn(
-                        "flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-bold cursor-pointer transition-all",
+                        "flex items-center gap-1 px-2.5 py-1 sm:px-2.5 sm:py-1 rounded-md text-[10px] font-bold cursor-pointer transition-all",
                         previewTab === "raw" 
                           ? "bg-neutral-800 text-neutral-200" 
                           : "text-neutral-500 hover:text-neutral-350"
                       )}
                     >
                       <EyeOff className="w-3 h-3" />
-                      Raw Editor
+                      Raw
                     </button>
                   </div>
                 )}
-
-                <button
-                  onClick={() => setSelectedAsset(null)}
-                  className="text-neutral-400 hover:text-neutral-200 text-[11px] font-bold bg-neutral-950 border border-neutral-850 px-3 py-1.5 rounded-lg transition-colors cursor-pointer shrink-0 ml-auto sm:ml-0"
-                >
-                  Close View
-                </button>
               </div>
-            </div>
 
             {/* Content Body */}
             <div className="flex-1 overflow-y-auto p-3 sm:p-6 md:p-8 no-scrollbar bg-neutral-900/10">
@@ -506,59 +511,78 @@ export default function ProjectDashboardPage() {
             </div>
 
             {/* Footer Options & Actions */}
-            <div className="p-3 sm:p-6 border-t border-neutral-850 bg-neutral-950/20 flex flex-col gap-3 sm:gap-4">
-              {/* Inline Model Selection for Regeneration */}
-              <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl border border-[#1f1f23] bg-[#121215]">
-                <ModelSelector
-                  mode={regenMode}
-                  pinnedModel={regenModel}
-                  onChange={(mode, model) => {
-                    setRegenMode(mode);
-                    setRegenModel(model);
-                  }}
-                  className="flex-1"
-                  size="sm"
-                />
-                <button
-                  onClick={handleRegenerate}
-                  disabled={regenerating}
-                  className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg border border-neutral-800 hover:border-neutral-700 bg-neutral-900 hover:bg-neutral-950 transition-colors cursor-pointer text-xs font-semibold text-neutral-200 shrink-0"
-                >
-                  <RefreshCw className={`w-3.5 h-3.5 ${regenerating ? "animate-spin" : ""}`} />
-                  {regenerating ? "Regenerating..." : "Regenerate"}
-                </button>
-              </div>
+            <div className="p-3 sm:p-6 border-t border-neutral-850 bg-neutral-950/20 flex flex-col gap-3">
+              
+              {/* Collapsible Model Selection & Regeneration Panel */}
+              {(selectedAsset.asset_type === "thumbnail" || showRegen) && (
+                <div className="flex flex-col gap-3 p-3 sm:p-4 rounded-xl border border-[#1f1f23] bg-[#121215] transition-all">
+                  <ModelSelector
+                    mode={regenMode}
+                    pinnedModel={regenModel}
+                    onChange={(mode, model) => {
+                      setRegenMode(mode);
+                      setRegenModel(model);
+                    }}
+                    className="flex-1"
+                    size="sm"
+                  />
+                  <button
+                    onClick={handleRegenerate}
+                    disabled={regenerating}
+                    className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg border border-neutral-800 hover:border-neutral-700 bg-neutral-900 hover:bg-neutral-950 transition-colors cursor-pointer text-xs font-semibold text-neutral-200 w-full"
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 ${regenerating ? "animate-spin" : ""}`} />
+                    {regenerating ? "Regenerating..." : "Regenerate Content"}
+                  </button>
+                </div>
+              )}
 
-              {/* Copy/Export Buttons */}
-              {selectedAsset.asset_type !== "thumbnail" && (
-                <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3 mt-1 sm:mt-2">
+              {/* Copy/Export/Regen Buttons */}
+              {selectedAsset.asset_type !== "thumbnail" ? (
+                <div className="flex flex-row items-center gap-2 sm:gap-3 w-full">
                   <MovingBorderButton
                     borderRadius="0.5rem"
                     onClick={() => handleCopy(selectedAsset.content)}
-                    className="flex items-center justify-center gap-2 w-full py-2.5 sm:py-3"
+                    className="flex items-center justify-center gap-2 flex-1 py-2.5 text-xs"
                   >
                     {copied ? (
                       <>
-                        <Check className="w-3.5 h-3.5" />
-                        Copied!
+                        <Check className="w-3.5 h-3.5 shrink-0" />
+                        <span>Copied!</span>
                       </>
                     ) : (
                       <>
-                        <Copy className="w-3.5 h-3.5" />
-                        Copy Asset Text
+                        <Copy className="w-3.5 h-3.5 shrink-0" />
+                        <span className="hidden sm:inline">Copy Asset Text</span>
+                        <span className="inline sm:hidden">Copy</span>
                       </>
                     )}
                   </MovingBorderButton>
 
                   <button
                     onClick={() => handleExport(selectedAsset)}
-                    className="flex items-center justify-center gap-2 py-2.5 sm:py-3 px-4 sm:px-6 rounded-lg border border-neutral-800 hover:border-neutral-700 bg-neutral-900 hover:bg-neutral-950 transition-colors w-full cursor-pointer text-xs font-bold text-neutral-200"
+                    className="flex items-center justify-center gap-2 py-2.5 px-3 sm:px-6 rounded-lg border border-neutral-800 hover:border-neutral-700 bg-neutral-900 hover:bg-neutral-950 transition-colors flex-1 cursor-pointer text-xs font-bold text-neutral-200"
                   >
-                    <Download className="w-3.5 h-3.5" />
-                    Download (.txt)
+                    <Download className="w-3.5 h-3.5 shrink-0" />
+                    <span className="hidden sm:inline">Download (.txt)</span>
+                    <span className="inline sm:hidden">Download</span>
+                  </button>
+
+                  <button
+                    onClick={() => setShowRegen(!showRegen)}
+                    className={cn(
+                      "flex items-center justify-center gap-2 py-2.5 px-3 sm:px-4 rounded-lg border transition-colors cursor-pointer text-xs font-bold shrink-0",
+                      showRegen 
+                        ? "bg-brand/10 border-brand/30 text-brand" 
+                        : "bg-neutral-900 border-neutral-800 text-neutral-200 hover:bg-neutral-950 hover:border-neutral-700"
+                    )}
+                  >
+                    <RefreshCw className={cn("w-3.5 h-3.5 shrink-0", showRegen && "rotate-45 transition-transform duration-200")} />
+                    <span className="hidden sm:inline">Regenerate</span>
+                    <span className="inline sm:hidden">Regen</span>
                   </button>
                 </div>
-              )}
+              ) : null}
             </div>
           </motion.div>
         </motion.div>
