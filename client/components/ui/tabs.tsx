@@ -35,7 +35,7 @@ export const Tabs = ({
     <div className="flex flex-col w-full">
       <div
         className={cn(
-          "flex flex-row items-center justify-start [perspective:1000px] relative overflow-auto sm:overflow-visible no-scrollbar max-w-full w-full bg-neutral-900/50 border border-neutral-800 p-1 rounded-2xl gap-2",
+          "flex flex-col sm:flex-row items-stretch sm:items-center justify-start [perspective:1000px] relative overflow-hidden sm:overflow-visible max-w-full w-full bg-neutral-900/50 border border-neutral-800 p-1.5 rounded-2xl gap-1.5 sm:gap-2",
           containerClassName
         )}
       >
@@ -47,7 +47,7 @@ export const Tabs = ({
             onMouseEnter={() => setHovering(true)}
             onMouseLeave={() => setHovering(false)}
             className={cn(
-              "relative px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 flex items-center justify-center gap-2 flex-1 shrink-0 min-w-fit cursor-pointer active:scale-95",
+              "relative px-4 py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 flex items-center justify-start sm:justify-center gap-2.5 flex-1 shrink-0 cursor-pointer active:scale-95 w-full sm:w-auto",
               tabClassName
             )}
             style={{
@@ -59,14 +59,14 @@ export const Tabs = ({
                 layoutId="clickedbutton"
                 transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                 className={cn(
-                  "absolute inset-0 bg-neutral-800 rounded-xl",
+                  "absolute inset-0 bg-neutral-800 rounded-xl border border-neutral-700/30",
                   activeTabClassName
                 )}
               />
             )}
 
             <span className={cn(
-              "relative z-20 flex items-center gap-2",
+              "relative z-20 flex items-center gap-2.5",
               active.value === tab.value ? "text-neutral-100 font-semibold" : "text-neutral-400 hover:text-neutral-200"
             )}>
               {tab.icon}

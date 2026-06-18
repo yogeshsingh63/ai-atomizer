@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Youtube, Upload, FileText, ArrowRight, Sparkles, AlertCircle } from "lucide-react";
+import { Youtube, Upload, FileText, ArrowRight, Sparkles, AlertCircle, ArrowLeft } from "lucide-react";
 import { Tabs } from "@/components/ui/tabs";
 import { HoverBorderGradient } from "@/components/ui/hover-border-gradient";
 import { Dropzone } from "@/components/dropzone";
@@ -134,7 +134,16 @@ export default function NewProjectPage() {
       {/* Grid Pattern */}
       <BackgroundBeams />
 
-      <div className="w-full max-w-lg bg-[#121215] border border-[#1f1f23] p-5 sm:p-8 md:p-10 rounded-2xl flex flex-col gap-6 sm:gap-8 shadow-xl relative z-10">
+      <div className="w-full max-w-lg flex flex-col gap-4 relative z-10">
+        <button
+          onClick={() => router.push("/")}
+          className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-neutral-900 bg-neutral-950 hover:bg-neutral-900 text-xs font-semibold text-neutral-400 hover:text-neutral-200 transition-all w-fit cursor-pointer group active:scale-95 duration-150"
+        >
+          <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform text-neutral-500 group-hover:text-brand" />
+          <span>Back to Home</span>
+        </button>
+
+        <div className="w-full bg-[#121215] border border-[#1f1f23] p-5 sm:p-8 md:p-10 rounded-2xl flex flex-col gap-6 sm:gap-8 shadow-xl">
         <div className="flex flex-col items-center text-center gap-2">
           <div className="flex items-center gap-1.5 px-3 py-1 rounded-full brand-badge text-[10px] font-bold uppercase tracking-wider">
             <Sparkles className="w-3.5 h-3.5 text-brand" />
@@ -192,6 +201,7 @@ export default function NewProjectPage() {
             {!loading && <ArrowRight className="w-3.5 h-3.5" />}
           </HoverBorderGradient>
         </form>
+        </div>
       </div>
     </div>
   );
