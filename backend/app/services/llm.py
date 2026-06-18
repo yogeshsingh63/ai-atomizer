@@ -138,10 +138,20 @@ async def chat_completion(
         try:
             logger.info("Attempting Gemini API Fallback...")
             genai.configure(api_key=gemini_key)
-            # Use gemini-1.5-flash for general tasks, and Gemini pro for critic if pinned
-            model_name = "gemini-1.5-flash"
-            if model_mode == "pinned" and pinned_model and "pro" in pinned_model:
-                model_name = "gemini-1.5-pro"
+            
+            # Dynamically map the requested or fallback models to direct Gemini SDK names
+            model_name = "gemini-2.5-flash"
+            if model_mode == "pinned" and pinned_model:
+                if "gemini-2.5-pro" in pinned_model:
+                    model_name = "gemini-2.5-pro"
+                elif "gemini-2.5-flash" in pinned_model:
+                    model_name = "gemini-2.5-flash"
+                elif "gemini-1.5-pro" in pinned_model:
+                    model_name = "gemini-1.5-pro"
+                elif "gemini-1.5-flash" in pinned_model:
+                    model_name = "gemini-1.5-flash"
+                elif "pro" in pinned_model:
+                    model_name = "gemini-2.5-pro"
             
             # Map prompt formats
             contents = []
