@@ -318,24 +318,24 @@ function setupMockProjectData(projectId: number, title: string, sourceType: Sour
       project_id: projectId,
       start_seconds: 12,
       end_seconds: 45,
-      quote: "The secret to building extremely engaging AI apps is to focus on micro-interactions. A button that glows, a grid that rotates, a smooth hover transition - these details make users love the tool.",
-      reason: "Actionable concrete design advice for frontend builders."
+      quote: "The true bottleneck in modern content creation isn't writing original ideas—it's distribution. Taking one massive video or podcast and refracturing it into ten platform-native posts multiplies your audience footprint by 10x.",
+      reason: "High-value core thesis of content repurposing."
     },
     {
       id: 2,
       project_id: projectId,
       start_seconds: 78,
       end_seconds: 122,
-      quote: "Most startups fail not because their technology isn't advanced, but because their user experience is generic. If your tool feels like a standard Bootstrap template, you have already lost.",
-      reason: "Strong hook regarding UX importance for startup success."
+      quote: "Every social network has its own native culture and format constraints. If you just copy and paste descriptions between platforms, you are leaving 90% of your engagement on the table.",
+      reason: "Explaining why custom platform templates are required."
     },
     {
       id: 3,
       project_id: projectId,
       start_seconds: 190,
       end_seconds: 240,
-      quote: "OpenRouter's free fallback chain is a game changer. By simply supplying an array of 5 free models, your app automatically rotates and handles rate limits without writing complex logic.",
-      reason: "Concrete technical tip on managing LLM reliability."
+      quote: "Prism AI automates this workflow in under 90 seconds. It handles transcription, moment selection, writing, and runs an automated critic loop to remove generic AI filler statements.",
+      reason: "Outlining the backend pipeline technology."
     }
   ];
 
@@ -344,24 +344,25 @@ function setupMockProjectData(projectId: number, title: string, sourceType: Sour
       id: 101,
       project_id: projectId,
       asset_type: 'blog',
-      content: `# Crafting Interfaces That Wow: The UI Secrets of Top AI Apps
+      content: `# The Power of Content Refraction: How to Multiply Your Distribution
+      
+In the digital attention economy, content creation is only half the battle. The other half—often the more difficult half—is distribution.
 
-In the rapidly evolving landscape of generative AI, functionality is becoming a commodity. Anyone can make an API call. The true battleground has shifted to **User Experience (UX)**. 
+Many creators spend 20 hours producing a single deep-dive video, publish it on one platform, and hope for the best. This is a massive waste of leverage. High-growth media brands succeed through **Content Refraction**: taking a single core piece of content and refracting it into platform-native text, micro-posts, and highlight clips.
 
-During our recent session on modern application building, we unpacked the visual design systems that differentiate mediocre products from premium, high-retention software. Here are the core strategies.
+## What is Content Refraction?
+Content refraction is the systematic process of breaking down long-form media into smaller, highly-targeted assets. Instead of copy-pasting the same description, you write custom assets tailored to each channel's native culture.
 
-## 1. Focus on Micro-Interactions
-Engaging interfaces aren't just pretty layouts; they are responsive and alive. A border that sweeps around a card on hover, a gradient that tracks the user's cursor, or a subtle decode animation on page load. These details indicate premium craftsmanship.
+> "The true bottleneck in modern content creation isn't writing original ideas—it's distribution. Taking one massive video or podcast and refracturing it into ten platform-native posts multiplies your audience footprint by 10x."
 
-> "The secret to building extremely engaging AI apps is to focus on micro-interactions. A button that glows, a grid that rotates, a smooth hover transition - these details make users love the tool."
+## How Prism AI Automates the Refraction Pipeline
+Prism AI makes content distribution seamless through automated engineering steps:
+1. **Source Transcription**: Ingests YouTube URLs, audio files, or raw text transcripts.
+2. **Key Moments Extraction**: Locates high-leverage quotes and timestamps.
+3. **Platform-Native Layouts**: Generates structured LinkedIn cards, X threads, and detailed SEO blogs.
+4. **Critic Engine Review**: An automated review step audits tone and formatting to ensure it sounds human.
 
-## 2. Ditch the Generic Templates
-Many founders rush to launch with generic CSS frames. While this helps validate an MVP, it establishes a negative first impression. High-end products use curated, harmonious color palettes (often tailored HSL color spaces) rather than browser-standard reds and blues.
-
-## 3. Leverage Provider Fallbacks
-From a technical reliability standpoint, user satisfaction drops to zero if the app returns a rate-limit error. Chaining zero-price API endpoints ensures high uptime while testing ideas, providing a large effective quota for early adopters.
-
-*Premium design is not decorative; it is functional.*`,
+*Refracting content is not about spamming; it is about multiplying your leverage.*`,
       related_highlight_id: null,
       model_used: 'meta-llama/llama-3.3-70b-instruct:free',
       status: 'done',
@@ -371,31 +372,27 @@ From a technical reliability standpoint, user satisfaction drops to zero if the 
       id: 102,
       project_id: projectId,
       asset_type: 'thread',
-      content: `1/ Generative AI is democratizing backend capability. 
+      content: `1/ Creating content is hard. Distributing it is even harder. 
 
-If anyone can wire up an LLM, where is the competitive moat?
+Most creators spend hours editing a video, post it once, and move on. This wastes 90% of its potential reach.
 
-It's the User Experience. Here is a thread on the UX secrets of premium AI products. 👇
+Here is how "content refraction" multiplies your output by 10x. 🧵
 
-2/ Micro-interactions are the heartbeat of an app.
+2/ Every social network has its own native culture. 
 
-A button with an active hover gradient.
-A bento grid with 3D depth cards.
-A text decoder reveal effect.
+A copy-pasted YouTube description doesn't work on LinkedIn. A block of text doesn't work on X. 
 
-These micro-animations signal quality and encourage user engagement.
+You need platform-native assets: short threads for X, professional insights for LinkedIn, and SEO articles for Google.
 
-3/ UX is not just colors; it is reliability.
+3/ Prism AI automates this layout mapping. 
 
-Rate limits can kill user trust instantly. Using fallback arrays like those offered on OpenRouter allows your app to rotate models transparently. High uptime = high trust.
+It takes a single video link, transcribes it, and writes:
+- ✍️ High-retention X threads
+- 💼 Authoritative LinkedIn updates
+- 📖 Deep-dive SEO blog articles
+- ✂️ Viral short clip recommendations
 
-4/ Avoid generic Bootstrap or Tailwind templates. 
-
-If your design feels stock, users assume your engine is stock too. Invest in tailored HSL palettes, outfit typography, and clean glassmorphism.
-
-5/ Takeaway: premium design is not decorative; it is functional. Visual wow-factors keep users coming back and justify premium pricing.
-
-What's your favorite micro-interaction in modern web apps? Let me know below!`,
+4/ The result? 10x distribution in less than 90 seconds, all derived directly from your original voice. Stop creating more. Refract what you already have.`,
       related_highlight_id: null,
       model_used: 'deepseek/deepseek-chat:free',
       status: 'done',
@@ -405,20 +402,20 @@ What's your favorite micro-interaction in modern web apps? Let me know below!`,
       id: 103,
       project_id: projectId,
       asset_type: 'linkedin',
-      content: `If anyone can call an LLM API, where is the product moat?
+      content: `If you are only posting your videos on one platform, you are leaving 90% of your audience on the table. 
 
-The answer is simple: User Experience.
+High-performing creators don't make more content. They refract what they already have.
 
-Standard dashboards and generic visual layouts are the fastest way to get ignored. Premium applications differentiate themselves by building custom, responsive interfaces that feel alive. 
+Content refraction is the process of taking a single long-form asset (like a podcast or webinar) and spinning it out into platform-native, high-value formats:
+- X Threads: To capture visual feed attention.
+- LinkedIn Cards: To establish professional authority.
+- Blog Articles: To capture long-term search engine value.
 
-Key takeaways for product builders:
-1. Micro-interactions matter: Smooth hover transitions, interactive cards, and text reveals build massive user engagement.
-2. Rely on developer resilience: Combine API endpoints with fallback options to guarantee near-100% uptime.
-3. Design communicates value: Harmonious palettes and modern typography command higher value than default layouts.
+Prism AI automates this entire pipeline in under 90 seconds. It transcribes your media, extracts high-leverage key moments, and writes human-quality social copies tailored to each network. 
 
-Moats are no longer built in the database; they are built in the interface.
+Stop playing the volume game. Master the leverage game.
 
-#UXDesign #GenerativeAI #ProductManagement #Frontend`,
+#ContentMarketing #AI #ContentRepurposing #PrismAI #CreatorEconomy`,
       related_highlight_id: null,
       model_used: 'qwen/qwen-2.5-72b-instruct:free',
       status: 'done',
@@ -429,8 +426,8 @@ Moats are no longer built in the database; they are built in the interface.
       project_id: projectId,
       asset_type: 'clip',
       content: `**Clip 1 (12s - 45s)**
-- **Caption:** The absolute secret to making users fall in love with your AI application.
-- **On-Screen Text:** FOCUS ON MICRO-INTERACTIONS`,
+- **Caption:** The leverage secret that high-growth creators use to multiply their reach.
+- **On-Screen Text:** MULTIPLY YOUR DISTRIBUTION`,
       related_highlight_id: 1,
       model_used: 'google/gemini-2.5-flash',
       status: 'done',
@@ -441,8 +438,8 @@ Moats are no longer built in the database; they are built in the interface.
       project_id: projectId,
       asset_type: 'clip',
       content: `**Clip 2 (78s - 122s)**
-- **Caption:** Why standard UX layouts are holding your startup back from growth.
-- **On-Screen Text:** AVOID GENERIC TEMPLATES`,
+- **Caption:** Why copying and pasting descriptions across social platforms fails.
+- **On-Screen Text:** CUSTOMIZE FOR PLATFORM CULTURES`,
       related_highlight_id: 2,
       model_used: 'google/gemini-2.5-flash',
       status: 'done',

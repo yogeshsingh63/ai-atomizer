@@ -8,9 +8,9 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: "AI Atomizer | Premium Content Repurposing Engine",
-  description: "Repurpose long-form video, audio, or articles into blog posts, Twitter threads, LinkedIn posts, and viral shorts suggestion clips using OpenRouter fallback model chains.",
-  keywords: ["AI Content Repurposing", "AI Blog Generator", "Social Media Threads", "OpenRouter fallback", "Video highlights"],
+  title: "Prism AI | Premium Content Repurposing Engine",
+  description: "Repurpose long-form video, audio, or articles into blog posts, X threads, LinkedIn posts, and viral shorts suggestion clips using OpenRouter fallback model chains.",
+  keywords: ["Prism AI", "Content Repurposing", "AI Blog Generator", "Social Media Threads", "OpenRouter fallback", "Video highlights"],
 };
 
 export default function RootLayout({
