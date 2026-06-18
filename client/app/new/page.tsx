@@ -80,7 +80,7 @@ export default function NewProjectPage() {
               setArticleText("");
             }}
             placeholder="https://www.youtube.com/watch?v=..."
-            className="w-full bg-[#121215] border border-[#1f1f23] focus:border-neutral-500 rounded-lg px-4 py-3 text-xs text-neutral-200 outline-none transition-colors duration-200"
+            className="w-full bg-[#121215] border border-[#1f1f23] focus:border-brand-border focus:ring-1 focus:ring-brand/30 rounded-lg px-4 py-3 text-xs text-neutral-200 outline-none transition-all duration-200"
           />
         </div>
       ),
@@ -117,7 +117,7 @@ export default function NewProjectPage() {
             }}
             placeholder="Paste your long-form article, lecture transcript, or notes here..."
             rows={5}
-            className="w-full bg-[#121215] border border-[#1f1f23] focus:border-neutral-500 rounded-lg px-4 py-3 text-xs text-neutral-200 outline-none transition-colors duration-200 resize-none no-scrollbar"
+            className="w-full bg-[#121215] border border-[#1f1f23] focus:border-brand-border focus:ring-1 focus:ring-brand/30 rounded-lg px-4 py-3 text-xs text-neutral-200 outline-none transition-all duration-200 resize-none no-scrollbar"
           />
         </div>
       ),
@@ -151,7 +151,7 @@ export default function NewProjectPage() {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g. Scaling AI Startups Panel"
-              className="w-full bg-neutral-950 border border-neutral-850 focus:border-neutral-500 rounded-lg px-4 py-3 text-xs text-neutral-200 outline-none transition-colors duration-200"
+              className="w-full bg-neutral-950 border border-neutral-850 focus:border-brand-border focus:ring-1 focus:ring-brand/30 rounded-lg px-4 py-3 text-xs text-neutral-200 outline-none transition-all duration-200"
             />
           </div>
 

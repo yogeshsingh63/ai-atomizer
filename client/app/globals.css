@@ -20,6 +20,11 @@
   --border: 240 3.7% 15.9%;
   --input: 240 3.7% 15.9%;
   --ring: 240 5% 64.9%;
+  
+  /* Slate-blue Accent Design System */
+  --brand: 215 85% 58%;
+  --brand-muted: 215 30% 14%;
+  --brand-border: 215 30% 24%;
 }
 
 @theme {
@@ -41,6 +46,11 @@
   --color-popover: hsl(var(--popover));
   --color-popover-foreground: hsl(var(--popover-foreground));
   
+  /* Steel blue brand maps */
+  --color-brand: hsl(var(--brand));
+  --color-brand-muted: hsl(var(--brand-muted));
+  --color-brand-border: hsl(var(--brand-border));
+  
   --radius-lg: 0.75rem;
   --radius-md: 0.5rem;
   --radius-sm: 0.25rem;
@@ -58,6 +68,18 @@ body {
 .premium-panel {
   background-color: #121215;
   border: 1px solid #1f1f23;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.premium-panel:hover {
+  border-color: hsl(var(--brand-border));
+}
+
+/* Badge highlights */
+.brand-badge {
+  background-color: hsl(var(--brand-muted));
+  border: 1px solid hsl(var(--brand-border));
+  color: hsl(var(--brand));
 }
 
 /* Scrollbar styles */
