@@ -173,34 +173,26 @@ export async function createProject(data: {
   // If backend is active
   if (await isBackendOnline()) {
     try {
-      if (data.source_type === 'upload' && data.file) {
-        const formData = new FormData();
-        formData.append('title', data.title);
-        formData.append('source_type', data.source_type);
-        formData.append('file', data.file);
-        formData.append('default_model_mode', data.default_model_mode);
-        if (data.default_pinned_model) formData.append('default_pinned_model', data.default_pinned_model);
-
-        const res = await fetch(`${BACKEND_URL}/projects`, {
-          method: 'POST',
-          headers: getAuthHeaders(),
-          body: formData,
-        });
-        if (res.ok) return await res.json();
-      } else {
-        const res = await fetch(`${BACKEND_URL}/projects`, {
-          method: 'POST',
-          headers: getAuthHeaders('application/json'),
-          body: JSON.stringify({
-            title: data.title,
-            source_type: data.source_type,
-            source_ref: data.source_ref,
-            default_model_mode: data.default_model_mode,
-            default_pinned_model: data.default_pinned_model,
-          }),
-        });
-        if (res.ok) return await res.json();
+      const formData = new FormData();
+      formData.append('title', data.title);
+      formData.append('source_type', data.source_type);
+      formData.append('default_model_mode', data.default_model_mode);
+      if (data.source_ref) {
+        formData.append('source_ref', data.source_ref);
       }
+      if (data.default_pinned_model) {
+        formData.append('default_pinned_model', data.default_pinned_model);
+      }
+      if (data.file) {
+        formData.append('file', data.file);
+      }
+
+      const res = await fetch(`${BACKEND_URL}/projects`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: formData,
+      });
+      if (res.ok) return await res.json();
     } catch (e) {
       console.warn('Failed to post project to backend, using mock:', e);
     }
