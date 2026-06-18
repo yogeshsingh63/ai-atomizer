@@ -101,7 +101,7 @@ async def chat_completion(
             
             payload: Dict[str, Any] = {
                 "messages": formatted_messages,
-                "max_tokens": 3000
+                "max_tokens": 1000
             }
             if json_mode:
                 payload["response_format"] = {"type": "json_object"}
@@ -180,7 +180,7 @@ async def chat_completion(
             }
             model_slug = "llama-3.3-70b-versatile"
             if model_mode == "pinned" and pinned_model:
-                model_slug = "gemma2-9b-it"
+                model_slug = "llama-3.3-70b-versatile"
             
             payload = {
                 "messages": formatted_messages,
