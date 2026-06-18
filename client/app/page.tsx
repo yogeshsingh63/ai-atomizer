@@ -6,78 +6,97 @@ import { useRouter } from "next/navigation";
 import { 
   Sparkles, ArrowRight, Zap, Share2, Flame, Cpu, 
   Play, Clock, Clipboard, CheckCircle, ExternalLink,
-  Youtube, Twitter, Linkedin, FileText, ListCollapse
+  Youtube, Linkedin, FileText, ListCollapse
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { HoverBorderGradient } from "@/components/ui/hover-border-gradient";
 import { BackgroundBeams } from "@/components/ui/background-beams";
 import { LinkedInPreview, TwitterPreview, BlogPreview } from "@/components/post-preview";
+import { XIcon } from "@/components/ui/x-icon";
+import { PrismLogo } from "@/components/ui/prism-logo";
 
 // Mock Repurposing Content for Live Simulator
 const MOCK_SOURCE_VIDEO = {
-  url: "https://www.youtube.com/watch?v=db_engine_101",
-  title: "Building a Lock-Free High-Throughput DB from Scratch",
-  duration: "18:42",
-  channel: "Systems Architecture Insider",
-  views: "128K views",
+  url: "https://www.youtube.com/watch?v=SubuU1iOC2s&t=357s",
+  title: "Introducing Prism AI: Repurpose Long Videos into Platform-Native Social Assets",
+  duration: "12:15",
+  channel: "Prism AI Media",
+  views: "42K views",
   avatar: "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?q=80&w=100&auto=format&fit=crop",
-  thumbnail: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=600&auto=format&fit=crop",
-  transcriptSnippet: `[00:05] Today, we're deep-diving into why standard databases lock threads.
-[01:12] We designed our database using standard memory mapping and specialized thread-local queues.
-[02:40] By eliminating lock contention entirely, we achieved 1.2 million write ops per second on consumer hardware.
-[04:15] Memory mapping allows the OS to handle caching directly, bypassing kernel space overhead...`
+  thumbnail: "/prism_repurpose_thumbnail.png",
+  transcriptSnippet: `[00:00] Today, we're officially launching Prism AI. It's a premium content repurposing engine.
+[01:15] Creators waste hours taking a single YouTube video or podcast and trying to format it for LinkedIn, X, and blogs.
+[02:40] Prism AI automates this. You submit your media link, and it transcribes, extracts key moments, and writes native assets.
+[04:20] It even runs a critic agent to rewrite generic AI phrasing, ensuring it sounds authentic and professional...`
 };
 
-const MOCK_LINKEDIN = `Building a high-throughput system isn't about throwing hardware at the problem. It's about designing around hardware realities.
+const MOCK_LINKEDIN = `High-performing content creators don't work harder. They build leverage.
 
-Our team just finished benchmarking our new storage engine: 1.2 Million writes/second.
+If you are spending hours manually turning your YouTube videos or podcasts into LinkedIn articles, X threads, and SEO blogs, you are playing a low-leverage game.
 
-The secret? Thread-local ring buffers that eliminate CPU thread blocking entirely.
+Introducing **Prism AI**—the premium content repurposing engine built to multiply your distribution.
 
-Here are 3 architectural rules we followed:
-1. Eliminate Lock Contention (no shared state)
-2. Memory Map Files (bypass kernel space overhead)
-3. Custom Ring Buffers (lock-free rings)
+Here is how the automated pipeline works:
+1. **Source Ingestion**: Paste any YouTube link or upload raw audio/video.
+2. **Context-Aware Highlights**: The engine extracts high-signal quotes and timestamps.
+3. **Platform-Native Layouts**: Writes custom social copy tailored to each network's native culture.
+4. **Critic Engine Loop**: A secondary AI reviews the drafts to remove generic AI fluff.
 
-Read the full technical breakdown in our latest blog post! #SystemDesign #Database`;
+Refract your long-form media into a spectrum of ready-to-publish text assets in under 90 seconds.
 
-const MOCK_TWITTER = `1/ We built the world's fastest database by breaking traditional assumptions.
+Try it out and see how we help media teams secure 10x distribution! #ContentMarketing #CreatorEconomy #Automation #AI`;
 
-Here is how we reached 1.2M writes/sec without high-end hardware. 🧵
+const MOCK_TWITTER = `1/ Stop copy-pasting your YouTube descriptions onto other social platforms. It doesn't work.
 
-2/ Standard databases rely on mutex locks for concurrency. Mutexes block execution threads, creating massive bottlenecks when scaled.
+Every social network has its own native culture and layout constraints. 
 
-We threw mutexes out.
+Here is how we built Prism AI to automate platform-native content refraction in 90 seconds. 🧵
 
-3/ Instead, we used thread-local queues. Every core has its own ring buffer. Writing threads never compete for the same memory space.
+2/ Prism AI takes your long-form video or audio and automatically extracts:
+- 📖 Deep-dive SEO blog articles
+- ✍️ Engaging X threads
+- 💼 Authoritative LinkedIn updates
+- ✂️ Viral short clip recommendations
 
-4/ The results speak for themselves: over 1.2M sequential write ops per second on a single machine. Next up: network layer optimizations.`;
+3/ We built a secondary "Critic Engine" pipeline. 
 
-const MOCK_BLOG = `# Building the World's Fastest Storage Engine
+Standard AI tools write generic, robotic text. The Critic Engine audits the draft, removes filler text, and checks statistics against the actual transcript to preserve absolute editorial integrity.
 
-For the past year, we have been obsessed with memory performance and cache locality. When designing database systems, execution locks are usually the first thing to degrade throughput.
+4/ By distributing platform-native assets simultaneously, you capture 300% more engagement across channels. 
 
-## The Problem: Shared State Bottlenecks
-When multiple cores attempt to read and write to the same indexing tree, mutex locks force cores to idle.
+Master the leverage game. Stop creating more content—refract what you already have.`;
 
-## Our Solution: Lock-Free Thread Locality
-By routing every channel to a core-specific lock-free queue, we completely eliminated write collision. The results speak for themselves: over 1.2M sequential write ops per second.`;
+const MOCK_BLOG = `# Multiplying Creator Output: The Prism AI Content Engine
+
+In the modern media landscape, production value is no longer a bottleneck. The true battleground is distribution. Creators and marketing teams spend days producing deep-dive video assets, only to publish them once on a single platform. This is a massive waste of leverage. 
+
+**Prism AI** was built to solve this distribution problem by refracting a single core asset into a beautiful spectrum of platform-native text copies.
+
+## The Content Refraction Workflow
+Prism AI automates content distribution through four core technical phases:
+1. **Transcription & Syncing**: Transcribes incoming media and builds word-level sync maps.
+2. **Moments Identification**: Evaluates transcript context to extract viral hooks and key segments.
+3. **Draft Composition**: Writes platform-custom social cards, threads, and SEO blogs.
+4. **Critic Rewriting**: Audits drafts through a secondary LLM chain to remove generic AI filler.
+
+## Native Platform Layouts
+A copy-pasted block of text doesn't perform well on X. A brief bulleted summary underperforms on LinkedIn. By training our engine on successful platform layouts, Prism AI compositions natively fit feed cultures.`;
 
 const MOCK_HIGHLIGHTS = [
   {
-    timestamp: "00:45 - 02:15",
-    title: "The Mutex Lock Bottleneck",
-    description: "Explanation of why traditional database mutexes stall CPU cores at scale.",
+    timestamp: "00:00 - 01:10",
+    title: "The Creator Distribution Moat",
+    description: "Explaining why content distribution leverage matters more than raw volume.",
   },
   {
-    timestamp: "03:10 - 05:40",
-    title: "Thread-Local Ring Buffers",
-    description: "Deep dive into lock-free architecture using single-producer single-consumer buffers.",
+    timestamp: "02:15 - 03:50",
+    title: "Platform-Native Layout Writing",
+    description: "A breakdown of why custom templates are required for LinkedIn, X, and SEO blogs.",
   },
   {
-    timestamp: "07:20 - 09:15",
-    title: "Memory Mapping Files",
-    description: "Bypassing write() kernel boundary overhead by writing directly to mapped system memory.",
+    timestamp: "04:05 - 06:20",
+    title: "The Critic Agent Pipeline",
+    description: "How Prism AI audits drafts through a secondary critic step to ensure human quality.",
   }
 ];
 
@@ -85,6 +104,7 @@ export default function LandingPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"input" | "linkedin" | "twitter" | "blog" | "highlights">("input");
   const [copied, setCopied] = useState(false);
+  const [imgErr, setImgErr] = useState(false);
 
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -109,22 +129,22 @@ export default function LandingPage() {
     switch (activeTab) {
       case "input":
         return (
-          <div className="flex flex-col gap-4 p-4 sm:p-5 bg-[#0e0e11] border border-neutral-900 rounded-xl w-full max-w-full sm:max-w-lg mx-auto min-w-0">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-red-950/40 border border-red-900/30 flex items-center justify-center text-red-500">
+          <div className="flex flex-col gap-4 p-4 sm:p-5 bg-[#0e0e11] border border-neutral-900 rounded-xl w-full max-w-full sm:max-w-lg mx-auto min-w-0 overflow-hidden">
+            <div className="flex items-center gap-3 w-full min-w-0">
+              <div className="w-10 h-10 rounded-full bg-red-950/40 border border-red-900/30 flex items-center justify-center text-red-500 shrink-0">
                 <Youtube className="w-5 h-5" />
               </div>
-              <div className="flex flex-col min-w-0">
+              <div className="flex flex-col min-w-0 flex-1">
                 <span className="text-xs text-neutral-400 font-semibold uppercase tracking-wider">Source YouTube Video</span>
-                <a href={MOCK_SOURCE_VIDEO.url} target="_blank" rel="noreferrer" className="text-sm font-bold text-neutral-200 hover:text-brand flex items-center gap-1 min-w-0 w-full">
-                  <span className="truncate">{MOCK_SOURCE_VIDEO.title}</span>
+                <a href={MOCK_SOURCE_VIDEO.url} target="_blank" rel="noreferrer" className="text-sm font-bold text-neutral-200 hover:text-brand flex items-center gap-1 min-w-0 w-full overflow-hidden">
+                  <span className="truncate flex-1 min-w-0">{MOCK_SOURCE_VIDEO.title}</span>
                   <ExternalLink className="w-3 h-3 inline shrink-0" />
                 </a>
               </div>
             </div>
             
-            <div className="relative aspect-video w-full rounded-lg overflow-hidden border border-neutral-900 group">
-              <img src={MOCK_SOURCE_VIDEO.thumbnail} alt="Video cover" className="w-full h-full object-cover brightness-75" />
+            <div className="relative aspect-video w-full max-w-full rounded-lg overflow-hidden border border-neutral-900 group shrink-0">
+              <img src={MOCK_SOURCE_VIDEO.thumbnail} alt="Video cover" className="absolute inset-0 w-full h-full object-cover brightness-75" />
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="w-12 h-12 rounded-full bg-neutral-950/80 border border-neutral-800 flex items-center justify-center text-neutral-200 group-hover:scale-105 transition-transform">
                   <Play className="w-5 h-5 fill-current ml-0.5 text-brand" />
@@ -135,11 +155,11 @@ export default function LandingPage() {
               </div>
             </div>
  
-            <div className="flex flex-col gap-1.5 mt-2">
-              <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Transcript Snippet (Auto-Extracted)</span>
-              <div className="p-3 bg-neutral-950 border border-neutral-900 rounded-lg text-[11px] font-mono text-neutral-400 leading-relaxed max-h-36 overflow-y-auto no-scrollbar">
+            <div className="flex flex-col gap-1.5 mt-2 min-w-0 w-full">
+              <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest truncate block">Transcript Snippet (Auto-Extracted)</span>
+              <div className="p-3 bg-neutral-950 border border-neutral-900 rounded-lg text-[11px] font-mono text-neutral-400 leading-relaxed max-h-36 overflow-y-auto no-scrollbar w-full min-w-0 break-words whitespace-pre-wrap">
                 {MOCK_SOURCE_VIDEO.transcriptSnippet.split("\n").map((line, i) => (
-                  <p key={i} className="mb-1"><span className="text-brand/70 font-semibold">{line.slice(0, 7)}</span>{line.slice(7)}</p>
+                  <p key={i} className="mb-1 break-words whitespace-pre-wrap"><span className="text-brand/70 font-semibold">{line.slice(0, 7)}</span>{line.slice(7)}</p>
                 ))}
               </div>
             </div>
@@ -225,11 +245,9 @@ export default function LandingPage() {
       {/* Navigation Bar */}
       <header className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-5 flex items-center justify-between z-10 border-b border-neutral-900/80 backdrop-blur-md sticky top-0">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-neutral-900 border border-neutral-800 flex items-center justify-center">
-            <Sparkles className="w-4 h-4 text-brand" />
-          </div>
-          <span className="font-extrabold text-base tracking-tight text-neutral-200">
-            AI <span className="text-brand">Atomizer</span>
+          <PrismLogo size={32} />
+          <span className="font-extrabold text-base tracking-tight text-neutral-200 ml-1">
+            Prism <span className="text-brand">AI</span>
           </span>
         </div>
         <Link 
@@ -255,20 +273,20 @@ export default function LandingPage() {
           Supply YouTube links, raw audio/video uploads, or text logs. The system transcribes, extracts highlights, and writes targeted network posts.
         </p>
 
-        <div className="flex flex-col sm:flex-row items-center gap-3 mt-8 sm:mt-10 w-full max-w-sm sm:max-w-none mx-auto justify-center">
+        <div className="flex flex-col sm:flex-row items-center gap-3 mt-8 sm:mt-10 w-full max-w-xs sm:max-w-none mx-auto justify-center px-4">
           <HoverBorderGradient
             as="button"
             onClick={() => router.push("/new")}
-            containerClassName="w-full sm:w-auto"
-            className="flex items-center justify-center gap-2 font-bold py-3 px-8 text-neutral-950 text-xs bg-neutral-100 hover:bg-white border-neutral-700"
+            containerClassName="w-full sm:w-auto py-3 px-8 rounded-xl font-bold text-xs shadow-lg bg-neutral-100 hover:bg-white active:scale-[0.98] transition-all duration-200"
+            className="flex items-center justify-center gap-2 text-neutral-950 text-xs"
           >
-            Start Repurposing Free
-            <ArrowRight className="w-3.5 h-3.5" />
+            Get Started
+            <ArrowRight className="w-3.5 h-3.5 text-neutral-950" />
           </HoverBorderGradient>
           
           <a
             href="#simulator"
-            className="text-xs font-semibold text-neutral-450 hover:text-neutral-200 py-3 px-6 rounded-lg border border-neutral-850 bg-neutral-900/40 hover:bg-neutral-900/80 transition-colors w-full sm:w-auto text-center active:scale-95 duration-150"
+            className="w-full sm:w-auto py-3 px-8 text-xs font-semibold text-neutral-300 hover:text-neutral-150 bg-neutral-900/40 hover:bg-neutral-900/80 border border-neutral-800 hover:border-neutral-700 rounded-xl transition-all duration-200 active:scale-[0.98] flex items-center justify-center gap-2"
           >
             See interactive preview
           </a>
@@ -281,16 +299,16 @@ export default function LandingPage() {
             <div className="bg-neutral-950 rounded-xl border border-neutral-900 p-4 sm:p-6 flex flex-col gap-6 w-full max-w-full min-w-0">
               
               {/* Window Controls & Simulator Tabs */}
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-neutral-900 pb-4 gap-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-neutral-900 pb-4 gap-4 w-full min-w-0">
                 <div className="flex items-center gap-1.5 shrink-0">
-                  <div className="w-2.5 h-2.5 rounded-full bg-neutral-800" />
-                  <div className="w-2.5 h-2.5 rounded-full bg-neutral-800" />
-                  <div className="w-2.5 h-2.5 rounded-full bg-neutral-800" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-[#ff5f56]" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-[#27c93f]" />
                   <span className="text-[10px] text-neutral-500 font-mono ml-2">live_preview_simulator.sh</span>
                 </div>
                 
                 {/* Horizontal scrollable tabs on small screens */}
-                <div className="flex items-center gap-0.5 sm:gap-1 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 no-scrollbar">
+                <div className="flex items-center gap-0.5 sm:gap-1 overflow-x-auto w-full max-w-full min-w-0 sm:w-auto pb-1 sm:pb-0 no-scrollbar">
                   <button 
                     onClick={() => setActiveTab("input")}
                     className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg text-[10px] sm:text-[10.5px] font-semibold transition-all duration-200 shrink-0 border cursor-pointer active:scale-95 ${
@@ -323,7 +341,7 @@ export default function LandingPage() {
                         : "bg-transparent border-transparent text-neutral-400 hover:text-neutral-200 hover:bg-neutral-900"
                     }`}
                   >
-                    <Twitter className="w-3.5 h-3.5" />
+                    <XIcon className="w-3.5 h-3.5" />
                     <span className="hidden sm:inline">X Thread</span>
                   </button>
 
@@ -354,7 +372,7 @@ export default function LandingPage() {
               </div>
 
               {/* Dynamic Tab Pane Wrapper */}
-              <div className="w-full min-h-[300px] flex items-center justify-center overflow-hidden min-w-0">
+              <div className="w-full min-h-[300px] overflow-hidden min-w-0">
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={activeTab}
@@ -421,7 +439,7 @@ export default function LandingPage() {
 
       {/* Footer */}
       <footer className="w-full border-t border-neutral-900 py-8 text-center text-[9px] text-neutral-600 relative z-10 mt-auto">
-        &copy; {new Date().getFullYear()} AI Atomizer. Built with Next.js 14 & Aceternity UI. All rights reserved.
+        &copy; {new Date().getFullYear()} Prism AI. Built with Next.js 14 & Aceternity UI. All rights reserved.
       </footer>
     </div>
   );

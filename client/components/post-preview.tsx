@@ -321,7 +321,7 @@ export const BlogPreview = ({
           <img 
             src={coverUrl} 
             alt={title} 
-            className="w-full h-full object-cover"
+            className="absolute inset-0 w-full h-full object-cover"
           />
         </div>
       )}

@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { 
-  FileText, Twitter, Linkedin, Video, Image as ImageIcon, 
+  FileText, Linkedin, Video, Image as ImageIcon, 
   Copy, Download, RefreshCw, ArrowLeft, Check, Sparkles, Pin, Clock, AlertCircle, Eye, EyeOff,
   MessageCircle, Repeat2, Heart, X
 } from "lucide-react";
@@ -14,6 +14,7 @@ import { ModelSelector } from "@/components/model-selector";
 import { BackgroundBeams } from "@/components/ui/background-beams";
 import { TwitterPreview, LinkedInPreview, BlogPreview } from "@/components/post-preview";
 import { motion, AnimatePresence } from "framer-motion";
+import { XIcon } from "@/components/ui/x-icon";
 import { 
   Project, GeneratedAsset, Highlight, 
   getProject, getAssets, getHighlights, regenerateAsset 
@@ -175,7 +176,7 @@ export default function ProjectDashboardPage() {
       type: "thread",
       title: "Twitter/X Thread",
       description: threadAsset?.content || "Writes a multi-tweet thread layout.",
-      icon: <Twitter className="w-4 h-4 text-[#1d9bf0]" />,
+      icon: <XIcon className="w-4 h-4 text-[#e7e9ea]" />,
       asset: threadAsset,
       className: "md:col-span-1",
       header: (
@@ -376,7 +377,7 @@ export default function ProjectDashboardPage() {
                 <div className="flex items-center gap-3 min-w-0">
                   <span className="p-2 sm:p-2.5 rounded-xl bg-neutral-950 border border-neutral-850 shrink-0 hidden sm:flex">
                     {selectedAsset.asset_type === "blog" && <FileText className="w-4 h-4 text-brand" />}
-                    {selectedAsset.asset_type === "thread" && <Twitter className="w-4 h-4 text-[#1d9bf0]" />}
+                    {selectedAsset.asset_type === "thread" && <XIcon className="w-4 h-4 text-[#e7e9ea]" />}
                     {selectedAsset.asset_type === "linkedin" && <Linkedin className="w-4 h-4 text-[#0a66c2]" />}
                     {selectedAsset.asset_type === "clip" && <Video className="w-4 h-4 text-brand" />}
                     {selectedAsset.asset_type === "thumbnail" && <ImageIcon className="w-4 h-4 text-brand" />}
@@ -438,7 +439,7 @@ export default function ProjectDashboardPage() {
                           <img 
                             src={thumb.content} 
                             alt="Cover thumbnail" 
-                            className="w-full h-full object-cover"
+                            className="absolute inset-0 w-full h-full object-cover"
                           />
                         </div>
                         <div className="flex items-center justify-between text-[10px] text-neutral-500">
