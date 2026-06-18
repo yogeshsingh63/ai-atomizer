@@ -20,7 +20,7 @@ export function HoverBorderGradient({
   return (
     <Tag
       className={cn(
-        "relative flex items-center justify-center rounded-lg border border-neutral-700 bg-neutral-100 text-neutral-950 font-bold px-6 py-2.5 text-xs hover:bg-white hover:border-neutral-500 transition-all duration-200 cursor-pointer shadow-sm focus:outline-none focus:ring-1 focus:ring-neutral-400 select-none",
+        "relative flex items-center justify-center rounded-lg border border-neutral-700 bg-neutral-100 text-neutral-950 font-bold px-6 py-2.5 text-xs hover:bg-white hover:border-neutral-500 transition-all duration-200 cursor-pointer shadow-sm focus:outline-none focus:ring-0 select-none",
         containerClassName
       )}
       {...props}

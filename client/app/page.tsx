@@ -136,9 +136,9 @@ export default function LandingPage() {
               </div>
               <div className="flex flex-col min-w-0 flex-1">
                 <span className="text-xs text-neutral-400 font-semibold uppercase tracking-wider">Source YouTube Video</span>
-                <a href={MOCK_SOURCE_VIDEO.url} target="_blank" rel="noreferrer" className="text-sm font-bold text-neutral-200 hover:text-brand flex items-center gap-1 min-w-0 w-full overflow-hidden">
-                  <span className="truncate flex-1 min-w-0">{MOCK_SOURCE_VIDEO.title}</span>
-                  <ExternalLink className="w-3 h-3 inline shrink-0" />
+                <a href={MOCK_SOURCE_VIDEO.url} target="_blank" rel="noreferrer" className="text-sm font-bold text-neutral-200 hover:text-brand flex flex-wrap items-center gap-1.5 w-full">
+                  <span className="text-neutral-200 hover:text-brand leading-snug break-words">{MOCK_SOURCE_VIDEO.title}</span>
+                  <ExternalLink className="w-3 h-3 inline shrink-0 text-neutral-400" />
                 </a>
               </div>
             </div>
@@ -311,7 +311,7 @@ export default function LandingPage() {
                 <div className="flex items-center gap-0.5 sm:gap-1 overflow-x-auto w-full max-w-full min-w-0 sm:w-auto pb-1 sm:pb-0 no-scrollbar">
                   <button 
                     onClick={() => setActiveTab("input")}
-                    className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg text-[10px] sm:text-[10.5px] font-semibold transition-all duration-200 shrink-0 border cursor-pointer active:scale-95 ${
+                    className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg text-[10px] sm:text-[10.5px] font-semibold transition-all duration-200 shrink-0 border cursor-pointer active:scale-95 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 ${
                       activeTab === "input" 
                         ? "bg-brand-muted border-brand-border text-brand" 
                         : "bg-transparent border-transparent text-neutral-400 hover:text-neutral-200 hover:bg-neutral-900"
@@ -323,7 +323,7 @@ export default function LandingPage() {
                   
                   <button 
                     onClick={() => setActiveTab("linkedin")}
-                    className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg text-[10px] sm:text-[10.5px] font-semibold transition-all duration-200 shrink-0 border cursor-pointer active:scale-95 ${
+                    className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg text-[10px] sm:text-[10.5px] font-semibold transition-all duration-200 shrink-0 border cursor-pointer active:scale-95 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 ${
                       activeTab === "linkedin" 
                         ? "bg-brand-muted border-brand-border text-brand" 
                         : "bg-transparent border-transparent text-neutral-400 hover:text-neutral-200 hover:bg-neutral-900"
@@ -335,7 +335,7 @@ export default function LandingPage() {
                   
                   <button 
                     onClick={() => setActiveTab("twitter")}
-                    className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg text-[10px] sm:text-[10.5px] font-semibold transition-all duration-200 shrink-0 border cursor-pointer active:scale-95 ${
+                    className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg text-[10px] sm:text-[10.5px] font-semibold transition-all duration-200 shrink-0 border cursor-pointer active:scale-95 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 ${
                       activeTab === "twitter" 
                         ? "bg-brand-muted border-brand-border text-brand" 
                         : "bg-transparent border-transparent text-neutral-400 hover:text-neutral-200 hover:bg-neutral-900"
@@ -347,7 +347,7 @@ export default function LandingPage() {
 
                   <button 
                     onClick={() => setActiveTab("blog")}
-                    className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg text-[10px] sm:text-[10.5px] font-semibold transition-all duration-200 shrink-0 border cursor-pointer active:scale-95 ${
+                    className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg text-[10px] sm:text-[10.5px] font-semibold transition-all duration-200 shrink-0 border cursor-pointer active:scale-95 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 ${
                       activeTab === "blog" 
                         ? "bg-brand-muted border-brand-border text-brand" 
                         : "bg-transparent border-transparent text-neutral-400 hover:text-neutral-200 hover:bg-neutral-900"
@@ -359,7 +359,7 @@ export default function LandingPage() {
 
                   <button 
                     onClick={() => setActiveTab("highlights")}
-                    className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg text-[10px] sm:text-[10.5px] font-semibold transition-all duration-200 shrink-0 border cursor-pointer active:scale-95 ${
+                    className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg text-[10px] sm:text-[10.5px] font-semibold transition-all duration-200 shrink-0 border cursor-pointer active:scale-95 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 ${
                       activeTab === "highlights" 
                         ? "bg-brand-muted border-brand-border text-brand" 
                         : "bg-transparent border-transparent text-neutral-400 hover:text-neutral-200 hover:bg-neutral-900"

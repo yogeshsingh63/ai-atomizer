@@ -118,9 +118,8 @@ body {
   background: #2d2d34;
 }
 
-/* Smooth focus ring for accessibility */
-*:focus-visible {
-  outline: 2px solid hsl(var(--brand));
-  outline-offset: 2px;
-  border-radius: 4px;
+/* Disable focus outlines and focus rings globally across the entire website */
+*:focus, *:focus-visible, button:focus, button:focus-visible, input:focus, select:focus, textarea:focus, a:focus {
+  outline: none !important;
+  box-shadow: none !important;
 }

@@ -83,8 +83,8 @@ export const TwitterPreview = ({
   const tweets = parseTweets(content);
 
   return (
-    <div className="flex flex-col w-full max-w-lg mx-auto bg-[#000000] border border-[#2f3336] rounded-2xl overflow-hidden font-sans text-[15px] text-[#e7e9ea] text-left">
-      <div className="px-4 py-3 border-b border-[#2f3336] bg-[#0c1017]/10 flex items-center justify-between">
+    <div className="flex flex-col w-full max-w-lg mx-auto bg-[#000000] border border-neutral-900 rounded-2xl overflow-hidden font-sans text-[15px] text-[#e7e9ea] text-left">
+      <div className="px-4 py-3 border-b border-neutral-900 bg-[#0c1017]/10 flex items-center justify-between">
         <h4 className="text-[11px] font-bold text-neutral-400 tracking-widest uppercase">Post Preview • X / Twitter</h4>
         <div className="flex items-center gap-2">
           {actions}
@@ -193,8 +193,8 @@ export const LinkedInPreview = ({
   actions
 }: PreviewProps) => {
   return (
-    <div className="flex flex-col w-full max-w-lg mx-auto bg-[#18181b] border border-[#27272a] rounded-2xl overflow-hidden font-sans text-[14px] text-neutral-300 shadow-md text-left">
-      <div className="px-4 py-3 border-b border-[#27272a] bg-[#0c1017]/10 flex items-center justify-between">
+    <div className="flex flex-col w-full max-w-lg mx-auto bg-[#18181b] border border-neutral-900 rounded-2xl overflow-hidden font-sans text-[14px] text-neutral-300 shadow-md text-left">
+      <div className="px-4 py-3 border-b border-neutral-900 bg-[#0c1017]/10 flex items-center justify-between">
         <h4 className="text-[11px] font-bold text-neutral-400 tracking-widest uppercase">Post Preview • LinkedIn</h4>
         <div className="flex items-center gap-2">
           {actions}
@@ -208,7 +208,7 @@ export const LinkedInPreview = ({
           <img 
             src={avatarUrl} 
             alt={authorName} 
-            className="w-12 h-12 rounded-full object-cover shrink-0 border border-[#27272a]"
+            className="w-12 h-12 rounded-full object-cover shrink-0 border border-neutral-900"
           />
           <div className="flex flex-col min-w-0">
             <div className="flex items-center gap-1 flex-wrap">
@@ -232,7 +232,7 @@ export const LinkedInPreview = ({
       </div>
 
       {/* Action Bar */}
-      <div className="border-t border-[#27272a] p-1 bg-[#121214] flex items-center justify-around text-neutral-400 text-[10px] sm:text-xs font-bold">
+      <div className="border-t border-neutral-900 p-1 bg-[#121214] flex items-center justify-around text-neutral-400 text-[10px] sm:text-xs font-bold">
         <button className="flex items-center gap-1.5 py-2 px-1 sm:py-3 sm:px-3 hover:bg-neutral-800/60 rounded-lg transition-colors cursor-pointer flex-1 justify-center">
           <ThumbsUp className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-neutral-450" />
           <span className="hidden sm:inline">Like</span>
@@ -307,8 +307,8 @@ export const BlogPreview = ({
   };
 
   return (
-    <div className="flex flex-col w-full max-w-2xl mx-auto bg-neutral-950 border border-neutral-850 rounded-2xl overflow-hidden shadow-lg text-left">
-      <div className="px-4 py-3 border-b border-neutral-850 bg-neutral-900/10 flex items-center justify-between">
+    <div className="flex flex-col w-full max-w-2xl mx-auto bg-neutral-950 border border-neutral-900 rounded-2xl overflow-hidden shadow-lg text-left">
+      <div className="px-4 py-3 border-b border-neutral-900 bg-neutral-900/10 flex items-center justify-between">
         <h4 className="text-[11px] font-bold text-neutral-400 tracking-widest uppercase">Post Preview • Blog Article</h4>
         <div className="flex items-center gap-2">
           {actions}
