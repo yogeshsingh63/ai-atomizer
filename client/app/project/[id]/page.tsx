@@ -354,11 +354,11 @@ export default function ProjectDashboardPage() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 12 }}
               transition={{ duration: 0.25, ease: "easeOut" }}
-              className="w-full max-w-2xl h-full max-h-[85vh] bg-[#121215] border border-neutral-900 rounded-2xl shadow-2xl flex flex-col overflow-hidden relative border-brand-border/20"
+              className="w-full max-w-2xl h-full max-h-[90vh] bg-[#121215] border border-neutral-900 rounded-2xl shadow-2xl flex flex-col overflow-hidden relative border-brand-border/20"
               onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
-            <div className="p-4 sm:p-6 border-b border-neutral-850 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-neutral-950/10">
+            <div className="p-3 sm:p-6 border-b border-neutral-850 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 bg-neutral-950/10">
               <div className="flex items-center gap-3">
                 <span className="p-2.5 rounded-xl bg-neutral-950 border border-neutral-850 shrink-0">
                   {selectedAsset.asset_type === "blog" && <FileText className="w-4 h-4 text-brand" />}
@@ -419,7 +419,7 @@ export default function ProjectDashboardPage() {
             </div>
 
             {/* Content Body */}
-            <div className="flex-1 overflow-y-auto p-6 md:p-8 no-scrollbar bg-neutral-900/10">
+            <div className="flex-1 overflow-y-auto p-3 sm:p-6 md:p-8 no-scrollbar bg-neutral-900/10">
               {selectedAsset.asset_type === "thumbnail" ? (
                 <div className="flex flex-col gap-6">
                   <div className="flex items-center gap-2 p-4 rounded-xl bg-neutral-955 border border-neutral-850 text-neutral-400 text-[11px] leading-relaxed">
@@ -456,7 +456,7 @@ export default function ProjectDashboardPage() {
                     const matchHighlight = highlights.find(h => h.id === clip.related_highlight_id);
                     return (
                       <div key={clip.id} className="p-6 rounded-2xl bg-neutral-950 border border-neutral-850 hover:border-neutral-750 transition-colors flex flex-col gap-4">
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-neutral-900 pb-3">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-neutral-900 pb-2 sm:pb-3">
                           <div className="flex items-center gap-2">
                             <h4 className="text-xs font-bold text-neutral-200">Clip Suggestion #{idx + 1}</h4>
                             <span className="text-[10px] bg-neutral-900 border border-neutral-850 px-2 py-0.5 rounded text-neutral-300 font-semibold tracking-wide">
@@ -506,9 +506,9 @@ export default function ProjectDashboardPage() {
             </div>
 
             {/* Footer Options & Actions */}
-            <div className="p-6 border-t border-neutral-850 bg-neutral-950/20 flex flex-col gap-4">
+            <div className="p-3 sm:p-6 border-t border-neutral-850 bg-neutral-950/20 flex flex-col gap-3 sm:gap-4">
               {/* Inline Model Selection for Regeneration */}
-              <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 p-4 rounded-xl border border-[#1f1f23] bg-[#121215]">
+              <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl border border-[#1f1f23] bg-[#121215]">
                 <ModelSelector
                   mode={regenMode}
                   pinnedModel={regenModel}
@@ -531,11 +531,11 @@ export default function ProjectDashboardPage() {
 
               {/* Copy/Export Buttons */}
               {selectedAsset.asset_type !== "thumbnail" && (
-                <div className="flex flex-col sm:flex-row items-center gap-3 mt-2">
+                <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3 mt-1 sm:mt-2">
                   <MovingBorderButton
                     borderRadius="0.5rem"
                     onClick={() => handleCopy(selectedAsset.content)}
-                    className="flex items-center justify-center gap-2 w-full"
+                    className="flex items-center justify-center gap-2 w-full py-2.5 sm:py-3"
                   >
                     {copied ? (
                       <>
@@ -552,7 +552,7 @@ export default function ProjectDashboardPage() {
 
                   <button
                     onClick={() => handleExport(selectedAsset)}
-                    className="flex items-center justify-center gap-2 py-3 px-6 rounded-lg border border-neutral-800 hover:border-neutral-700 bg-neutral-900 hover:bg-neutral-950 transition-colors w-full cursor-pointer text-xs font-bold text-neutral-200"
+                    className="flex items-center justify-center gap-2 py-2.5 sm:py-3 px-4 sm:px-6 rounded-lg border border-neutral-800 hover:border-neutral-700 bg-neutral-900 hover:bg-neutral-950 transition-colors w-full cursor-pointer text-xs font-bold text-neutral-200"
                   >
                     <Download className="w-3.5 h-3.5" />
                     Download (.txt)

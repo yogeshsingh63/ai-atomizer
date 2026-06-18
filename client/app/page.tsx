@@ -218,7 +218,7 @@ export default function LandingPage() {
   ];
 
   return (
-    <div className="flex flex-col min-h-screen bg-neutral-950 text-neutral-100 relative overflow-hidden">
+    <div className="flex flex-col min-h-screen bg-neutral-950 text-neutral-100 relative overflow-x-hidden">
       {/* Background Thin Static Grid */}
       <BackgroundBeams />
 
@@ -242,17 +242,17 @@ export default function LandingPage() {
 
       {/* Hero Section */}
       <section className="flex flex-col items-center text-center justify-center max-w-5xl mx-auto px-4 sm:px-6 pt-14 sm:pt-20 pb-12 sm:pb-16 relative z-10 flex-1">
-        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-muted border border-brand-border text-[10px] font-bold text-brand mb-6 uppercase tracking-wider">
-          <Flame className="w-3.5 h-3.5" />
-          Premium Content Repurposing Pipeline
+        <div className="flex items-center justify-center gap-1.5 px-3 py-1 rounded-full bg-brand-muted border border-brand-border text-[9px] sm:text-[10px] font-bold text-brand mb-5 sm:mb-6 uppercase tracking-wider text-center">
+          <Flame className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" />
+          <span>Content Repurposing Pipeline</span>
         </div>
 
-        <h1 className="text-3xl font-extrabold sm:text-6xl tracking-tight leading-[1.12] text-neutral-100 max-w-4xl">
-          Convert Long Videos & Audio Into <span className="underline decoration-brand/60 decoration-wavy underline-offset-8 text-brand">Structured Social Assets</span>
+        <h1 className="text-2xl sm:text-4xl md:text-6xl font-extrabold tracking-tight leading-[1.15] text-neutral-100 max-w-4xl px-1">
+          Convert Long Videos & Audio Into <span className="underline decoration-brand/60 decoration-wavy underline-offset-4 sm:underline-offset-8 text-brand">Structured Social Assets</span>
         </h1>
 
-        <p className="text-xs sm:text-sm text-neutral-400 max-w-2xl mt-5 sm:mt-6 leading-relaxed">
-          Unlock maximum distribution. Supply YouTube links, raw audio/video uploads, or text logs. The system structures transcribing, extracts highlights, writes targeted network updates, and maps post previews.
+        <p className="text-[11px] sm:text-sm text-neutral-400 max-w-2xl mt-4 sm:mt-6 leading-relaxed px-2 sm:px-0">
+          Supply YouTube links, raw audio/video uploads, or text logs. The system transcribes, extracts highlights, and writes targeted network posts.
         </p>
 
         <div className="flex flex-col sm:flex-row items-center gap-3 mt-8 sm:mt-10 w-full max-w-sm sm:max-w-none mx-auto justify-center">
@@ -275,7 +275,7 @@ export default function LandingPage() {
         </div>
 
         {/* Live Simulator Mockup Section */}
-        <div id="simulator" className="w-full max-w-4xl mt-20 relative">
+        <div id="simulator" className="w-full max-w-4xl mt-12 sm:mt-20 relative">
           <div className="border border-neutral-850 rounded-2xl overflow-hidden bg-neutral-900/10 backdrop-blur-md p-1 border-brand-border/40 shadow-xl">
             
             <div className="bg-neutral-950 rounded-xl border border-neutral-900 p-4 sm:p-6 flex flex-col gap-6">
@@ -290,65 +290,65 @@ export default function LandingPage() {
                 </div>
                 
                 {/* Horizontal scrollable tabs on small screens */}
-                <div className="flex items-center gap-1 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 no-scrollbar">
+                <div className="flex items-center gap-0.5 sm:gap-1 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 no-scrollbar">
                   <button 
                     onClick={() => setActiveTab("input")}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10.5px] font-semibold transition-all duration-200 shrink-0 border cursor-pointer ${
+                    className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg text-[10px] sm:text-[10.5px] font-semibold transition-all duration-200 shrink-0 border cursor-pointer active:scale-95 ${
                       activeTab === "input" 
                         ? "bg-brand-muted border-brand-border text-brand" 
                         : "bg-transparent border-transparent text-neutral-400 hover:text-neutral-200 hover:bg-neutral-900"
                     }`}
                   >
                     <Youtube className="w-3.5 h-3.5" />
-                    Source YouTube
+                    <span className="hidden sm:inline">Source</span>
                   </button>
                   
                   <button 
                     onClick={() => setActiveTab("linkedin")}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10.5px] font-semibold transition-all duration-200 shrink-0 border cursor-pointer ${
+                    className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg text-[10px] sm:text-[10.5px] font-semibold transition-all duration-200 shrink-0 border cursor-pointer active:scale-95 ${
                       activeTab === "linkedin" 
                         ? "bg-brand-muted border-brand-border text-brand" 
                         : "bg-transparent border-transparent text-neutral-400 hover:text-neutral-200 hover:bg-neutral-900"
                     }`}
                   >
                     <Linkedin className="w-3.5 h-3.5" />
-                    LinkedIn Card
+                    <span className="hidden sm:inline">LinkedIn</span>
                   </button>
                   
                   <button 
                     onClick={() => setActiveTab("twitter")}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10.5px] font-semibold transition-all duration-200 shrink-0 border cursor-pointer ${
+                    className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg text-[10px] sm:text-[10.5px] font-semibold transition-all duration-200 shrink-0 border cursor-pointer active:scale-95 ${
                       activeTab === "twitter" 
                         ? "bg-brand-muted border-brand-border text-brand" 
                         : "bg-transparent border-transparent text-neutral-400 hover:text-neutral-200 hover:bg-neutral-900"
                     }`}
                   >
                     <Twitter className="w-3.5 h-3.5" />
-                    X Thread
+                    <span className="hidden sm:inline">X Thread</span>
                   </button>
 
                   <button 
                     onClick={() => setActiveTab("blog")}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10.5px] font-semibold transition-all duration-200 shrink-0 border cursor-pointer ${
+                    className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg text-[10px] sm:text-[10.5px] font-semibold transition-all duration-200 shrink-0 border cursor-pointer active:scale-95 ${
                       activeTab === "blog" 
                         ? "bg-brand-muted border-brand-border text-brand" 
                         : "bg-transparent border-transparent text-neutral-400 hover:text-neutral-200 hover:bg-neutral-900"
                     }`}
                   >
                     <FileText className="w-3.5 h-3.5" />
-                    Blog Article
+                    <span className="hidden sm:inline">Blog</span>
                   </button>
 
                   <button 
                     onClick={() => setActiveTab("highlights")}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10.5px] font-semibold transition-all duration-200 shrink-0 border cursor-pointer ${
+                    className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg text-[10px] sm:text-[10.5px] font-semibold transition-all duration-200 shrink-0 border cursor-pointer active:scale-95 ${
                       activeTab === "highlights" 
                         ? "bg-brand-muted border-brand-border text-brand" 
                         : "bg-transparent border-transparent text-neutral-400 hover:text-neutral-200 hover:bg-neutral-900"
                     }`}
                   >
                     <ListCollapse className="w-3.5 h-3.5" />
-                    Short Highlights
+                    <span className="hidden sm:inline">Highlights</span>
                   </button>
                 </div>
               </div>
@@ -376,21 +376,21 @@ export default function LandingPage() {
 
       {/* Features Grid */}
       <section id="features" className="max-w-7xl mx-auto px-4 sm:px-6 py-16 sm:py-24 border-t border-neutral-900 relative z-10 w-full">
-        <div className="flex flex-col items-center text-center gap-2 mb-16">
-          <span className="text-[10px] uppercase font-bold text-brand tracking-widest brand-badge px-2.5 py-1 rounded-full">Features System</span>
-          <h2 className="text-xl font-extrabold text-neutral-100 sm:text-3xl tracking-tight mt-3">
+        <div className="flex flex-col items-center text-center gap-2 mb-10 sm:mb-16">
+          <span className="text-[9px] sm:text-[10px] uppercase font-bold text-brand tracking-widest brand-badge px-2.5 py-1 rounded-full">Features System</span>
+          <h2 className="text-lg sm:text-xl md:text-3xl font-extrabold text-neutral-100 tracking-tight mt-3">
             Engineered For Editorial Integrity
           </h2>
-          <p className="text-xs sm:text-sm text-neutral-500 max-w-lg mt-1">
+          <p className="text-[11px] sm:text-sm text-neutral-500 max-w-lg mt-1 px-2 sm:px-0">
             We move past basic template formatting. The engine optimizes context, reviews structural logic, and targets platforms.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           {features.map((feature, idx) => (
             <div 
               key={idx} 
-              className="premium-panel p-6 rounded-xl flex flex-col gap-4"
+              className="premium-panel p-5 sm:p-6 rounded-xl flex flex-col gap-3 sm:gap-4"
             >
               <div className="w-8 h-8 rounded-lg bg-neutral-950 border border-neutral-900 flex items-center justify-center shadow-sm text-brand">
                 {feature.icon}
@@ -405,7 +405,7 @@ export default function LandingPage() {
       {/* Action Banner */}
       <section className="w-full max-w-4xl mx-auto px-4 sm:px-6 pb-16 sm:pb-24 relative z-10 text-center">
         <div className="bg-[#0e0e11] border border-neutral-900/60 border-brand-border/20 p-6 sm:p-12 rounded-2xl flex flex-col items-center gap-5 sm:gap-6">
-          <h3 className="text-xl sm:text-2xl font-extrabold text-neutral-150">Ready to distribute your voice?</h3>
+          <h3 className="text-lg sm:text-xl md:text-2xl font-extrabold text-neutral-150">Ready to distribute your voice?</h3>
           <p className="text-xs text-neutral-400 max-w-sm leading-relaxed">
             Stop manually scripting separate updates. Transform your first transcript in less than 90 seconds.
           </p>
