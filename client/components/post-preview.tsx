@@ -234,19 +234,19 @@ export const LinkedInPreview = ({
       {/* Action Bar */}
       <div className="border-t border-neutral-900 p-1 bg-[#121214] flex items-center justify-around text-neutral-400 text-[10px] sm:text-xs font-bold">
         <button className="flex items-center gap-1.5 py-2 px-1 sm:py-3 sm:px-3 hover:bg-neutral-800/60 rounded-lg transition-colors cursor-pointer flex-1 justify-center">
-          <ThumbsUp className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-neutral-450" />
+          <ThumbsUp className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-neutral-400" />
           <span className="hidden sm:inline">Like</span>
         </button>
         <button className="flex items-center gap-1.5 py-2 px-1 sm:py-3 sm:px-3 hover:bg-neutral-800/60 rounded-lg transition-colors cursor-pointer flex-1 justify-center">
-          <MessageSquare className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-neutral-450" />
+          <MessageSquare className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-neutral-400" />
           <span className="hidden sm:inline">Comment</span>
         </button>
         <button className="flex items-center gap-1.5 py-2 px-1 sm:py-3 sm:px-3 hover:bg-neutral-800/60 rounded-lg transition-colors cursor-pointer flex-1 justify-center">
-          <Repeat2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-neutral-450" />
+          <Repeat2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-neutral-400" />
           <span className="hidden sm:inline">Repost</span>
         </button>
         <button className="flex items-center gap-1.5 py-2 px-1 sm:py-3 sm:px-3 hover:bg-neutral-800/60 rounded-lg transition-colors cursor-pointer flex-1 justify-center">
-          <Send className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-neutral-450" />
+          <Send className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-neutral-400" />
           <span className="hidden sm:inline">Send</span>
         </button>
       </div>

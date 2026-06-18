@@ -53,7 +53,7 @@ export const MultiStepLoader = ({
             </span>
           )}
         </div>
-        <p className="text-[11px] text-neutral-450 leading-relaxed">
+        <p className="text-[11px] text-neutral-400 leading-relaxed">
           Converting your raw content into platform-optimized text structures.
         </p>
       </div>

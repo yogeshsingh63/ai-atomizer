@@ -179,13 +179,13 @@ export default function LandingPage() {
         );
       case "blog":
         return (
-          <div className="relative max-h-[480px] overflow-y-auto no-scrollbar border border-neutral-850 rounded-2xl w-full max-w-full overflow-hidden">
+          <div className="relative max-h-[480px] overflow-y-auto no-scrollbar border border-neutral-900 rounded-2xl w-full max-w-full overflow-hidden">
             <BlogPreview content={MOCK_BLOG} title="Building the World's Fastest Storage Engine" actions={renderCopyButton(MOCK_BLOG, "Copy blog article")} />
           </div>
         );
       case "highlights":
         return (
-          <div className="flex flex-col gap-3 w-full max-w-full sm:max-w-lg mx-auto bg-neutral-950 border border-neutral-850 p-4 sm:p-5 rounded-2xl overflow-hidden">
+          <div className="flex flex-col gap-3 w-full max-w-full sm:max-w-lg mx-auto bg-neutral-950 border border-neutral-900 p-4 sm:p-5 rounded-2xl overflow-hidden">
             <div className="flex items-center justify-between border-b border-neutral-900 pb-3 mb-2 flex-wrap gap-2">
               <span className="text-xs font-bold text-neutral-300">Extracted Highlights & Short Clips</span>
               <span className="text-[10px] text-neutral-500">{MOCK_HIGHLIGHTS.length} clips found</span>
@@ -200,7 +200,7 @@ export default function LandingPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between flex-wrap gap-2">
                       <span className="text-xs font-bold text-neutral-200 group-hover:text-brand transition-colors truncate">{item.title}</span>
-                      <span className="text-[10px] font-mono bg-neutral-900 text-neutral-450 border border-neutral-850 px-1.5 py-0.5 rounded shrink-0">
+                      <span className="text-[10px] font-mono bg-neutral-900 text-neutral-400 border border-neutral-900 px-1.5 py-0.5 rounded shrink-0">
                         {item.timestamp}
                       </span>
                     </div>
@@ -252,7 +252,7 @@ export default function LandingPage() {
         </div>
         <Link 
           href="/new" 
-          className="text-xs font-semibold text-neutral-300 hover:text-neutral-150 bg-neutral-900 hover:bg-neutral-850 border border-neutral-800 px-4 py-2 rounded-lg transition-all duration-200 active:scale-95"
+          className="text-xs font-semibold text-neutral-300 hover:text-white bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 px-4 py-2 rounded-lg transition-all duration-200 active:scale-95"
         >
           Launch Engine
         </Link>
@@ -286,7 +286,7 @@ export default function LandingPage() {
           
           <a
             href="#simulator"
-            className="w-full sm:w-auto py-3 px-8 text-xs font-semibold text-neutral-300 hover:text-neutral-150 bg-neutral-900/40 hover:bg-neutral-900/80 border border-neutral-800 hover:border-neutral-700 rounded-xl transition-all duration-200 active:scale-[0.98] flex items-center justify-center gap-2"
+            className="w-full sm:w-auto py-3 px-8 text-xs font-semibold text-neutral-300 hover:text-white bg-neutral-900/40 hover:bg-neutral-900/80 border border-neutral-800 hover:border-neutral-700 rounded-xl transition-all duration-200 active:scale-[0.98] flex items-center justify-center gap-2"
           >
             See interactive preview
           </a>
@@ -294,7 +294,7 @@ export default function LandingPage() {
 
         {/* Live Simulator Mockup Section */}
         <div id="simulator" className="w-full max-w-4xl mt-12 sm:mt-20 relative px-1">
-          <div className="border border-neutral-850 rounded-2xl overflow-hidden bg-neutral-900/10 backdrop-blur-md p-1 border-brand-border/40 shadow-xl w-full max-w-full min-w-0">
+          <div className="border border-neutral-900 rounded-2xl overflow-hidden bg-neutral-900/10 backdrop-blur-md p-1 border-brand-border/40 shadow-xl w-full max-w-full min-w-0">
             
             <div className="bg-neutral-950 rounded-xl border border-neutral-900 p-4 sm:p-6 flex flex-col gap-6 w-full max-w-full min-w-0">
               
@@ -413,8 +413,8 @@ export default function LandingPage() {
               <div className="w-8 h-8 rounded-lg bg-neutral-950 border border-neutral-900 flex items-center justify-center shadow-sm text-brand">
                 {feature.icon}
               </div>
-              <h4 className="text-xs font-bold text-neutral-205 mt-2">{feature.title}</h4>
-              <p className="text-[11px] text-neutral-450 leading-relaxed">{feature.description}</p>
+              <h4 className="text-xs font-bold text-neutral-200 mt-2">{feature.title}</h4>
+              <p className="text-[11px] text-neutral-400 leading-relaxed">{feature.description}</p>
             </div>
           ))}
         </div>
@@ -423,7 +423,7 @@ export default function LandingPage() {
       {/* Action Banner */}
       <section className="w-full max-w-4xl mx-auto px-4 sm:px-6 pb-16 sm:pb-24 relative z-10 text-center">
         <div className="bg-[#0e0e11] border border-neutral-900/60 border-brand-border/20 p-6 sm:p-12 rounded-2xl flex flex-col items-center gap-5 sm:gap-6">
-          <h3 className="text-lg sm:text-xl md:text-2xl font-extrabold text-neutral-150">Ready to distribute your voice?</h3>
+          <h3 className="text-lg sm:text-xl md:text-2xl font-extrabold text-neutral-100">Ready to distribute your voice?</h3>
           <p className="text-xs text-neutral-400 max-w-sm leading-relaxed">
             Stop manually scripting separate updates. Transform your first transcript in less than 90 seconds.
           </p>

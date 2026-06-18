@@ -163,7 +163,7 @@ export default function NewProjectPage() {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g. Scaling AI Startups Panel"
-              className="w-full bg-neutral-950 border border-neutral-850 focus:border-brand-border focus:ring-1 focus:ring-brand/30 rounded-lg px-4 py-3 text-xs text-neutral-200 outline-none transition-all duration-200"
+              className="w-full bg-neutral-950 border border-neutral-900 focus:border-brand-border focus:ring-1 focus:ring-brand/30 rounded-lg px-4 py-3 text-xs text-neutral-200 outline-none transition-all duration-200"
             />
           </div>
 

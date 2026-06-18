@@ -24,7 +24,7 @@ export function Button({
   return (
     <Component
       className={cn(
-        "relative flex items-center justify-center rounded-lg border border-neutral-800 bg-neutral-900 text-neutral-100 font-semibold px-6 py-2.5 text-xs hover:bg-neutral-850 hover:border-neutral-700 transition-all duration-200 cursor-pointer shadow-sm select-none sm:w-auto w-full",
+        "relative flex items-center justify-center rounded-lg border border-neutral-800 bg-neutral-900 text-neutral-100 font-semibold px-6 py-2.5 text-xs hover:bg-neutral-800 hover:border-neutral-700 transition-all duration-200 cursor-pointer shadow-sm select-none sm:w-auto w-full",
         containerClassName
       )}
       {...otherProps}
