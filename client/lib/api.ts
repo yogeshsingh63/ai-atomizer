@@ -222,7 +222,7 @@ export async function createProject(data: {
 export async function getProject(id: number): Promise<Project> {
   if (await isBackendOnline()) {
     try {
-      const res = await fetch(`${BACKEND_URL}/projects/${id}`, {
+      const res = await fetch(`${BACKEND_URL}/projects/${id}?t=${Date.now()}`, {
         headers: getAuthHeaders(),
       });
       if (res.ok) return await res.json();
@@ -254,7 +254,7 @@ export async function getProject(id: number): Promise<Project> {
 export async function getHighlights(id: number): Promise<Highlight[]> {
   if (await isBackendOnline()) {
     try {
-      const res = await fetch(`${BACKEND_URL}/projects/${id}/highlights`, {
+      const res = await fetch(`${BACKEND_URL}/projects/${id}/highlights?t=${Date.now()}`, {
         headers: getAuthHeaders(),
       });
       if (res.ok) return await res.json();
@@ -268,7 +268,7 @@ export async function getHighlights(id: number): Promise<Highlight[]> {
 export async function getAssets(id: number): Promise<GeneratedAsset[]> {
   if (await isBackendOnline()) {
     try {
-      const res = await fetch(`${BACKEND_URL}/projects/${id}/assets`, {
+      const res = await fetch(`${BACKEND_URL}/projects/${id}/assets?t=${Date.now()}`, {
         headers: getAuthHeaders(),
       });
       if (res.ok) return await res.json();
@@ -331,7 +331,7 @@ export function subscribeToEvents(
       eventSource.onmessage = (e) => {
         const data = JSON.parse(e.data);
         onEvent(data);
-        if (data.stage === 'done' || data.status === 'completed') {
+        if (data.stage === 'Running Critic Review' && data.status === 'completed') {
           eventSource?.close();
           onComplete();
         }
@@ -540,8 +540,7 @@ function runMockPipelineFlow(
     { name: 'Transcribing Audio', duration: 3000 },
     { name: 'Extracting Highlights', duration: 4000 },
     { name: 'Generating Assets', duration: 4500 },
-    { name: 'Running Critic Review', duration: 3500 },
-    { name: 'Generating Thumbnails', duration: 3000 }
+    { name: 'Running Critic Review', duration: 3500 }
   ];
 
   let currentStageIndex = 0;

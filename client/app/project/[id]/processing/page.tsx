@@ -11,7 +11,6 @@ const STEPS: LoaderStep[] = [
   { text: "Extracting Key Highlights", stage: "Extracting Highlights" },
   { text: "Writing Articles and Social Assets", stage: "Generating Assets" },
   { text: "Optimizing with Critic Model Pass", stage: "Running Critic Review" },
-  { text: "Rendering AI Cover Thumbnails", stage: "Generating Thumbnails" },
 ];
 
 export default function ProcessingPage() {
@@ -44,9 +43,10 @@ export default function ProcessingPage() {
         setErrorMsg("Pipeline run failed. Please check backend logs.");
       },
       () => {
-        // Completion handler: Redirect to dashboard
+        // Completion handler: Redirect to dashboard with replacement and route refresh to prevent stale cache
         setTimeout(() => {
-          router.push(`/project/${projectId}`);
+          router.replace(`/project/${projectId}`);
+          router.refresh();
         }, 1000);
       }
     );

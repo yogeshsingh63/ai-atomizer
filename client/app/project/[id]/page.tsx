@@ -21,6 +21,8 @@ import {
 } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
+const DEFAULT_THUMBNAIL_PLACEHOLDER = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=600&auto=format&fit=crop";
+
 export default function ProjectDashboardPage() {
   const params = useParams();
   const router = useRouter();
@@ -57,7 +59,7 @@ export default function ProjectDashboardPage() {
 
         // If the project is not done yet, redirect to the processing loader/error screen
         if (p && p.status !== "done") {
-          router.push(`/project/${projectId}/processing`);
+          router.replace(`/project/${projectId}/processing`);
           return;
         }
 
@@ -201,27 +203,31 @@ export default function ProjectDashboardPage() {
       icon: <XIcon className="w-4 h-4 text-[#e7e9ea]" />,
       asset: threadAsset,
       className: "md:col-span-1",
-      header: (
-        <div className="h-32 bg-neutral-950 rounded-xl flex flex-col p-4 border border-neutral-900 relative overflow-hidden text-left justify-center select-none text-[11px] text-[#71767b]">
-          <div className="flex gap-2 items-start">
-            <div className="w-6 h-6 rounded-full bg-neutral-800 border border-[#2f3336] shrink-0" />
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-1 flex-wrap">
-                <span className="font-bold text-[#e7e9ea] text-[10.5px]">Puneet</span>
-                <span className="truncate">@system</span>
+      header: (() => {
+        const threadTweets = threadAsset?.content ? parseThreadIntoTweets(threadAsset.content) : [];
+        const firstTweet = threadTweets.length > 0 ? threadTweets[0] : "1/ We built the world's fastest database by breaking assumption...";
+        return (
+          <div className="h-32 bg-neutral-950 rounded-xl flex flex-col p-4 border border-neutral-900 relative overflow-hidden text-left justify-center select-none text-[11px] text-[#71767b]">
+            <div className="flex gap-2 items-start">
+              <div className="w-6 h-6 rounded-full bg-neutral-800 border border-[#2f3336] shrink-0" />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1 flex-wrap">
+                  <span className="font-bold text-[#e7e9ea] text-[10.5px]">Yogesh</span>
+                  <span className="truncate">@yogesh_rajawat</span>
+                </div>
+                <p className="text-[#e7e9ea] leading-tight line-clamp-2 mt-0.5 whitespace-pre-wrap">
+                  {firstTweet}
+                </p>
               </div>
-              <p className="text-[#e7e9ea] leading-tight line-clamp-2 mt-0.5">
-                1/ We built the world's fastest database by breaking assumption...
-              </p>
+            </div>
+            <div className="flex items-center gap-4 text-[9px] text-[#71767b] mt-3 pl-8">
+              <span className="flex items-center gap-0.5"><MessageCircle className="w-3 h-3" /> 12</span>
+              <span className="flex items-center gap-0.5"><Repeat2 className="w-3 h-3" /> 8</span>
+              <span className="flex items-center gap-0.5"><Heart className="w-3 h-3" /> 42</span>
             </div>
           </div>
-          <div className="flex items-center gap-4 text-[9px] text-[#71767b] mt-3 pl-8">
-            <span className="flex items-center gap-0.5"><MessageCircle className="w-3 h-3" /> 12</span>
-            <span className="flex items-center gap-0.5"><Repeat2 className="w-3 h-3" /> 8</span>
-            <span className="flex items-center gap-0.5"><Heart className="w-3 h-3" /> 42</span>
-          </div>
-        </div>
-      )
+        );
+      })()
     },
     {
       type: "linkedin",
@@ -235,12 +241,12 @@ export default function ProjectDashboardPage() {
           <div className="flex gap-2 items-center">
             <div className="w-6 h-6 rounded-full bg-neutral-800 border border-neutral-900 shrink-0" />
             <div className="flex flex-col min-w-0">
-              <span className="font-bold text-neutral-200 text-[10.5px]">Puneet Patwari</span>
-              <span className="text-[9px] text-[#71767b] truncate">Systems Engineer</span>
+              <span className="font-bold text-neutral-200 text-[10.5px]">Yogesh</span>
+              <span className="text-[9px] text-[#71767b] truncate">AI Content Strategist</span>
             </div>
           </div>
-          <p className="text-neutral-300 leading-tight line-clamp-2 mt-2">
-            Building a high-throughput system isn't about hardware. It's about designing...
+          <p className="text-neutral-300 leading-tight line-clamp-2 mt-2 whitespace-pre-wrap">
+            {linkedinAsset?.content || "Building a high-throughput system isn't about hardware. It's about designing..."}
           </p>
         </div>
       )
@@ -264,7 +270,7 @@ export default function ProjectDashboardPage() {
             <span className="text-neutral-700">&rarr;</span>
             <span className="text-[10px] font-mono bg-neutral-900 border border-neutral-800 px-1.5 py-0.5 rounded text-neutral-400">03:10</span>
           </div>
-
+ 
           <div className="w-full bg-neutral-900 h-1 rounded-full overflow-hidden">
             <div className="bg-brand h-full w-[65%]" />
           </div>
@@ -274,26 +280,26 @@ export default function ProjectDashboardPage() {
     {
       type: "thumbnail",
       title: "AI Thumbnail Images",
-      description: `${thumbnailAssets.length} image thumbnails created for cover layouts.`,
+      description: `${thumbnailAssets.length || 1} image thumbnail templates for cover layouts.`,
       icon: <ImageIcon className="w-4 h-4 text-brand" />,
-      asset: thumbnailAssets[0],
+      asset: thumbnailAssets[0] || {
+        id: -1,
+        project_id: projectId,
+        asset_type: "thumbnail",
+        content: DEFAULT_THUMBNAIL_PLACEHOLDER,
+        model_used: "placeholder",
+        status: "done",
+        created_at: new Date().toISOString()
+      },
       className: "md:col-span-1",
       header: (
         <div className="h-32 bg-neutral-950 rounded-xl overflow-hidden border border-neutral-900 relative group/thumb">
-          {thumbnailAssets[0]?.content ? (
-            <>
-              <img 
-                src={thumbnailAssets[0].content} 
-                alt="Thumbnail" 
-                className="w-full h-full object-cover group-hover/thumb:scale-105 transition-transform duration-300"
-              />
-              <div className="absolute inset-0 bg-neutral-950/40 group-hover/thumb:bg-neutral-950/20 transition-colors" />
-            </>
-          ) : (
-            <div className="w-full h-full bg-neutral-950 flex items-center justify-center">
-              <ImageIcon className="w-6 h-6 text-neutral-700" />
-            </div>
-          )}
+          <img 
+            src={thumbnailAssets[0]?.content || DEFAULT_THUMBNAIL_PLACEHOLDER} 
+            alt="Thumbnail" 
+            className="w-full h-full object-cover group-hover/thumb:scale-105 transition-transform duration-300"
+          />
+          <div className="absolute inset-0 bg-neutral-950/40 group-hover/thumb:bg-neutral-950/20 transition-colors" />
         </div>
       )
     }
@@ -533,7 +539,7 @@ export default function ProjectDashboardPage() {
                             <BlogPreview 
                               content={selectedAsset.content} 
                               title={project?.title} 
-                              coverUrl={thumbnailAssets[0]?.content}
+                              coverUrl={thumbnailAssets[0]?.content || DEFAULT_THUMBNAIL_PLACEHOLDER}
                             />
                           )}
                           {selectedAsset.asset_type === "thread" && (
