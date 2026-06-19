@@ -11,7 +11,6 @@ from app.db import async_session
 from app.models import Project, Transcript, Highlight, GeneratedAsset, Job
 from app.services.llm import chat_completion
 from app.services.transcribe import transcribe_audio
-from app.services.imagegen import generate_image
 
 logger = logging.getLogger(__name__)
 
@@ -197,12 +196,12 @@ async def run_pipeline(project_id: int):
             await update_job_status(db, project_id, "Extracting Highlights", "running")
             
             highlights_prompt = (
-                "You are an expert content editor. You will be given a transcript with timestamps.\n"
-                "Identify the 3 to 7 most compelling, quotable, or surprising moments in it—the kind of moments that make someone stop scrolling.\n\n"
-                "For each moment, return:\n"
-                "- start_seconds, end_seconds (integer timestamps corresponding to the moment)\n"
-                "- quote: the exact or lightly cleaned-up quote from that moment\n"
-                "- reason: one sentence on why this moment is notable (surprising claim, peak, actionable advice, etc.)\n\n"
+                "You are an elite video editor and content strategist. You will be given a transcript with timestamps.\n"
+                "Your task is to identify the 3 to 7 most compelling, high-impact, or surprising moments in the transcript—the kinds of hooks that make people stop scrolling on social feeds.\n\n"
+                "For each highlight, you must extract:\n"
+                "- start_seconds, end_seconds: Exact integer timestamps marking the start and end of this specific moment.\n"
+                "- quote: The exact word-for-word quote from the transcript corresponding to these timestamps. Do not paraphrase.\n"
+                "- reason: A brief, punchy, 1-sentence explanation of why this moment is notable (e.g. key takeaway, surprising claim, counter-intuitive insight).\n\n"
                 "Respond ONLY with a valid JSON object matching this exact shape:\n"
                 '{"highlights": [{"start_seconds": 0, "end_seconds": 0, "quote": "quote text", "reason": "reason description"}]}'
             )
@@ -264,14 +263,44 @@ async def run_pipeline(project_id: int):
             await update_job_status(db, project_id, "Generating Assets", "running")
 
             # Formulate text formats prompts
-            blog_sys = "Write a long-form blog post (600-900 words) based on this transcript. Include an H1 title and H2 section headers. Do not use generic filler phrases like 'in today's world' or 'let's dive in'. Write in a direct, no-fluff tone."
-            thread_sys = (
-                "Write a 5-8 tweet thread based on this transcript. "
-                "Tweet 1 must be a hook. End with a one-line takeaway. "
-                "Number each tweet clearly (e.g., 1/, 2/, etc.). "
-                "CRITICAL: Each individual tweet (including its number prefix) MUST be strictly under 280 characters so it fits the X free-tier limit. Keep them punchy."
+            blog_sys = (
+                "You are an elite technology blogger and technical writer. "
+                "Write a high-quality, comprehensive long-form blog post (700-1000 words) based on the provided transcript and key highlights.\n\n"
+                "Structuring Guidelines:\n"
+                "- Create a catchy, high-conversion H1 title.\n"
+                "- Divide the post into logical H2 and H3 sections to keep the reader engaged.\n"
+                "- Integrate at least two exact, relevant quotes from the transcript inside blockquotes (> \"quote\") to establish credibility.\n"
+                "- Use bullet points, bold key concepts, and formatted lists to make the article highly scannable.\n\n"
+                "Writing & Style Rules:\n"
+                "- Tone must be authoritative, clear, and direct. Avoid corporate speak or marketing hype.\n"
+                "- DO NOT use generic AI intro/outro filler phrases (e.g., 'In today\'s fast-paced digital landscape', 'Let\'s dive in', 'In conclusion', 'It is important to remember'). Start directly with a compelling hook.\n"
+                "- Ground all claims, statistics, and examples strictly in the transcript data. Do not make up external facts.\n"
+                "- Focus on creating value-dense, deep-dive content."
             )
-            linkedin_sys = "Write a LinkedIn post (150-250 words) based on this transcript. Open with a one-line hook. Professional but not corporate-speak tone. End with one concrete takeaway."
+            thread_sys = (
+                "You are a master of social copywriting and Twitter/X storytelling. "
+                "Write an engaging 5-8 tweet thread based on the provided transcript.\n\n"
+                "Formatting & Structure:\n"
+                "- Tweet 1: Hook. Must be a scroll-stopping statement, question, or counter-intuitive insight derived from the transcript. Add a thread indicator (🧵 or 'a thread:').\n"
+                "- Tweets 2-7: Value-dense body tweets. Every tweet must offer a specific key takeaway, concrete example, or actionable step from the source data.\n"
+                "- Tweet 8 (Final): Clear, punchy one-line summary takeaway.\n"
+                "- Number each tweet clearly at the start (e.g., '1/', '2/', etc.).\n\n"
+                "CRITICAL constraints:\n"
+                "- Every single tweet MUST be strictly under 280 characters (including its number prefix). Double-check lengths.\n"
+                "- Avoid generic AI summaries. Ensure each tweet reads like it was written by an active practitioner.\n"
+                "- Use whitespace and linebreaks strategically within each tweet to make them highly readable."
+            )
+            linkedin_sys = (
+                "You are a thought leader on LinkedIn. "
+                "Write a high-converting, professional LinkedIn post (200-300 words) based on the transcript.\n\n"
+                "Guidelines:\n"
+                "- Open with a powerful, single-line hook that creates curiosity or challenges status quo.\n"
+                "- Structure the post with generous spacing (short paragraphs of 1-2 sentences) to ensure it is easy to scan on mobile devices.\n"
+                "- Focus on a core narrative: 'Problem -> Actionable Insight from Transcript -> Concrete Lesson'.\n"
+                "- Integrate a key quote from the transcript naturally.\n"
+                "- End with an engaging question to drive comments, followed by 3-4 highly relevant hashtags.\n"
+                "- Style: Professional, authentic, and direct. Avoid emojis overload or corporate buzzwords."
+            )
 
             highlights_summary = "\n".join([f"- Quote: \"{h.quote}\" (Reason: {h.reason})" for h in highlights_list])
             user_content = f"Source Transcript:\n{full_text}\n\nKey Highlights to cover:\n{highlights_summary}"
@@ -288,7 +317,13 @@ async def run_pipeline(project_id: int):
             # Generate clip caption recommendations
             clip_content_parts = []
             for idx, h in enumerate(highlights_list):
-                clip_sys = "Given this key moment quote, write a short caption (1 sentence, platform style) and an on-screen text overlay instruction (max 6 words, punchy)."
+                clip_sys = (
+                    "You are a viral short-form video editor (TikTok, Instagram Reels, YouTube Shorts). "
+                    "Given the key moment quote from the transcript, write:\n"
+                    "1. A high-engagement caption (1-2 sentences, punchy, curiosity-driven).\n"
+                    "2. A scroll-stopping on-screen text overlay instruction (max 5 words, uppercase, punchy, e.g., 'THE TRUTH ABOUT AI', '10X YOUR LEVERAGE').\n\n"
+                    "Make it modern, snappy, and optimized for social feeds."
+                )
                 clip_res, clip_model = await chat_completion(
                     [{"role": "user", "content": f"Moment Quote: \"{h.quote}\""}],
                     system_prompt=clip_sys,
@@ -301,16 +336,19 @@ async def run_pipeline(project_id: int):
 
             # --- STEP 4.5: Critic Rewrite Pass ---
             await update_job_status(db, project_id, "Running Critic Review", "running")
-            critic_model = os.getenv("CRITIC_MODEL", "google/gemini-2.5-pro")
+            critic_model = os.getenv("CRITIC_MODEL", "google/gemini-3.1-flash-lite")
             
             async def run_critic(draft: str, asset_type: str) -> str:
                 critic_prompt = (
-                    "You are a strict editorial director. You will be given a draft text generated from a transcript.\n"
-                    "Your job is to audit and rewrite it to make it sound human and grounded.\n"
-                    "1. Cut any sentences that are generic filler or could apply to any general topic.\n"
-                    "2. Verify all facts, claims, and figures against the provided source transcript. If the draft claims something not in the transcript, delete or correct it.\n"
-                    "3. Preserve the native formatting layout (e.g. keep blog markdown or tweet numbers).\n"
-                    "4. If the draft is a Twitter thread, make sure each individual numbered tweet remains strictly under 280 characters. Trim or split any tweet that exceeds 280 characters."
+                    "You are a strict, world-class Editorial Director and Fact-Checker.\n"
+                    "Audit and rewrite the provided draft to remove any signs of AI-generated fluff and ensure absolute accuracy.\n\n"
+                    "Strict Rules:\n"
+                    "1. ELIMINATE ALL FILLER: Scan for and delete generic assertions, cliché intros/outros, and buzzwords.\n"
+                    "2. GROUND IN DATA: Cross-reference every single claim, number, and concept in the draft with the source transcript. If the draft references anything not explicitly mentioned or supported by the transcript, delete or correct it.\n"
+                    "3. READABILITY & FLOW: Improve sentence structure. Make the voice sound human, active, and direct.\n"
+                    "4. FORMAT COMPLIANCE: Keep the native layout of the asset (H1/H2 markdown headers for blogs, numbered format for Twitter threads, spacing for LinkedIn).\n"
+                    "5. LENGTH AUDIT: If the draft is a Twitter thread, verify that every single numbered tweet remains strictly under 280 characters. Trim, split, or compress sentences if they exceed this limit.\n"
+                    "6. OUTPUT FORMAT: Respond ONLY with the finalized, audited, and rewritten draft of the asset. Do NOT include any intro/outro commentary, audit notes, change lists, explanations, or rejection alerts. The output must be a direct drop-in replacement for the asset."
                 )
                 user_msg = f"Source Transcript:\n{full_text}\n\nDraft Draft ({asset_type}):\n{draft}"
                 # Pinned paid model call
@@ -355,54 +393,12 @@ async def run_pipeline(project_id: int):
             for asset in assets_to_create:
                 db.add(asset)
             
-            await db.commit()
-            await update_job_status(db, project_id, "Running Critic Review", "completed", model_used=critic_model)
-
-            # --- STEP 5: Generate Thumbnails ---
-            await update_job_status(db, project_id, "Generating Thumbnails", "running")
-            
-            # 1. Blog visual description & image gen
-            blog_desc_prompt = "Generate a concrete, abstract 3D visual scene description (composition, elements, colors) representing this title. Respond only with the visual instruction prompt, max 40 words."
-            blog_desc, _ = await chat_completion(
-                [{"role": "user", "content": f"Title: {project.title}"}],
-                system_prompt=blog_desc_prompt,
-                model_mode=project.default_model_mode,
-                pinned_model=project.default_pinned_model
-            )
-            blog_thumb_path, blog_thumb_model = await generate_image(blog_desc, project_id, "blog_cover")
-            db.add(GeneratedAsset(
-                project_id=project_id,
-                asset_type="thumbnail",
-                content=blog_thumb_path,
-                model_used=blog_thumb_model,
-                status="done"
-            ))
-
-            # 2. Clips visual descriptions & image gen
-            for idx, h in enumerate(highlights_list):
-                clip_desc_prompt = "Generate an abstract cover graphics composition description representing this key quote. Max 45 words, respond only with the image generation prompt."
-                clip_desc, _ = await chat_completion(
-                    [{"role": "user", "content": f"Quote: \"{h.quote}\""}],
-                    system_prompt=clip_desc_prompt,
-                    model_mode=project.default_model_mode,
-                    pinned_model=project.default_pinned_model
-                )
-                clip_thumb_path, clip_thumb_model = await generate_image(clip_desc, project_id, f"clip_cover_{h.id}")
-                db.add(GeneratedAsset(
-                    project_id=project_id,
-                    asset_type="thumbnail",
-                    content=clip_thumb_path,
-                    related_highlight_id=h.id,
-                    model_used=clip_thumb_model,
-                    status="done"
-                ))
-
-            await db.commit()
-            await update_job_status(db, project_id, "Generating Thumbnails", "completed", model_used=blog_thumb_model)
-
-            # Mark Project Completed
+            # Mark Project Completed in database first, to ensure no client race condition
             project.status = "done"
             await db.commit()
+
+            # Broadcast final completion event
+            await update_job_status(db, project_id, "Running Critic Review", "completed", model_used=critic_model)
             logger.info(f"Pipeline completed successfully for project {project_id}.")
 
         except Exception as e:

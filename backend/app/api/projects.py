@@ -172,7 +172,7 @@ async def get_project_events_stream(
                     event_data = await asyncio.wait_for(q.get(), timeout=15.0)
                     yield f"data: {json.dumps(event_data)}\n\n"
                     # Stop if it reached final stages
-                    if event_data.get("stage") == "Generating Thumbnails" and event_data.get("status") in ["completed", "failed"]:
+                    if event_data.get("stage") == "Running Critic Review" and event_data.get("status") in ["completed", "failed"]:
                         break
                 except asyncio.TimeoutError:
                     # Send empty comment to prevent browser timeout
