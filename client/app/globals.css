@@ -25,6 +25,9 @@
   --brand: 215 85% 58%;
   --brand-muted: 215 30% 14%;
   --brand-border: 215 30% 24%;
+
+  /* System font stack (replaces next/font/google Outfit — works offline) */
+  --font-outfit: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
 @theme {
