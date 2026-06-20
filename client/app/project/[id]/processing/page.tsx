@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { MultiStepLoader, LoaderStep } from "@/components/ui/multi-step-loader";
 import { BackgroundBeams } from "@/components/ui/background-beams";
-import { subscribeToEvents } from "@/lib/api";
+import { subscribeToEvents, getProject } from "@/lib/api";
 
 const STEPS: LoaderStep[] = [
   { text: "Downloading and Transcribing Audio", stage: "Transcribing Audio" },
@@ -25,33 +25,62 @@ export default function ProcessingPage() {
   useEffect(() => {
     if (!projectId) return;
 
-    const unsubscribe = subscribeToEvents(
-      projectId,
-      (event) => {
-        if (event.stage) {
-          setCurrentStage(event.stage);
-        }
-        if (event.status) {
-          setCurrentStatus(event.status);
-        }
-        if (event.error_message) {
-          setErrorMsg(event.error_message);
-        }
-      },
-      () => {
-        // Error handler
-        setErrorMsg("Pipeline run failed. Please check backend logs.");
-      },
-      () => {
-        // Completion handler: Redirect to dashboard with replacement and route refresh to prevent stale cache
-        setTimeout(() => {
+    let cancelled = false;
+    let unsubscribe: (() => void) | null = null;
+
+    // Mount-time status check: if the project is already done, redirect
+    // immediately instead of waiting for an SSE event that already fired.
+    (async () => {
+      try {
+        const p = await getProject(projectId);
+        if (cancelled) return;
+        if (p.status === "done") {
           router.replace(`/project/${projectId}`);
           router.refresh();
-        }, 1000);
+          return;
+        }
+        if (p.status === "failed") {
+          setErrorMsg("Pipeline run failed. Please check backend logs.");
+          return;
+        }
+      } catch {
+        // ignore — fall through to SSE subscription
       }
-    );
 
-    return () => unsubscribe();
+      if (cancelled) return;
+
+      // Subscribe to live SSE events (with always-on safety polling).
+      unsubscribe = subscribeToEvents(
+        projectId,
+        (event) => {
+          if (cancelled) return;
+          if (event.stage) {
+            setCurrentStage(event.stage);
+          }
+          if (event.status) {
+            setCurrentStatus(event.status);
+          }
+          if (event.error_message) {
+            setErrorMsg(event.error_message);
+          }
+        },
+        () => {
+          if (cancelled) return;
+          setErrorMsg("Pipeline run failed. Please check backend logs.");
+        },
+        () => {
+          if (cancelled) return;
+          // Redirect immediately — the DB is committed before the event fires.
+          router.replace(`/project/${projectId}`);
+          router.refresh();
+        }
+      );
+    })();
+
+    return () => {
+      cancelled = true;
+      if (unsubscribe) unsubscribe();
+    };
   }, [projectId, router]);
 
   return (

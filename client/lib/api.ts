@@ -13,6 +13,7 @@ export interface Project {
   status: ProjectStatus;
   default_model_mode: 'auto' | 'pinned';
   default_pinned_model: string | null;
+  target_assets: string | null; // JSON array string of asset types
   created_at: string;
 }
 
@@ -73,6 +74,18 @@ export interface Model {
 // API Configurations
 const BACKEND_BASE = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
 const BACKEND_URL = `${BACKEND_BASE}/api`;
+
+// Resolve image URLs stored in the DB to a browser-loadable absolute URL.
+// Backend-saved thumbnails are stored as relative paths like "/generated/9/blog_cover.png"
+// and served from the backend origin (port 8000). Without this, the browser resolves
+// them against the frontend origin (port 3000) and 404s. Absolute URLs (http/https/data)
+// are returned as-is.
+export function resolveImageUrl(path: string | null | undefined): string {
+  if (!path) return '';
+  if (/^(https?:|data:|blob:)/i.test(path)) return path;
+  // Relative path served by the backend static mount
+  return `${BACKEND_BASE}${path.startsWith('/') ? path : `/${path}`}`;
+}
 
 // Authentication helpers
 export function redirectToGoogleLogin() {
@@ -174,6 +187,7 @@ export async function createProject(data: {
   source_ref: string;
   default_model_mode: 'auto' | 'pinned';
   default_pinned_model: string | null;
+  target_assets?: string[]; // array of asset types to generate
   file?: File;
 }): Promise<{ project_id: number }> {
   // If backend is active
@@ -188,6 +202,9 @@ export async function createProject(data: {
       }
       if (data.default_pinned_model) {
         formData.append('default_pinned_model', data.default_pinned_model);
+      }
+      if (data.target_assets && data.target_assets.length > 0) {
+        formData.append('target_assets', JSON.stringify(data.target_assets));
       }
       if (data.file) {
         formData.append('file', data.file);
@@ -214,6 +231,7 @@ export async function createProject(data: {
     status: 'pending',
     default_model_mode: data.default_model_mode,
     default_pinned_model: data.default_pinned_model,
+    target_assets: data.target_assets ? JSON.stringify(data.target_assets) : null,
     created_at: new Date().toISOString(),
   };
 
@@ -248,6 +266,7 @@ export async function getProject(id: number): Promise<Project> {
       status: 'done',
       default_model_mode: 'auto',
       default_pinned_model: null,
+      target_assets: null,
       created_at: new Date().toISOString(),
     };
     mockProjects.push(autoProj);
@@ -377,6 +396,9 @@ export function subscribeToEvents(
         // Graceful degradation: fall back to polling instead of immediately erroring.
         startPolling();
       };
+      // Always-on safety poll alongside SSE: catches completion even if the
+      // SSE event was missed (connected after broadcast, silent drop, etc).
+      startPolling();
     } else {
       // Mock SSE execution
       runMockPipelineFlow(id, onEvent, onComplete);
