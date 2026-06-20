@@ -7,7 +7,7 @@ This document serves as the persistent context and rules manual for any AI model
 ## 📜 Rules for AI Assistants (Context Updates)
 1. **Maintain This File:** Before concluding any turn or session, check if new architecture changes, preferences, or findings have been introduced. If so, update this file.
 2. **Keep it Concise:** Maintain sections cleanly. Do not remove historical configuration facts unless they are deprecated by new code changes.
-3. **Strict Commit Standards:** Keep git commits short, atomic, and descriptive. Prefix commits with standard conventions (e.g., `fix:`, `feat:`, `chore:`, `style:`).
+3. **Strict Commit Standards:** Keep git commits short, atomic, and descriptive. Prefix commits with standard conventions (e.g., `fix:`, `feat:`, `chore:`, `style:`). Always commit directly on the `dev` branch only (enforced for any AI agent).
 
 ---
 
