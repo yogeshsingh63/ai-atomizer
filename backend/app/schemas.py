@@ -76,6 +76,8 @@ class GeneratedAssetResponse(ORMModel):
 
 class AssetRegenerateRequest(BaseModel):
     model: Optional[str] = None  # Specific pinned model slug to regenerate with
+    prompt: Optional[str] = None  # Custom user instructions to steer regeneration
+    model_mode: Optional[str] = None  # "auto" | "pinned" (defaults based on model)
 
 # Job Schemas
 class JobResponse(ORMModel):
@@ -97,3 +99,4 @@ class ModelResponse(BaseModel):
     name: str
     pricing: ModelPricing
     is_free: bool
+    provider: str = "openrouter"  # nvidia | gemini | openrouter | groq | auto
