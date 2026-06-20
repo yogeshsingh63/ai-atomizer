@@ -27,6 +27,7 @@ export const BentoGridItem = ({
   header,
   icon,
   onClick,
+  footer,
 }: {
   className?: string;
   title?: string | React.ReactNode;
@@ -34,6 +35,7 @@ export const BentoGridItem = ({
   header?: React.ReactNode;
   icon?: React.ReactNode;
   onClick?: () => void;
+  footer?: React.ReactNode;
 }) => {
   return (
     <div
@@ -55,6 +57,11 @@ export const BentoGridItem = ({
           {description}
         </div>
       </div>
+      {footer && (
+        <div className="relative z-10" onClick={(e) => e.stopPropagation()}>
+          {footer}
+        </div>
+      )}
     </div>
   );
 };
