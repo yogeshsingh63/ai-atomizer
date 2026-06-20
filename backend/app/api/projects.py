@@ -26,6 +26,7 @@ async def create_new_project(
     source_ref: Optional[str] = Form(None),
     default_model_mode: str = Form("auto"),
     default_pinned_model: Optional[str] = Form(None),
+    target_assets: Optional[str] = Form(None),  # JSON array string
     file: Optional[UploadFile] = File(None),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
@@ -59,6 +60,7 @@ async def create_new_project(
         status="pending",
         default_model_mode=default_model_mode,
         default_pinned_model=default_pinned_model,
+        target_assets=target_assets,
         user_id=current_user.id
     )
     

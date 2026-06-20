@@ -30,6 +30,7 @@ class ProjectCreate(BaseModel):
     source_ref: str
     default_model_mode: str = "auto"  # auto | pinned
     default_pinned_model: Optional[str] = None
+    target_assets: Optional[str] = None  # JSON array string of asset types to generate
 
 class ProjectResponse(ORMModel):
     id: int
@@ -39,6 +40,7 @@ class ProjectResponse(ORMModel):
     status: str
     default_model_mode: str
     default_pinned_model: Optional[str]
+    target_assets: Optional[str] = None
     user_id: int
     created_at: datetime
 

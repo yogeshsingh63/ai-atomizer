@@ -25,6 +25,7 @@ class Project(Base):
     status = Column(String, default="pending")  # pending | transcribing | extracting | generating | done | failed
     default_model_mode = Column(String, default="auto")  # auto | pinned
     default_pinned_model = Column(String, nullable=True)
+    target_assets = Column(Text, nullable=True)  # JSON array of asset types to generate, e.g. '["blog","thread","linkedin","clip"]'
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
 

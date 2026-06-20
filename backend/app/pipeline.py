@@ -343,34 +343,61 @@ async def run_pipeline(project_id: int):
             await db.commit()
             await update_job_status(db, project_id, "Generating Assets", "running")
 
+            # Parse target_assets to decide which assets to generate. Defaults
+            # to all if unset/empty — this lets users skip assets they don't
+            # need, cutting pipeline time significantly.
+            try:
+                target = json.loads(project.target_assets) if project.target_assets else []
+            except (json.JSONDecodeError, TypeError):
+                target = []
+            ALL_ASSETS = {"blog", "thread", "linkedin", "clip"}
+            target_set = set(target) & ALL_ASSETS
+            if not target_set:
+                target_set = ALL_ASSETS  # default: generate everything
+            logger.info(f"Project {project_id} target assets: {sorted(target_set)}")
+
             highlights_summary = "\n".join([f"- Quote: \"{h.quote}\" (Reason: {h.reason})" for h in highlights_list])
             user_content = f"Source Transcript:\n{full_text}\n\nKey Highlights to cover:\n{highlights_summary}"
 
-            # Run blog/thread/linkedin LLM calls in parallel (with validation re-roll)
-            text_tasks = [
-                _generate_with_reroll(user_content, BLOG_SYS, "blog", project),
-                _generate_with_reroll(user_content, THREAD_SYS, "thread", project),
-                _generate_with_reroll(user_content, LINKEDIN_SYS, "linkedin", project),
-            ]
-            blog_res, thread_res, linkedin_res = await asyncio.gather(*text_tasks)
+            # Build the parallel generation tasks only for selected assets.
+            text_tasks = []
+            task_keys = []  # track which asset each task result maps to
+            if "blog" in target_set:
+                text_tasks.append(_generate_with_reroll(user_content, BLOG_SYS, "blog", project))
+                task_keys.append("blog")
+            if "thread" in target_set:
+                text_tasks.append(_generate_with_reroll(user_content, THREAD_SYS, "thread", project))
+                task_keys.append("thread")
+            if "linkedin" in target_set:
+                text_tasks.append(_generate_with_reroll(user_content, LINKEDIN_SYS, "linkedin", project))
+                task_keys.append("linkedin")
 
-            # Generate clip captions in parallel too (was sequential — major speedup)
-            async def gen_clip(h: Highlight) -> Tuple[int, str, str]:
-                clip_cfg = get_asset_config("clip")
-                clip_msg = build_generation_message(f"Moment Quote: \"{h.quote}\"", None)
-                clip_res, clip_model = await chat_completion(
-                    [{"role": "user", "content": clip_msg}],
-                    system_prompt=CLIP_SYS,
-                    model_mode=project.default_model_mode,
-                    pinned_model=project.default_pinned_model,
-                    max_tokens=clip_cfg["max_tokens"],
-                    temperature=clip_cfg["temperature"],
-                )
-                return h.id, clip_res, clip_model
+            text_results = await asyncio.gather(*text_tasks) if text_tasks else []
+            results_by_type = {key: res for key, res in zip(task_keys, text_results)}
+            blog_res = results_by_type.get("blog")
+            thread_res = results_by_type.get("thread")
+            linkedin_res = results_by_type.get("linkedin")
 
-            clip_content_parts = await asyncio.gather(*[gen_clip(h) for h in highlights_list])
+            # Generate clip captions in parallel (only if clips are selected)
+            clip_content_parts: List[Tuple[int, str, str]] = []
+            if "clip" in target_set and highlights_list:
+                async def gen_clip(h: Highlight) -> Tuple[int, str, str]:
+                    clip_cfg = get_asset_config("clip")
+                    clip_msg = build_generation_message(f"Moment Quote: \"{h.quote}\"", None)
+                    clip_res, clip_model = await chat_completion(
+                        [{"role": "user", "content": clip_msg}],
+                        system_prompt=CLIP_SYS,
+                        model_mode=project.default_model_mode,
+                        pinned_model=project.default_pinned_model,
+                        max_tokens=clip_cfg["max_tokens"],
+                        temperature=clip_cfg["temperature"],
+                    )
+                    return h.id, clip_res, clip_model
 
-            await update_job_status(db, project_id, "Generating Assets", "completed", model_used=blog_res[1])
+                clip_content_parts = await asyncio.gather(*[gen_clip(h) for h in highlights_list])
+
+            assets_model_for_status = blog_res or thread_res or linkedin_res
+            await update_job_status(db, project_id, "Generating Assets", "completed", model_used=assets_model_for_status[1] if assets_model_for_status else None)
 
             # --- STEP 4.5: Critic Rewrite Pass (+ parallel blog cover thumbnail) ---
             await update_job_status(db, project_id, "Running Critic Review", "running")
@@ -411,25 +438,48 @@ async def run_pipeline(project_id: int):
                     logger.warning(f"Blog cover generation failed (non-fatal): {e}")
                     return None, None
 
-            # Run blog/thread/linkedin/clip critics + blog cover all in parallel
-            parallel_tasks = [
-                run_critic(blog_res[0], "blog"),
-                run_critic(thread_res[0], "thread"),
-                run_critic(linkedin_res[0], "linkedin"),
-                *[run_critic(clip_text, "clip suggestion") for (_, clip_text, _) in clip_content_parts],
-                generate_blog_cover(),
-            ]
-            parallel_results = await asyncio.gather(*parallel_tasks)
-            blog_clean, thread_clean, linkedin_clean = parallel_results[0], parallel_results[1], parallel_results[2]
-            clip_critics = parallel_results[3:-1]
-            cover_path, cover_model = parallel_results[-1]
+            # Run selected critics + blog cover all in parallel
+            parallel_tasks = []
+            parallel_keys = []
+            if blog_res:
+                parallel_tasks.append(run_critic(blog_res[0], "blog"))
+                parallel_keys.append("blog")
+            if thread_res:
+                parallel_tasks.append(run_critic(thread_res[0], "thread"))
+                parallel_keys.append("thread")
+            if linkedin_res:
+                parallel_tasks.append(run_critic(linkedin_res[0], "linkedin"))
+                parallel_keys.append("linkedin")
+            for (_, clip_text, _) in clip_content_parts:
+                parallel_tasks.append(run_critic(clip_text, "clip suggestion"))
+                parallel_keys.append("clip")
+            # Blog cover only if blog was generated
+            if blog_res:
+                parallel_tasks.append(generate_blog_cover())
+                parallel_keys.append("cover")
 
-            # Store text assets
-            assets_to_create = [
-                GeneratedAsset(project_id=project_id, asset_type="blog", content=blog_clean, model_used=blog_res[1], status="done"),
-                GeneratedAsset(project_id=project_id, asset_type="thread", content=thread_clean, model_used=thread_res[1], status="done"),
-                GeneratedAsset(project_id=project_id, asset_type="linkedin", content=linkedin_clean, model_used=linkedin_res[1], status="done")
-            ]
+            parallel_results = await asyncio.gather(*parallel_tasks) if parallel_tasks else []
+            result_map = {key: res for key, res in zip(parallel_keys, parallel_results)}
+            blog_clean = result_map.get("blog")
+            thread_clean = result_map.get("thread")
+            linkedin_clean = result_map.get("linkedin")
+            clip_critics = [result_map[k] for k in parallel_keys if k == "clip"]
+            cover_path, cover_model = result_map.get("cover", (None, None))
+
+            # Store text assets (only those that were generated)
+            assets_to_create = []
+            if blog_clean and blog_res:
+                assets_to_create.append(
+                    GeneratedAsset(project_id=project_id, asset_type="blog", content=blog_clean, model_used=blog_res[1], status="done")
+                )
+            if thread_clean and thread_res:
+                assets_to_create.append(
+                    GeneratedAsset(project_id=project_id, asset_type="thread", content=thread_clean, model_used=thread_res[1], status="done")
+                )
+            if linkedin_clean and linkedin_res:
+                assets_to_create.append(
+                    GeneratedAsset(project_id=project_id, asset_type="linkedin", content=linkedin_clean, model_used=linkedin_res[1], status="done")
+                )
             
             # Store blog cover thumbnail (if generation succeeded)
             if cover_path:

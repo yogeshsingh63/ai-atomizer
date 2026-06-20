@@ -39,6 +39,18 @@ async def lifespan(app: FastAPI):
     logger.info("Initializing database tables...")
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        # create_all only creates missing tables, not columns. Add the
+        # target_assets column to existing projects tables (idempotent).
+        try:
+            await conn.execute(
+                __import__("sqlalchemy").text(
+                    "ALTER TABLE projects ADD COLUMN target_assets TEXT"
+                )
+            )
+            logger.info("Added target_assets column to projects table.")
+        except Exception:
+            # Column already exists — expected on subsequent boots.
+            pass
     logger.info("Database initialized successfully.")
     yield
     logger.info("Disposing database connections...")
