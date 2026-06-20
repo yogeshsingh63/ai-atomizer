@@ -1,9 +1,10 @@
 import os
+import re
 import json
 import asyncio
 import logging
 import yt_dlp
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Tuple
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
@@ -11,6 +12,12 @@ from app.db import async_session
 from app.models import Project, Transcript, Highlight, GeneratedAsset, Job
 from app.services.llm import chat_completion
 from app.services.transcribe import transcribe_audio
+from app.services.imagegen import generate_image
+from app.services.prompts import (
+    HIGHLIGHTS_PROMPT, BLOG_SYS, THREAD_SYS, LINKEDIN_SYS, CLIP_SYS, CRITIC_PROMPT, THUMB_DESC_PROMPT,
+    SYSTEM_PROMPTS, get_asset_config, resolve_critic_model,
+    build_generation_message, build_critic_message,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +50,32 @@ def extract_and_parse_json(text: str) -> Any:
             pass
 
     raise json.JSONDecodeError("Could not extract or parse valid JSON from text.", text, 0)
+
+
+# ---------------------------------------------------------------------------
+# Content validation helpers (quality gate beyond the critic pass)
+# ---------------------------------------------------------------------------
+_TWEET_SPLIT_RE = re.compile(r"(?m)^\s*\d+[/.)]\s*")
+
+def _word_count(text: str) -> int:
+    return len(text.split())
+
+def _parse_tweets(thread_text: str) -> List[str]:
+    """Splits a numbered thread into individual tweet bodies."""
+    parts = _TWEET_SPLIT_RE.split(thread_text)
+    return [p.strip() for p in parts if p.strip()]
+
+def _blog_is_valid(content: str) -> bool:
+    """Blog must reach a minimum length (reject truncated/short drafts)."""
+    return _word_count(content) >= 400
+
+def _thread_is_valid(content: str) -> bool:
+    """Every tweet in the thread must stay under 280 chars."""
+    tweets = _parse_tweets(content)
+    if not tweets:
+        return True
+    return all(len(t) <= 280 for t in tweets)
+
 
 # In-memory queues for SSE events broadcasting
 # Maps project_id -> list of subscriber asyncio.Queues
@@ -104,10 +137,65 @@ async def update_job_status(
     }
     await broadcast_event(project_id, event)
 
+
+async def _generate_with_reroll(
+    user_content: str,
+    system_prompt: str,
+    asset_type: str,
+    project: Project,
+    custom_prompt: str = None,
+) -> Tuple[str, str]:
+    """
+    Generates a draft with one validation re-roll if quality checks fail.
+    """
+    cfg = get_asset_config(asset_type)
+    msg = build_generation_message(user_content, custom_prompt)
+    content, model_used = await chat_completion(
+        [{"role": "user", "content": msg}],
+        system_prompt=system_prompt,
+        model_mode=project.default_model_mode,
+        pinned_model=project.default_pinned_model,
+        max_tokens=cfg["max_tokens"],
+        temperature=cfg["temperature"],
+    )
+
+    # Validation + single re-roll
+    if asset_type == "blog" and not _blog_is_valid(content):
+        logger.warning(f"Blog draft too short ({_word_count(content)} words). Re-rolling once...")
+        retry_msg = build_generation_message(
+            f"Your previous draft was too short. Write the FULL 700-1000 word blog post.\n\n{user_content}",
+            custom_prompt,
+        )
+        content, model_used = await chat_completion(
+            [{"role": "user", "content": retry_msg}],
+            system_prompt=system_prompt,
+            model_mode=project.default_model_mode,
+            pinned_model=project.default_pinned_model,
+            max_tokens=cfg["max_tokens"],
+            temperature=cfg["temperature"],
+        )
+    elif asset_type == "thread" and not _thread_is_valid(content):
+        logger.warning("Thread has tweets exceeding 280 chars. Re-rolling once...")
+        retry_msg = build_generation_message(
+            f"Your previous thread had tweets over 280 characters. Rewrite ensuring EVERY tweet is strictly under 280 characters.\n\n{user_content}",
+            custom_prompt,
+        )
+        content, model_used = await chat_completion(
+            [{"role": "user", "content": retry_msg}],
+            system_prompt=system_prompt,
+            model_mode=project.default_model_mode,
+            pinned_model=project.default_pinned_model,
+            max_tokens=cfg["max_tokens"],
+            temperature=cfg["temperature"],
+        )
+
+    return content, model_used
+
+
 async def run_pipeline(project_id: int):
     """
     Background Task coordinating the entire content repurposing engine.
-    Runs Ingest -> Transcribe -> Highlight Extract -> Content Write -> Critic Loop -> Image Gen.
+    Runs Ingest -> Transcribe -> Highlight Extract -> Content Write -> Critic Loop.
     """
     logger.info(f"Initiating pipeline for project {project_id}...")
     
@@ -146,13 +234,12 @@ async def run_pipeline(project_id: int):
                     "no_warnings": True
                 }
                 
-                # Run download in worker thread
-                loop = asyncio.get_event_loop()
+                # Run download in worker thread (to_thread avoids deprecated get_event_loop)
                 def download():
                     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                         ydl.download([project.source_ref])
                 
-                await loop.run_in_executor(None, download)
+                await asyncio.to_thread(download)
                 await update_job_status(db, project_id, "Ingesting Media", "completed")
             
             elif project.source_type == "upload":
@@ -195,28 +282,20 @@ async def run_pipeline(project_id: int):
             await db.commit()
             await update_job_status(db, project_id, "Extracting Highlights", "running")
             
-            highlights_prompt = (
-                "You are an elite video editor and content strategist. You will be given a transcript with timestamps.\n"
-                "Your task is to identify the 3 to 7 most compelling, high-impact, or surprising moments in the transcript—the kinds of hooks that make people stop scrolling on social feeds.\n\n"
-                "For each highlight, you must extract:\n"
-                "- start_seconds, end_seconds: Exact integer timestamps marking the start and end of this specific moment.\n"
-                "- quote: The exact word-for-word quote from the transcript corresponding to these timestamps. Do not paraphrase.\n"
-                "- reason: A brief, punchy, 1-sentence explanation of why this moment is notable (e.g. key takeaway, surprising claim, counter-intuitive insight).\n\n"
-                "Respond ONLY with a valid JSON object matching this exact shape:\n"
-                '{"highlights": [{"start_seconds": 0, "end_seconds": 0, "quote": "quote text", "reason": "reason description"}]}'
-            )
-            
             transcript_input = "\n".join([f"[{s['start_seconds']}s - {s['end_seconds']}s]: {s['text']}" for s in segments])
             messages = [{"role": "user", "content": f"Transcript:\n{transcript_input}"}]
             
+            hcfg = get_asset_config("highlights")
             # Execute highlights LLM request
             logger.info("Requesting highlights extraction...")
             res_content, model_used = await chat_completion(
                 messages,
-                system_prompt=highlights_prompt,
+                system_prompt=HIGHLIGHTS_PROMPT,
                 model_mode=project.default_model_mode,
                 pinned_model=project.default_pinned_model,
-                json_mode=True
+                json_mode=True,
+                max_tokens=hcfg["max_tokens"],
+                temperature=hcfg["temperature"],
             )
             
             # Parse highlights JSON safely with retry
@@ -232,10 +311,12 @@ async def run_pipeline(project_id: int):
                 ]
                 res_content, model_used = await chat_completion(
                     correction_msg,
-                    system_prompt=highlights_prompt,
+                    system_prompt=HIGHLIGHTS_PROMPT,
                     model_mode=project.default_model_mode,
                     pinned_model=project.default_pinned_model,
-                    json_mode=True
+                    json_mode=True,
+                    max_tokens=hcfg["max_tokens"],
+                    temperature=hcfg["temperature"],
                 )
                 highlights_data = extract_and_parse_json(res_content)
 
@@ -262,111 +343,86 @@ async def run_pipeline(project_id: int):
             await db.commit()
             await update_job_status(db, project_id, "Generating Assets", "running")
 
-            # Formulate text formats prompts
-            blog_sys = (
-                "You are an elite technology blogger and technical writer. "
-                "Write a high-quality, comprehensive long-form blog post (700-1000 words) based on the provided transcript and key highlights.\n\n"
-                "Structuring Guidelines:\n"
-                "- Create a catchy, high-conversion H1 title.\n"
-                "- Divide the post into logical H2 and H3 sections to keep the reader engaged.\n"
-                "- Integrate at least two exact, relevant quotes from the transcript inside blockquotes (> \"quote\") to establish credibility.\n"
-                "- Use bullet points, bold key concepts, and formatted lists to make the article highly scannable.\n\n"
-                "Writing & Style Rules:\n"
-                "- Tone must be authoritative, clear, and direct. Avoid corporate speak or marketing hype.\n"
-                "- DO NOT use generic AI intro/outro filler phrases (e.g., 'In today\'s fast-paced digital landscape', 'Let\'s dive in', 'In conclusion', 'It is important to remember'). Start directly with a compelling hook.\n"
-                "- Ground all claims, statistics, and examples strictly in the transcript data. Do not make up external facts.\n"
-                "- Focus on creating value-dense, deep-dive content."
-            )
-            thread_sys = (
-                "You are a master of social copywriting and Twitter/X storytelling. "
-                "Write an engaging 5-8 tweet thread based on the provided transcript.\n\n"
-                "Formatting & Structure:\n"
-                "- Tweet 1: Hook. Must be a scroll-stopping statement, question, or counter-intuitive insight derived from the transcript. Add a thread indicator (🧵 or 'a thread:').\n"
-                "- Tweets 2-7: Value-dense body tweets. Every tweet must offer a specific key takeaway, concrete example, or actionable step from the source data.\n"
-                "- Tweet 8 (Final): Clear, punchy one-line summary takeaway.\n"
-                "- Number each tweet clearly at the start (e.g., '1/', '2/', etc.).\n\n"
-                "CRITICAL constraints:\n"
-                "- Every single tweet MUST be strictly under 280 characters (including its number prefix). Double-check lengths.\n"
-                "- Avoid generic AI summaries. Ensure each tweet reads like it was written by an active practitioner.\n"
-                "- Use whitespace and linebreaks strategically within each tweet to make them highly readable."
-            )
-            linkedin_sys = (
-                "You are a thought leader on LinkedIn. "
-                "Write a high-converting, professional LinkedIn post (200-300 words) based on the transcript.\n\n"
-                "Guidelines:\n"
-                "- Open with a powerful, single-line hook that creates curiosity or challenges status quo.\n"
-                "- Structure the post with generous spacing (short paragraphs of 1-2 sentences) to ensure it is easy to scan on mobile devices.\n"
-                "- Focus on a core narrative: 'Problem -> Actionable Insight from Transcript -> Concrete Lesson'.\n"
-                "- Integrate a key quote from the transcript naturally.\n"
-                "- End with an engaging question to drive comments, followed by 3-4 highly relevant hashtags.\n"
-                "- Style: Professional, authentic, and direct. Avoid emojis overload or corporate buzzwords."
-            )
-
             highlights_summary = "\n".join([f"- Quote: \"{h.quote}\" (Reason: {h.reason})" for h in highlights_list])
             user_content = f"Source Transcript:\n{full_text}\n\nKey Highlights to cover:\n{highlights_summary}"
 
-            # Run LLM calls in parallel
-            tasks = [
-                chat_completion([{"role": "user", "content": user_content}], system_prompt=blog_sys, model_mode=project.default_model_mode, pinned_model=project.default_pinned_model),
-                chat_completion([{"role": "user", "content": user_content}], system_prompt=thread_sys, model_mode=project.default_model_mode, pinned_model=project.default_pinned_model),
-                chat_completion([{"role": "user", "content": user_content}], system_prompt=linkedin_sys, model_mode=project.default_model_mode, pinned_model=project.default_pinned_model)
+            # Run blog/thread/linkedin LLM calls in parallel (with validation re-roll)
+            text_tasks = [
+                _generate_with_reroll(user_content, BLOG_SYS, "blog", project),
+                _generate_with_reroll(user_content, THREAD_SYS, "thread", project),
+                _generate_with_reroll(user_content, LINKEDIN_SYS, "linkedin", project),
             ]
-            
-            blog_res, thread_res, linkedin_res = await asyncio.gather(*tasks)
+            blog_res, thread_res, linkedin_res = await asyncio.gather(*text_tasks)
 
-            # Generate clip caption recommendations
-            clip_content_parts = []
-            for idx, h in enumerate(highlights_list):
-                clip_sys = (
-                    "You are a viral short-form video editor (TikTok, Instagram Reels, YouTube Shorts). "
-                    "Given the key moment quote from the transcript, write:\n"
-                    "1. A high-engagement caption (1-2 sentences, punchy, curiosity-driven).\n"
-                    "2. A scroll-stopping on-screen text overlay instruction (max 5 words, uppercase, punchy, e.g., 'THE TRUTH ABOUT AI', '10X YOUR LEVERAGE').\n\n"
-                    "Make it modern, snappy, and optimized for social feeds."
-                )
+            # Generate clip captions in parallel too (was sequential — major speedup)
+            async def gen_clip(h: Highlight) -> Tuple[int, str, str]:
+                clip_cfg = get_asset_config("clip")
+                clip_msg = build_generation_message(f"Moment Quote: \"{h.quote}\"", None)
                 clip_res, clip_model = await chat_completion(
-                    [{"role": "user", "content": f"Moment Quote: \"{h.quote}\""}],
-                    system_prompt=clip_sys,
+                    [{"role": "user", "content": clip_msg}],
+                    system_prompt=CLIP_SYS,
                     model_mode=project.default_model_mode,
-                    pinned_model=project.default_pinned_model
+                    pinned_model=project.default_pinned_model,
+                    max_tokens=clip_cfg["max_tokens"],
+                    temperature=clip_cfg["temperature"],
                 )
-                clip_content_parts.append((h.id, clip_res, clip_model))
+                return h.id, clip_res, clip_model
+
+            clip_content_parts = await asyncio.gather(*[gen_clip(h) for h in highlights_list])
 
             await update_job_status(db, project_id, "Generating Assets", "completed", model_used=blog_res[1])
 
-            # --- STEP 4.5: Critic Rewrite Pass ---
+            # --- STEP 4.5: Critic Rewrite Pass (+ parallel blog cover thumbnail) ---
             await update_job_status(db, project_id, "Running Critic Review", "running")
-            critic_model = os.getenv("CRITIC_MODEL", "google/gemini-3.1-flash-lite")
+            critic_model = resolve_critic_model()
+            critic_cfg = get_asset_config("critic")
             
-            async def run_critic(draft: str, asset_type: str) -> str:
-                critic_prompt = (
-                    "You are a strict, world-class Editorial Director and Fact-Checker.\n"
-                    "Audit and rewrite the provided draft to remove any signs of AI-generated fluff and ensure absolute accuracy.\n\n"
-                    "Strict Rules:\n"
-                    "1. ELIMINATE ALL FILLER: Scan for and delete generic assertions, cliché intros/outros, and buzzwords.\n"
-                    "2. GROUND IN DATA: Cross-reference every single claim, number, and concept in the draft with the source transcript. If the draft references anything not explicitly mentioned or supported by the transcript, delete or correct it.\n"
-                    "3. READABILITY & FLOW: Improve sentence structure. Make the voice sound human, active, and direct.\n"
-                    "4. FORMAT COMPLIANCE: Keep the native layout of the asset (H1/H2 markdown headers for blogs, numbered format for Twitter threads, spacing for LinkedIn).\n"
-                    "5. LENGTH AUDIT: If the draft is a Twitter thread, verify that every single numbered tweet remains strictly under 280 characters. Trim, split, or compress sentences if they exceed this limit.\n"
-                    "6. OUTPUT FORMAT: Respond ONLY with the finalized, audited, and rewritten draft of the asset. Do NOT include any intro/outro commentary, audit notes, change lists, explanations, or rejection alerts. The output must be a direct drop-in replacement for the asset."
-                )
-                user_msg = f"Source Transcript:\n{full_text}\n\nDraft Draft ({asset_type}):\n{draft}"
-                # Pinned paid model call
+            async def run_critic(draft: str, asset_type: str, custom_prompt: str = None) -> str:
+                user_msg = build_critic_message(full_text, draft, asset_type, custom_prompt)
                 content, _ = await chat_completion(
                     [{"role": "user", "content": user_msg}],
-                    system_prompt=critic_prompt,
+                    system_prompt=CRITIC_PROMPT,
                     model_mode="pinned",
-                    pinned_model=critic_model
+                    pinned_model=critic_model,
+                    max_tokens=critic_cfg["max_tokens"],
+                    temperature=critic_cfg["temperature"],
                 )
                 return content
 
-            # Run drafts through critic pass
-            critic_tasks = [
+            async def generate_blog_cover() -> Tuple[str, str]:
+                """Generates the blog cover thumbnail. Never raises — has its own
+                fallback chain ending in a gradient placeholder. Runs in parallel
+                with the critic pass so it adds near-zero wall-clock time."""
+                try:
+                    desc_cfg = get_asset_config("thumbnail")
+                    desc, _ = await chat_completion(
+                        [{"role": "user", "content": f"Reference: {project.title}"}],
+                        system_prompt=THUMB_DESC_PROMPT,
+                        model_mode=project.default_model_mode,
+                        pinned_model=project.default_pinned_model,
+                        max_tokens=desc_cfg["max_tokens"],
+                        temperature=desc_cfg["temperature"],
+                    )
+                    thumb_path, thumb_model = await generate_image(
+                        desc, project_id, "blog_cover", quality="fast", title=project.title
+                    )
+                    return thumb_path, thumb_model
+                except Exception as e:
+                    logger.warning(f"Blog cover generation failed (non-fatal): {e}")
+                    return None, None
+
+            # Run blog/thread/linkedin/clip critics + blog cover all in parallel
+            parallel_tasks = [
                 run_critic(blog_res[0], "blog"),
                 run_critic(thread_res[0], "thread"),
-                run_critic(linkedin_res[0], "linkedin")
+                run_critic(linkedin_res[0], "linkedin"),
+                *[run_critic(clip_text, "clip suggestion") for (_, clip_text, _) in clip_content_parts],
+                generate_blog_cover(),
             ]
-            blog_clean, thread_clean, linkedin_clean = await asyncio.gather(*critic_tasks)
+            parallel_results = await asyncio.gather(*parallel_tasks)
+            blog_clean, thread_clean, linkedin_clean = parallel_results[0], parallel_results[1], parallel_results[2]
+            clip_critics = parallel_results[3:-1]
+            cover_path, cover_model = parallel_results[-1]
 
             # Store text assets
             assets_to_create = [
@@ -375,10 +431,22 @@ async def run_pipeline(project_id: int):
                 GeneratedAsset(project_id=project_id, asset_type="linkedin", content=linkedin_clean, model_used=linkedin_res[1], status="done")
             ]
             
-            # Store clip assets
-            for h_id, clip_text, clip_model in clip_content_parts:
-                # Run clips through critic
-                clip_clean = await run_critic(clip_text, "clip suggestion")
+            # Store blog cover thumbnail (if generation succeeded)
+            if cover_path:
+                assets_to_create.append(
+                    GeneratedAsset(
+                        project_id=project_id,
+                        asset_type="thumbnail",
+                        content=cover_path,
+                        related_highlight_id=None,
+                        model_used=cover_model or "unknown",
+                        status="done"
+                    )
+                )
+                logger.info(f"Blog cover thumbnail stored: {cover_path} ({cover_model})")
+            
+            # Store clip assets (model_used from the draft generation, not the critic)
+            for (h_id, _clip_text, clip_model), clip_clean in zip(clip_content_parts, clip_critics):
                 assets_to_create.append(
                     GeneratedAsset(
                         project_id=project_id,
