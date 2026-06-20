@@ -133,34 +133,34 @@ export const TwitterPreview = ({
                 {formatPostText(tweetText, "twitter")}
               </div>
 
-              {/* Action Bar */}
+              {/* Action Bar — deterministic engagement seeded by tweet index */}
               <div className="flex items-center justify-between text-[#71767b] max-w-md mt-4 pr-1 sm:pr-4 gap-0.5 sm:gap-1.5">
                 <button className="flex items-center gap-0.5 sm:gap-1.5 hover:text-[#1d9bf0] transition-colors group/btn cursor-pointer">
                   <span className="p-1 sm:p-2 rounded-full group-hover/btn:bg-[#1d9bf0]/10">
                     <MessageCircle className="w-[14px] h-[14px] sm:w-[17px] sm:h-[17px]" />
                   </span>
-                  <span className="text-[10px] sm:text-[11.5px] font-medium">{Math.floor(Math.random() * 15) + 3}</span>
+                  <span className="text-[10px] sm:text-[11.5px] font-medium">{(idx * 7 + 3) % 15 + 3}</span>
                 </button>
                 
                 <button className="flex items-center gap-0.5 sm:gap-1.5 hover:text-[#00ba7c] transition-colors group/btn cursor-pointer">
                   <span className="p-1 sm:p-2 rounded-full group-hover/btn:bg-[#00ba7c]/10">
                     <Repeat2 className="w-[14px] h-[14px] sm:w-[17px] sm:h-[17px]" />
                   </span>
-                  <span className="text-[10px] sm:text-[11.5px] font-medium">{Math.floor(Math.random() * 10) + 1}</span>
+                  <span className="text-[10px] sm:text-[11.5px] font-medium">{(idx * 5 + 1) % 10 + 1}</span>
                 </button>
                 
                 <button className="flex items-center gap-0.5 sm:gap-1.5 hover:text-[#f91880] transition-colors group/btn cursor-pointer">
                   <span className="p-1 sm:p-2 rounded-full group-hover/btn:bg-[#f91880]/10">
                     <Heart className="w-[14px] h-[14px] sm:w-[17px] sm:h-[17px]" />
                   </span>
-                  <span className="text-[10px] sm:text-[11.5px] font-medium">{Math.floor(Math.random() * 80) + 12}</span>
+                  <span className="text-[10px] sm:text-[11.5px] font-medium">{(idx * 13 + 12) % 80 + 12}</span>
                 </button>
                 
                 <button className="hidden sm:flex items-center gap-0.5 sm:gap-1.5 hover:text-[#1d9bf0] transition-colors group/btn cursor-pointer">
                   <span className="p-1 sm:p-2 rounded-full group-hover/btn:bg-[#1d9bf0]/10">
                     <BarChart2 className="w-[14px] h-[14px] sm:w-[17px] sm:h-[17px]" />
                   </span>
-                  <span className="text-[10px] sm:text-[11.5px] font-medium">{Math.floor(Math.random() * 5) + 1}.{Math.floor(Math.random() * 9)}K</span>
+                  <span className="text-[10px] sm:text-[11.5px] font-medium">{(idx * 3 + 1) % 5 + 1}.{(idx * 7) % 9}K</span>
                 </button>
 
                 <button className="hidden sm:flex hover:text-[#1d9bf0] transition-colors group/btn cursor-pointer">

@@ -253,8 +253,8 @@ export default function LandingPage() {
 
           {/* Navigation links */}
           <nav className="hidden sm:flex items-center gap-6 text-[10px] font-bold text-neutral-400 uppercase tracking-wider">
-            <a href="#simulator" className="hover:text-brand hover:scale-102 active:scale-98 transition-all duration-150">Interactive Simulator</a>
-            <a href="#features" className="hover:text-brand hover:scale-102 active:scale-98 transition-all duration-150">Features System</a>
+            <a href="#simulator" className="hover:text-brand hover:scale-[1.02] active:scale-[0.98] transition-all duration-150">Interactive Simulator</a>
+            <a href="#features" className="hover:text-brand hover:scale-[1.02] active:scale-[0.98] transition-all duration-150">Features System</a>
           </nav>
 
           <Link 
@@ -480,7 +480,7 @@ export default function LandingPage() {
             </div>
 
             <p className="text-[9px] text-neutral-600 mt-1">
-              &copy; {new Date().getFullYear()} Prism AI. Built with Next.js 14 & Aceternity UI. All rights reserved.
+              &copy; {new Date().getFullYear()} Prism AI. Built with Next.js 16 & Aceternity UI. All rights reserved.
             </p>
           </div>
 

@@ -4,13 +4,14 @@ import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { 
   FileText, Linkedin, Video, Image as ImageIcon, 
-  Clipboard, CheckCircle, Check, Download, RefreshCw, ArrowLeft, Sparkles, Pin, Clock, AlertCircle, Eye, EyeOff,
+  Clipboard, CheckCircle, Check, Download, RefreshCw, ArrowLeft, Sparkles, Clock, AlertCircle, Eye, EyeOff,
   MessageCircle, Repeat2, Heart, X
 } from "lucide-react";
 import { BentoGrid, BentoGridItem } from "@/components/ui/bento-grid";
 import { Button as MovingBorderButton } from "@/components/ui/moving-border";
 import { TextGenerateEffect } from "@/components/ui/text-generate-effect";
 import { ModelSelector } from "@/components/model-selector";
+import { CardRegenPanel } from "@/components/card-regen-panel";
 import { BackgroundBeams } from "@/components/ui/background-beams";
 import { TwitterPreview, LinkedInPreview, BlogPreview } from "@/components/post-preview";
 import { motion, AnimatePresence } from "framer-motion";
@@ -91,6 +92,12 @@ export default function ProjectDashboardPage() {
     return text.split(/\n\n+/).map(p => p.trim()).filter(Boolean);
   };
 
+  const formatTimestamp = (seconds: number): string => {
+    const m = Math.floor(seconds / 60);
+    const s = Math.floor(seconds % 60);
+    return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  };
+
   const handleExport = (asset: GeneratedAsset) => {
     if (asset.asset_type === "thumbnail") {
       const a = document.createElement("a");
@@ -119,9 +126,9 @@ export default function ProjectDashboardPage() {
     setRegenerating(true);
     try {
       const updated = await regenerateAsset(
-        projectId, 
-        selectedAsset.id, 
-        regenMode === "pinned" ? regenModel : null
+        projectId,
+        selectedAsset.id,
+        { model: regenMode === "pinned" ? regenModel : null, model_mode: regenMode }
       );
       
       // Update lists
@@ -134,6 +141,18 @@ export default function ProjectDashboardPage() {
     } finally {
       setRegenerating(false);
     }
+  };
+
+  // Per-card regenerate (from the inline CardRegenPanel beneath each bento card)
+  const handleCardRegen = async (
+    assetId: number,
+    opts: { prompt?: string | null; model?: string | null; model_mode?: string | null }
+  ) => {
+    const updated = await regenerateAsset(projectId, assetId, opts);
+    const nextAssets = assets.map(a => a.id === assetId ? updated : a);
+    setAssets(nextAssets);
+    // If the drawer is open on this asset, refresh it too
+    if (selectedAsset?.id === assetId) setSelectedAsset(updated);
   };
 
   if (loading) {
@@ -194,7 +213,10 @@ export default function ProjectDashboardPage() {
             </p>
           </div>
         </div>
-      )
+      ),
+      footer: blogAsset ? (
+        <CardRegenPanel assetType="blog" onRegenerate={(opts) => handleCardRegen(blogAsset.id, opts)} />
+      ) : undefined
     },
     {
       type: "thread",
@@ -221,13 +243,16 @@ export default function ProjectDashboardPage() {
               </div>
             </div>
             <div className="flex items-center gap-4 text-[9px] text-[#71767b] mt-3 pl-8">
-              <span className="flex items-center gap-0.5"><MessageCircle className="w-3 h-3" /> 12</span>
-              <span className="flex items-center gap-0.5"><Repeat2 className="w-3 h-3" /> 8</span>
-              <span className="flex items-center gap-0.5"><Heart className="w-3 h-3" /> 42</span>
+              <span className="flex items-center gap-0.5"><MessageCircle className="w-3 h-3" /> {18 + (threadTweets.length % 7)}</span>
+              <span className="flex items-center gap-0.5"><Repeat2 className="w-3 h-3" /> {9 + (threadTweets.length % 5)}</span>
+              <span className="flex items-center gap-0.5"><Heart className="w-3 h-3" /> {47 + (threadTweets.length % 13)}</span>
             </div>
           </div>
         );
-      })()
+      })(),
+      footer: threadAsset ? (
+        <CardRegenPanel assetType="thread" onRegenerate={(opts) => handleCardRegen(threadAsset.id, opts)} />
+      ) : undefined
     },
     {
       type: "linkedin",
@@ -249,7 +274,10 @@ export default function ProjectDashboardPage() {
             {linkedinAsset?.content || "Building a high-throughput system isn't about hardware. It's about designing..."}
           </p>
         </div>
-      )
+      ),
+      footer: linkedinAsset ? (
+        <CardRegenPanel assetType="linkedin" onRegenerate={(opts) => handleCardRegen(linkedinAsset.id, opts)} />
+      ) : undefined
     },
     {
       type: "clip",
@@ -258,24 +286,36 @@ export default function ProjectDashboardPage() {
       icon: <Video className="w-4 h-4 text-brand" />,
       asset: clipAssets[0],
       className: "md:col-span-1",
-      header: (
-        <div className="h-32 bg-neutral-950 rounded-xl flex flex-col justify-between p-5 border border-neutral-900 relative overflow-hidden">
-          <div className="flex justify-between items-center">
-            <span className="text-[9px] uppercase font-bold text-neutral-400 tracking-wider">TIMESTAMPS</span>
-            <span className="brand-badge text-[9px] font-bold px-2 py-0.5 rounded-full">{clipAssets.length} Clips</span>
+      header: (() => {
+        const firstClipHighlight = clipAssets.length > 0
+          ? highlights.find(h => h.id === clipAssets[0].related_highlight_id)
+          : highlights[0];
+        const startTime = firstClipHighlight ? formatTimestamp(firstClipHighlight.start_seconds) : "00:00";
+        const endTime = firstClipHighlight ? formatTimestamp(firstClipHighlight.end_seconds) : "00:30";
+        const totalHighlights = highlights.length || 1;
+        const progressPct = totalHighlights > 0 ? Math.round((clipAssets.length / totalHighlights) * 100) : 0;
+        return (
+          <div className="h-32 bg-neutral-950 rounded-xl flex flex-col justify-between p-5 border border-neutral-900 relative overflow-hidden">
+            <div className="flex justify-between items-center">
+              <span className="text-[9px] uppercase font-bold text-neutral-400 tracking-wider">TIMESTAMPS</span>
+              <span className="brand-badge text-[9px] font-bold px-2 py-0.5 rounded-full">{clipAssets.length} Clips</span>
+            </div>
+            
+            <div className="flex gap-1.5 items-center my-2">
+              <span className="text-[10px] font-mono bg-neutral-900 border border-neutral-800 px-1.5 py-0.5 rounded text-neutral-400">{startTime}</span>
+              <span className="text-neutral-700">&rarr;</span>
+              <span className="text-[10px] font-mono bg-neutral-900 border border-neutral-800 px-1.5 py-0.5 rounded text-neutral-400">{endTime}</span>
+            </div>
+   
+            <div className="w-full bg-neutral-900 h-1 rounded-full overflow-hidden">
+              <div className="bg-brand h-full transition-all" style={{ width: `${Math.max(progressPct, 8)}%` }} />
+            </div>
           </div>
-          
-          <div className="flex gap-1.5 items-center my-2">
-            <span className="text-[10px] font-mono bg-neutral-900 border border-neutral-800 px-1.5 py-0.5 rounded text-neutral-400">00:45</span>
-            <span className="text-neutral-700">&rarr;</span>
-            <span className="text-[10px] font-mono bg-neutral-900 border border-neutral-800 px-1.5 py-0.5 rounded text-neutral-400">03:10</span>
-          </div>
- 
-          <div className="w-full bg-neutral-900 h-1 rounded-full overflow-hidden">
-            <div className="bg-brand h-full w-[65%]" />
-          </div>
-        </div>
-      )
+        );
+      })(),
+      footer: clipAssets[0] ? (
+        <CardRegenPanel assetType="clip" onRegenerate={(opts) => handleCardRegen(clipAssets[0].id, opts)} />
+      ) : undefined
     },
     {
       type: "thumbnail",
@@ -301,7 +341,38 @@ export default function ProjectDashboardPage() {
           />
           <div className="absolute inset-0 bg-neutral-950/40 group-hover/thumb:bg-neutral-950/20 transition-colors" />
         </div>
-      )
+      ),
+      footer: thumbnailAssets[0] ? (
+        <CardRegenPanel assetType="thumbnail" onRegenerate={(opts) => handleCardRegen(thumbnailAssets[0].id, opts)} />
+      ) : undefined
+    },
+    {
+      type: "highlights",
+      title: "Key Highlights",
+      description: `${highlights.length} high-impact moments extracted from the source.`,
+      icon: <Sparkles className="w-4 h-4 text-brand" />,
+      asset: null,
+      className: "md:col-span-1",
+      header: (
+        <div className="h-32 bg-neutral-950 rounded-xl flex flex-col p-4 border border-neutral-900 relative overflow-hidden text-left justify-center">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[9px] uppercase font-bold text-neutral-400 tracking-wider">Extracted Moments</span>
+            <span className="brand-badge text-[9px] font-bold px-2 py-0.5 rounded-full">{highlights.length}</span>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            {highlights.slice(0, 3).map((h, i) => (
+              <div key={h.id} className="flex items-center gap-2 text-[10px] text-neutral-500">
+                <span className="font-mono text-brand shrink-0">{formatTimestamp(h.start_seconds)}</span>
+                <span className="truncate">{h.quote}</span>
+              </div>
+            ))}
+            {highlights.length === 0 && (
+              <span className="text-[10px] text-neutral-600 italic">No highlights extracted.</span>
+            )}
+          </div>
+        </div>
+      ),
+      footer: undefined
     }
   ];
 
@@ -328,7 +399,7 @@ export default function ProjectDashboardPage() {
             <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-1">
               <div className="flex items-center gap-1.5 shrink-0">
                 <span className="text-[10px] text-neutral-500 uppercase font-bold tracking-wider">Source Ref:</span>
-                <span className="text-xs text-neutral-300 font-mono bg-[#121215] border border-neutral-900 px-2 py-0.5 rounded-lg inline-block truncate max-w-[140px] sm:max-w-xs md:max-w-md align-bottom">{project?.source_ref}</span>
+                <span className="text-xs text-neutral-300 font-mono bg-[#121215] border border-neutral-900 px-2 py-0.5 rounded-lg inline-block truncate max-w-[180px] sm:max-w-xs md:max-w-md align-bottom" title={project?.source_ref}>{project?.source_ref}</span>
               </div>
               
               <span className="text-neutral-800 hidden sm:inline select-none">•</span>
@@ -371,10 +442,11 @@ export default function ProjectDashboardPage() {
                   setSelectedAsset(clipAssets[0] || null);
                 } else if (item.type === "thumbnail") {
                   setSelectedAsset(thumbnailAssets[0] || null);
-                } else {
+                } else if (item.type !== "highlights") {
                   setSelectedAsset(item.asset || null);
                 }
               }}
+              footer={item.footer}
             />
           ))}
         </BentoGrid>
@@ -413,7 +485,7 @@ export default function ProjectDashboardPage() {
                     <h3 className="text-sm font-bold text-neutral-100 capitalize truncate">
                       {selectedAsset.asset_type} Output
                     </h3>
-                    <span className="text-[10px] text-neutral-550 flex items-center gap-1.5 font-medium truncate">
+                    <span className="text-[10px] text-neutral-500 flex items-center gap-1.5 font-medium truncate">
                       <Sparkles className="w-3 h-3 text-brand shrink-0" />
                       <span className="truncate">Model: {selectedAsset.model_used.split("/").pop()}</span>
                     </span>
@@ -431,7 +503,7 @@ export default function ProjectDashboardPage() {
                           "flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-bold cursor-pointer transition-all",
                           previewTab === "preview" 
                             ? "bg-neutral-800 text-neutral-200" 
-                            : "text-neutral-500 hover:text-neutral-350"
+                            : "text-neutral-500 hover:text-neutral-400"
                         )}
                       >
                         <Eye className="w-3 h-3" />
@@ -443,7 +515,7 @@ export default function ProjectDashboardPage() {
                           "flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-bold cursor-pointer transition-all",
                           previewTab === "raw" 
                             ? "bg-neutral-800 text-neutral-200" 
-                            : "text-neutral-500 hover:text-neutral-350"
+                            : "text-neutral-500 hover:text-neutral-400"
                         )}
                       >
                         <EyeOff className="w-3 h-3" />
@@ -512,7 +584,7 @@ export default function ProjectDashboardPage() {
 
                         {matchHighlight && (
                           <div className="p-3.5 rounded-lg bg-neutral-900/50 border border-neutral-900 text-xs italic text-neutral-500 leading-relaxed">
-                            Quote: "{matchHighlight.quote}"
+                            Quote: &ldquo;{matchHighlight.quote}&rdquo;
                           </div>
                         )}
 
@@ -581,7 +653,7 @@ export default function ProjectDashboardPage() {
                             })}
                           </div>
                         ) : (
-                          <div className="whitespace-pre-wrap leading-relaxed text-sm text-neutral-350 bg-neutral-950 border border-neutral-900 rounded-2xl p-6 font-mono text-xs">
+                          <div className="whitespace-pre-wrap leading-relaxed text-sm text-neutral-400 bg-neutral-950 border border-neutral-900 rounded-2xl p-6 font-mono text-xs">
                             <TextGenerateEffect words={selectedAsset.content} />
                           </div>
                         )
@@ -647,7 +719,7 @@ export default function ProjectDashboardPage() {
                   className="flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl border border-neutral-800 hover:border-neutral-700 bg-neutral-900 hover:bg-neutral-950 transition-colors cursor-pointer text-[11px] font-bold text-neutral-200 active:scale-95 duration-150 w-full disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <RefreshCw className={cn("w-3.5 h-3.5 shrink-0", regenerating && "animate-spin")} />
-                  <span className="truncate">{regenerating ? "Regening" : "Regenerate"}</span>
+                  <span className="truncate">{regenerating ? "Regenerating" : "Regenerate"}</span>
                 </button>
               </div>
             </div>
