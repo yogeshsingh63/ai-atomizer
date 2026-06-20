@@ -84,21 +84,30 @@ A copy-pasted block of text doesn't perform well on X. A brief bulleted summary 
 
 const MOCK_HIGHLIGHTS = [
   {
-    timestamp: "00:00 - 01:10",
-    title: "The Creator Distribution Moat",
-    description: "Explaining why content distribution leverage matters more than raw volume.",
+    start_seconds: 0,
+    end_seconds: 70,
+    quote: "The true bottleneck in modern content creation isn't writing original ideas—it's distribution.",
+    reason: "High-value core thesis of content repurposing: distribution beats volume.",
   },
   {
-    timestamp: "02:15 - 03:50",
-    title: "Platform-Native Layout Writing",
-    description: "A breakdown of why custom templates are required for LinkedIn, X, and SEO blogs.",
+    start_seconds: 135,
+    end_seconds: 230,
+    quote: "Every social network has its own native culture and format constraints. Copy-pasting loses 90% of engagement.",
+    reason: "Explaining why custom platform templates are required.",
   },
   {
-    timestamp: "04:05 - 06:20",
-    title: "The Critic Agent Pipeline",
-    description: "How Prism AI audits drafts through a secondary critic step to ensure human quality.",
+    start_seconds: 245,
+    end_seconds: 380,
+    quote: "Prism AI automates this workflow in under 90 seconds with a critic loop to remove generic AI filler.",
+    reason: "Outlining the backend pipeline technology and critic pass.",
   }
 ];
+
+const formatTs = (s: number): string => {
+  const m = Math.floor(s / 60);
+  const sec = Math.floor(s % 60);
+  return `${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
+};
 
 export default function LandingPage() {
   const router = useRouter();
@@ -129,7 +138,7 @@ export default function LandingPage() {
     switch (activeTab) {
       case "input":
         return (
-          <div className="flex flex-col gap-4 p-4 sm:p-5 bg-[#0e0e11] border border-neutral-900 rounded-xl w-full max-w-full sm:max-w-lg mx-auto min-w-0 overflow-hidden">
+          <div className="flex flex-col gap-4 p-4 sm:p-5 bg-[#0e0e11] border border-neutral-900 rounded-xl w-full max-w-2xl mx-auto min-w-0 overflow-hidden">
             <div className="flex items-center gap-3 w-full min-w-0">
               <div className="w-10 h-10 rounded-full bg-red-950/40 border border-red-900/30 flex items-center justify-center text-red-500 shrink-0">
                 <Youtube className="w-5 h-5" />
@@ -143,7 +152,16 @@ export default function LandingPage() {
             </div>
             
             <div className="relative aspect-video w-full max-w-full rounded-lg overflow-hidden border border-neutral-900 group shrink-0">
-              <img src={MOCK_SOURCE_VIDEO.thumbnail} alt="Video cover" className="absolute inset-0 w-full h-full object-cover brightness-75" />
+              <img 
+                src={MOCK_SOURCE_VIDEO.thumbnail} 
+                alt="Video cover" 
+                className="absolute inset-0 w-full h-full object-cover brightness-75"
+                onError={(e) => {
+                  const t = e.target as HTMLImageElement;
+                  t.style.display = 'none';
+                  t.parentElement!.style.background = 'linear-gradient(135deg, hsl(215 30% 14%), hsl(215 85% 58% / 0.3))';
+                }}
+              />
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="w-12 h-12 rounded-full bg-neutral-950/80 border border-neutral-800 flex items-center justify-center text-neutral-200 group-hover:scale-105 transition-transform">
                   <Play className="w-5 h-5 fill-current ml-0.5 text-brand" />
@@ -157,59 +175,68 @@ export default function LandingPage() {
             <div className="flex flex-col gap-1.5 mt-2 min-w-0 w-full">
               <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest truncate block">Transcript Snippet (Auto-Extracted)</span>
               <div className="p-3 bg-neutral-950 border border-neutral-900 rounded-lg text-[11px] font-mono text-neutral-400 leading-relaxed max-h-36 overflow-y-auto no-scrollbar w-full min-w-0 break-words whitespace-pre-wrap">
-                {MOCK_SOURCE_VIDEO.transcriptSnippet.split("\n").map((line, i) => (
-                  <p key={i} className="mb-1 break-words whitespace-pre-wrap"><span className="text-brand/70 font-semibold">{line.slice(0, 7)}</span>{line.slice(7)}</p>
-                ))}
+                {MOCK_SOURCE_VIDEO.transcriptSnippet.split("\n").map((line, i) => {
+                  const tsMatch = line.match(/^(\[\d{2}:\d{2}\])/);
+                  return (
+                    <p key={i} className="mb-1 break-words whitespace-pre-wrap">
+                      {tsMatch ? <span className="text-brand/70 font-semibold">{tsMatch[1]}</span> : null}
+                      {tsMatch ? line.slice(tsMatch[1].length) : line}
+                    </p>
+                  );
+                })}
               </div>
             </div>
           </div>
         );
       case "linkedin":
         return (
-          <div className="w-full max-w-full overflow-hidden">
+          <div className="w-full max-w-2xl mx-auto overflow-hidden">
             <LinkedInPreview content={MOCK_LINKEDIN} actions={renderCopyButton(MOCK_LINKEDIN, "Copy text")} />
           </div>
         );
       case "twitter":
         return (
-          <div className="w-full max-w-full overflow-hidden">
+          <div className="w-full max-w-2xl mx-auto overflow-hidden">
             <TwitterPreview content={MOCK_TWITTER} actions={renderCopyButton(MOCK_TWITTER, "Copy thread")} />
           </div>
         );
-      case "blog":
-        return (
-          <div className="relative max-h-[480px] overflow-y-auto no-scrollbar border border-neutral-900 rounded-2xl w-full max-w-full overflow-hidden">
-            <BlogPreview content={MOCK_BLOG} title="Building the World's Fastest Storage Engine" actions={renderCopyButton(MOCK_BLOG, "Copy blog article")} />
-          </div>
-        );
-      case "highlights":
-        return (
-          <div className="flex flex-col gap-3 w-full max-w-full sm:max-w-lg mx-auto bg-neutral-950 border border-neutral-900 p-4 sm:p-5 rounded-2xl overflow-hidden">
-            <div className="flex items-center justify-between border-b border-neutral-900 pb-3 mb-2 flex-wrap gap-2">
-              <span className="text-xs font-bold text-neutral-300">Extracted Highlights & Short Clips</span>
-              <span className="text-[10px] text-neutral-500">{MOCK_HIGHLIGHTS.length} clips found</span>
+        case "blog":
+          return (
+            <div className="relative max-h-[480px] overflow-y-auto no-scrollbar border border-neutral-900 rounded-2xl w-full max-w-2xl mx-auto overflow-hidden">
+              <BlogPreview content={MOCK_BLOG} title="Multiplying Creator Output: The Prism AI Content Engine" coverUrl="/prism_repurpose_thumbnail.png" actions={renderCopyButton(MOCK_BLOG, "Copy blog article")} />
             </div>
-            
-            <div className="flex flex-col gap-3">
-              {MOCK_HIGHLIGHTS.map((item, idx) => (
-                <div key={idx} className="p-3 bg-neutral-900/30 border border-neutral-900 rounded-xl flex items-start gap-3 hover:border-brand-border transition-colors group">
-                  <div className="w-8 h-8 rounded-lg bg-brand-muted border border-brand-border flex items-center justify-center text-brand shrink-0">
-                    <Clock className="w-4 h-4" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between flex-wrap gap-2">
-                      <span className="text-xs font-bold text-neutral-200 group-hover:text-brand transition-colors truncate">{item.title}</span>
-                      <span className="text-[10px] font-mono bg-neutral-900 text-neutral-400 border border-neutral-900 px-1.5 py-0.5 rounded shrink-0">
-                        {item.timestamp}
-                      </span>
+          );
+        case "highlights":
+          return (
+            <div className="flex flex-col gap-3 w-full max-w-2xl mx-auto bg-neutral-950 border border-neutral-900 p-4 sm:p-5 rounded-2xl overflow-hidden">
+              <div className="flex items-center justify-between border-b border-neutral-900 pb-3 mb-2 flex-wrap gap-2">
+                <span className="text-xs font-bold text-neutral-300">Extracted Highlights & Short Clips</span>
+                <span className="text-[10px] text-neutral-500">{MOCK_HIGHLIGHTS.length} clips found</span>
+              </div>
+              
+              <div className="flex flex-col gap-3">
+                {MOCK_HIGHLIGHTS.map((item, idx) => (
+                  <div key={idx} className="p-3 bg-neutral-900/30 border border-neutral-900 rounded-xl flex items-start gap-3 hover:border-brand-border transition-colors group">
+                    <div className="w-8 h-8 rounded-lg bg-brand-muted border border-brand-border flex items-center justify-center text-brand shrink-0">
+                      <Clock className="w-4 h-4" />
                     </div>
-                    <p className="text-[10.5px] text-neutral-400 mt-1 leading-relaxed">{item.description}</p>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between flex-wrap gap-2">
+                        <span className="text-xs font-bold text-neutral-200 group-hover:text-brand transition-colors truncate">
+                          Highlight #{idx + 1}
+                        </span>
+                        <span className="text-[10px] font-mono bg-neutral-900 text-neutral-400 border border-neutral-900 px-1.5 py-0.5 rounded shrink-0">
+                          {formatTs(item.start_seconds)} - {formatTs(item.end_seconds)}
+                        </span>
+                      </div>
+                      <p className="text-[10.5px] text-neutral-300 mt-1 leading-relaxed italic">&ldquo;{item.quote}&rdquo;</p>
+                      <p className="text-[10px] text-neutral-500 mt-1 leading-relaxed">{item.reason}</p>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
-        );
+          );
     }
   };
 

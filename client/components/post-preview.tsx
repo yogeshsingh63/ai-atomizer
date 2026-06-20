@@ -18,6 +18,18 @@ interface PreviewProps {
   actions?: React.ReactNode;
 }
 
+// On-brand SVG avatar (initials on a brand-gradient circle) as a data URI.
+// Zero network dependency — never breaks if Unsplash/CDN is down.
+const BRAND_AVATAR_DATA_URI =
+  "data:image/svg+xml;utf8," +
+  encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="hsl(215 30% 14%)"/><stop offset="1" stop-color="hsl(215 85% 58%)"/></linearGradient></defs><rect width="100" height="100" rx="50" fill="url(#g)"/><text x="50" y="50" font-family="sans-serif" font-size="44" font-weight="bold" fill="#e6edf5" text-anchor="middle" dominant-baseline="central">P</text></svg>`
+  );
+
+const handleAvatarError = (e: React.SyntheticEvent<HTMLImageElement>) => {
+  (e.target as HTMLImageElement).src = BRAND_AVATAR_DATA_URI;
+};
+
 // Inline content formatter for rich posts (bolds, hashtags, mentions)
 const formatPostText = (text: string, platform: "twitter" | "linkedin") => {
   const linkColor = platform === "twitter" ? "text-[#1d9bf0] hover:underline" : "text-brand hover:underline font-semibold";
@@ -63,7 +75,7 @@ export const TwitterPreview = ({
   content, 
   authorName = "Yogesh", 
   authorHandle = "yogesh_rajawat", 
-  avatarUrl = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=100&auto=format&fit=crop",
+  avatarUrl = BRAND_AVATAR_DATA_URI,
   actions
 }: PreviewProps) => {
   
@@ -111,6 +123,7 @@ export const TwitterPreview = ({
                 src={avatarUrl} 
                 alt={authorName} 
                 className="w-10 h-10 rounded-full object-cover border border-[#2f3336] z-10 shrink-0"
+                onError={handleAvatarError}
               />
 
               {/* Tweet Content */}
@@ -189,7 +202,7 @@ export const LinkedInPreview = ({
   content, 
   authorName = "Yogesh", 
   authorHandle = "AI Content Strategist", 
-  avatarUrl = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=100&auto=format&fit=crop",
+  avatarUrl = BRAND_AVATAR_DATA_URI,
   actions
 }: PreviewProps) => {
   return (
@@ -208,7 +221,8 @@ export const LinkedInPreview = ({
           <img 
             src={avatarUrl} 
             alt={authorName} 
-            className="w-12 h-12 rounded-full object-cover shrink-0 border border-neutral-900"
+            className="w-12 h-12 rounded-full object-cover border border-neutral-800"
+            onError={handleAvatarError}
           />
           <div className="flex flex-col min-w-0">
             <div className="flex items-center gap-1 flex-wrap">
@@ -259,7 +273,7 @@ export const BlogPreview = ({
   content, 
   title = "Untitled Article",
   authorName = "Yogesh", 
-  coverUrl = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=600&auto=format&fit=crop",
+  coverUrl = "/prism_repurpose_thumbnail.png",
   actions
 }: PreviewProps) => {
   
@@ -322,6 +336,7 @@ export const BlogPreview = ({
             src={coverUrl} 
             alt={title} 
             className="absolute inset-0 w-full h-full object-cover"
+            onError={handleAvatarError}
           />
         </div>
       )}
