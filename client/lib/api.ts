@@ -67,6 +67,7 @@ export interface Model {
     completion: string;
   };
   is_free: boolean;
+  provider: string; // auto | nvidia | gemini | openrouter | groq
 }
 
 // API Configurations
@@ -126,16 +127,21 @@ let mockProjects: Project[] = [];
 let mockAssets: Record<number, GeneratedAsset[]> = {};
 let mockHighlights: Record<number, Highlight[]> = {};
 
-// Prepopulated models list
+// Prepopulated models list (mirrors backend fallback, grouped by provider)
 const MOCK_MODELS: Model[] = [
-  { id: 'auto', name: 'Auto (free, fastest)', pricing: { prompt: '0', completion: '0' }, is_free: true },
-  { id: 'google/gemini-2.5-flash', name: 'Gemini 2.5 Flash', pricing: { prompt: '0', completion: '0' }, is_free: true },
-  { id: 'meta-llama/llama-3.3-70b-instruct:free', name: 'Llama 3.3 70B (Free)', pricing: { prompt: '0', completion: '0' }, is_free: true },
-  { id: 'deepseek/deepseek-chat:free', name: 'DeepSeek V3 (Free)', pricing: { prompt: '0', completion: '0' }, is_free: true },
-  { id: 'qwen/qwen-2.5-72b-instruct:free', name: 'Qwen 2.5 72B (Free)', pricing: { prompt: '0', completion: '0' }, is_free: true },
-  { id: 'anthropic/claude-3.5-sonnet', name: 'Claude 3.5 Sonnet (Paid)', pricing: { prompt: '0.003', completion: '0.015' }, is_free: false },
-  { id: 'google/gemini-2.5-pro', name: 'Gemini 2.5 Pro (Paid)', pricing: { prompt: '0.00125', completion: '0.00375' }, is_free: false },
-  { id: 'deepseek/deepseek-r1', name: 'DeepSeek R1 (Paid)', pricing: { prompt: '0.00055', completion: '0.00219' }, is_free: false },
+  { id: 'auto', name: 'Auto (free, fastest)', pricing: { prompt: '0', completion: '0' }, is_free: true, provider: 'auto' },
+  { id: 'meta/llama-3.3-70b-instruct', name: 'Llama 3.3 70B (NVIDIA NIM)', pricing: { prompt: '0', completion: '0' }, is_free: true, provider: 'nvidia' },
+  { id: 'nvidia/llama-3.3-nemotron-super-49b-v1', name: 'Nemotron Super 49B (NVIDIA NIM)', pricing: { prompt: '0', completion: '0' }, is_free: true, provider: 'nvidia' },
+  { id: 'meta/llama-4-maverick-17b-128e-instruct', name: 'Llama 4 Maverick 17B (NVIDIA NIM)', pricing: { prompt: '0', completion: '0' }, is_free: true, provider: 'nvidia' },
+  { id: 'meta/llama-3.1-70b-instruct', name: 'Llama 3.1 70B (NVIDIA NIM)', pricing: { prompt: '0', completion: '0' }, is_free: true, provider: 'nvidia' },
+  { id: 'google/gemini-2.5-flash', name: 'Gemini 2.5 Flash', pricing: { prompt: '0', completion: '0' }, is_free: true, provider: 'gemini' },
+  { id: 'google/gemini-2.0-flash-lite', name: 'Gemini 2.0 Flash Lite', pricing: { prompt: '0', completion: '0' }, is_free: true, provider: 'gemini' },
+  { id: 'meta-llama/llama-3.3-70b-instruct:free', name: 'Llama 3.3 70B (Free)', pricing: { prompt: '0', completion: '0' }, is_free: true, provider: 'openrouter' },
+  { id: 'deepseek/deepseek-chat:free', name: 'DeepSeek V3 (Free)', pricing: { prompt: '0', completion: '0' }, is_free: true, provider: 'openrouter' },
+  { id: 'qwen/qwen-2.5-72b-instruct:free', name: 'Qwen 2.5 72B (Free)', pricing: { prompt: '0', completion: '0' }, is_free: true, provider: 'openrouter' },
+  { id: 'anthropic/claude-3.5-sonnet', name: 'Claude 3.5 Sonnet (Paid)', pricing: { prompt: '0.003', completion: '0.015' }, is_free: false, provider: 'openrouter' },
+  { id: 'google/gemini-2.5-pro', name: 'Gemini 2.5 Pro (Paid)', pricing: { prompt: '0.00125', completion: '0.00375' }, is_free: false, provider: 'openrouter' },
+  { id: 'deepseek/deepseek-r1', name: 'DeepSeek R1 (Paid)', pricing: { prompt: '0.00055', completion: '0.00219' }, is_free: false, provider: 'openrouter' },
 ];
 
 // Helper to check if backend is running
@@ -279,13 +285,18 @@ export async function getAssets(id: number): Promise<GeneratedAsset[]> {
   return mockAssets[id] || [];
 }
 
-export async function regenerateAsset(id: number, assetId: number, model: string | null): Promise<GeneratedAsset> {
+export async function regenerateAsset(
+  id: number,
+  assetId: number,
+  options: { model?: string | null; prompt?: string | null; model_mode?: string | null } = {}
+): Promise<GeneratedAsset> {
+  const { model = null, prompt = null, model_mode = null } = options;
   if (await isBackendOnline()) {
     try {
       const res = await fetch(`${BACKEND_URL}/projects/${id}/assets/${assetId}/regenerate`, {
         method: 'POST',
         headers: getAuthHeaders('application/json'),
-        body: JSON.stringify({ model }),
+        body: JSON.stringify({ model, prompt, model_mode }),
       });
       if (res.ok) return await res.json();
     } catch (e) {
@@ -311,21 +322,42 @@ export async function regenerateAsset(id: number, assetId: number, model: string
   throw new Error('Asset not found');
 }
 
-// Subscribe to progress stream via SSE
+// Subscribe to progress stream via SSE, with polling fallback if SSE drops.
 export function subscribeToEvents(
   id: number,
   onEvent: (event: { stage: string; status: string; model_used: string | null; error_message: string | null }) => void,
   onError: () => void,
   onComplete: () => void
 ): () => void {
-  // Check if we should use mock SSE or real backend
-  let isMock = true;
   let eventSource: EventSource | null = null;
-  let timeoutId: any = null;
+  let pollInterval: ReturnType<typeof setInterval> | null = null;
+  let completed = false;
+
+  const finish = (fn: () => void) => {
+    if (completed) return;
+    completed = true;
+    if (pollInterval) clearInterval(pollInterval);
+    fn();
+  };
+
+  // Polling fallback: if SSE drops, poll the project status until done/failed.
+  const startPolling = () => {
+    if (pollInterval) return;
+    pollInterval = setInterval(async () => {
+      if (completed) { if (pollInterval) clearInterval(pollInterval); return; }
+      try {
+        const p = await getProject(id);
+        if (p.status === 'done') {
+          finish(onComplete);
+        } else if (p.status === 'failed') {
+          finish(onError);
+        }
+      } catch { /* keep polling */ }
+    }, 3000);
+  };
 
   isBackendOnline().then(online => {
     if (online) {
-      isMock = false;
       const token = getStoredToken() || '';
       eventSource = new EventSource(`${BACKEND_URL}/projects/${id}/events?token=${encodeURIComponent(token)}`);
       eventSource.onmessage = (e) => {
@@ -333,16 +365,17 @@ export function subscribeToEvents(
         onEvent(data);
         if (data.stage === 'Running Critic Review' && data.status === 'completed') {
           eventSource?.close();
-          onComplete();
+          finish(onComplete);
         }
         if (data.status === 'failed') {
           eventSource?.close();
-          onError();
+          finish(onError);
         }
       };
       eventSource.onerror = () => {
         eventSource?.close();
-        onError();
+        // Graceful degradation: fall back to polling instead of immediately erroring.
+        startPolling();
       };
     } else {
       // Mock SSE execution
@@ -351,12 +384,8 @@ export function subscribeToEvents(
   });
 
   return () => {
-    if (eventSource) {
-      eventSource.close();
-    }
-    if (timeoutId) {
-      clearTimeout(timeoutId);
-    }
+    if (eventSource) eventSource.close();
+    if (pollInterval) clearInterval(pollInterval);
   };
 }
 
