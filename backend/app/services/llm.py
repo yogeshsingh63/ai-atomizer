@@ -1,5 +1,6 @@
 import os
 import time
+import asyncio
 import httpx
 import logging
 from typing import List, Dict, Any, Optional, Tuple
@@ -71,15 +72,28 @@ async def get_free_openrouter_models() -> List[str]:
         ]
     return free_slugs
 
+
+def _is_rate_limited(status_code: int) -> bool:
+    """True for 429 Too Many Requests."""
+    return status_code == 429
+
+
+def _is_payment_required(status_code: int) -> bool:
+    """True for 402 Payment Required (credits exhausted)."""
+    return status_code == 402
+
+
 async def nvidia_chat_completion(
     messages: List[Dict[str, str]],
     model: str,
     api_key: str,
-    json_mode: bool = False
+    json_mode: bool = False,
+    max_tokens: Optional[int] = None,
+    temperature: Optional[float] = None
 ) -> str:
     """
     Calls NVIDIA Build API for chat completions.
-    Tested and verified working models (quality score 9.0/10):
+    Verified working models (quality score 9.0/10):
       - meta/llama-3.3-70b-instruct
       - meta/llama-3.1-70b-instruct
       - meta/llama-3.1-8b-instruct
@@ -91,11 +105,15 @@ async def nvidia_chat_completion(
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json"
     }
-    payload = {
+    payload: Dict[str, Any] = {
         "model": model,
         "messages": messages,
-        "max_tokens": 1024
     }
+    # Per-asset budget instead of a flat 1024 cap that truncated blogs.
+    if max_tokens is not None:
+        payload["max_tokens"] = max_tokens
+    if temperature is not None:
+        payload["temperature"] = temperature
     if json_mode:
         payload["response_format"] = {"type": "json_object"}
         
@@ -111,14 +129,14 @@ async def gemini_chat_completion(
     messages: List[Dict[str, str]],
     system_prompt: Optional[str],
     model_name: str,
-    json_mode: bool = False
+    json_mode: bool = False,
+    max_tokens: Optional[int] = None,
+    temperature: Optional[float] = None
 ) -> str:
     """
     Calls Google Gemini via the new google-genai SDK.
     Runs the blocking SDK call in an executor to avoid blocking the event loop.
     """
-    import asyncio
-
     gemini_key = os.getenv("GEMINI_API_KEY")
     if not gemini_key or not genai:
         raise RuntimeError("Gemini API key or SDK not available")
@@ -133,10 +151,14 @@ async def gemini_chat_completion(
         contents.append(f"{m['role'].capitalize()}: {m['content']}")
     prompt = "\n\n".join(contents)
 
-    # Build config
-    config = {}
+    # Build config (sampling params + json mode)
+    config: Dict[str, Any] = {}
     if json_mode:
         config["response_mime_type"] = "application/json"
+    if max_tokens is not None:
+        config["max_output_tokens"] = max_tokens
+    if temperature is not None:
+        config["temperature"] = temperature
 
     def _generate():
         response = client.models.generate_content(
@@ -146,8 +168,7 @@ async def gemini_chat_completion(
         )
         return response.text
 
-    loop = asyncio.get_event_loop()
-    result = await loop.run_in_executor(None, _generate)
+    result = await asyncio.to_thread(_generate)
     return result
 
 async def chat_completion(
@@ -155,7 +176,9 @@ async def chat_completion(
     system_prompt: Optional[str] = None,
     model_mode: str = "auto",
     pinned_model: Optional[str] = None,
-    json_mode: bool = False
+    json_mode: bool = False,
+    max_tokens: Optional[int] = None,
+    temperature: Optional[float] = None
 ) -> Tuple[str, str]:
     """
     Main LLM completion router with fallback mechanics.
@@ -163,10 +186,14 @@ async def chat_completion(
     Fallback chain (ordered by quality test results):
       1. NVIDIA Build API (5 verified models, all scored 9.0/10)
       2. Google Gemini SDK (gemini-2.5-flash scored 10/10 creative)
-      3. OpenRouter (gemini-2.5-flash scored 9.0/10 overall)
+      3. OpenRouter (free-model array; often rate-limited on free tier)
       4. Groq (llama-3.3-70b-versatile scored 9.0/10)
-      5. Ollama (local offline fallback)
+      5. Gemini SDK (last resort, if skipped earlier)
+      6. Ollama (local offline fallback)
     
+    Sampling params (max_tokens, temperature) are threaded into every provider
+    so per-asset budgets are respected (prevents blog truncation).
+
     Returns: (generated_text, model_used)
     """
     # 1. Prepare messages list
@@ -205,9 +232,15 @@ async def chat_completion(
         for model in attempts:
             try:
                 logger.info(f"Attempting NVIDIA API chat completion: {model}...")
-                content = await nvidia_chat_completion(formatted_messages, model, nvidia_key, json_mode=json_mode)
+                content = await nvidia_chat_completion(
+                    formatted_messages, model, nvidia_key,
+                    json_mode=json_mode, max_tokens=max_tokens, temperature=temperature
+                )
                 logger.info(f"NVIDIA API model success: {model}")
-                return content, f"nvidia/{model}"
+                # Return the model slug as-is (already includes vendor prefix
+                # like meta/ or nvidia/). Previously this double-prefixed to
+                # "nvidia/meta/..." which corrupted DB logging + UI badges.
+                return content, model
             except Exception as e:
                 logger.warning(f"NVIDIA API model {model} failed: {e}")
 
@@ -236,14 +269,17 @@ async def chat_completion(
         for model_name in gemini_models:
             try:
                 logger.info(f"Attempting Gemini SDK: {model_name}...")
-                content = await gemini_chat_completion(messages, system_prompt, model_name, json_mode=json_mode)
+                content = await gemini_chat_completion(
+                    messages, system_prompt, model_name,
+                    json_mode=json_mode, max_tokens=max_tokens, temperature=temperature
+                )
                 if content:
                     logger.info(f"Gemini SDK success: {model_name}")
                     return content, f"gemini/{model_name}"
             except Exception as e:
                 logger.warning(f"Gemini SDK model {model_name} failed: {e}")
 
-    # --- STEP 3: OpenRouter (gemini-2.5-flash via OpenRouter scored 9.0/10) ---
+    # --- STEP 3: OpenRouter (free-model array; deep fallback) ---
     api_key = os.getenv("OPENROUTER_API_KEY")
     if api_key and not api_key.startswith("your-"):
         try:
@@ -254,10 +290,12 @@ async def chat_completion(
                 "X-Title": "Prism AI",
             }
             
-            payload: Dict[str, Any] = {
-                "messages": formatted_messages,
-                "max_tokens": 1000
-            }
+            payload: Dict[str, Any] = {"messages": formatted_messages}
+            # Per-asset budget instead of a flat 1000 cap.
+            if max_tokens is not None:
+                payload["max_tokens"] = max_tokens
+            if temperature is not None:
+                payload["temperature"] = temperature
             if json_mode:
                 payload["response_format"] = {"type": "json_object"}
             
@@ -282,6 +320,11 @@ async def chat_completion(
                     model_used = data.get("model", pinned_model or "openrouter-unknown")
                     logger.info(f"OpenRouter success. Model used: {model_used}")
                     return content, model_used
+                elif _is_payment_required(res.status_code):
+                    logger.warning("OpenRouter returned 402 (credits exhausted). Skipping.")
+                elif _is_rate_limited(res.status_code):
+                    logger.warning("OpenRouter returned 429 (rate limited). Backing off briefly...")
+                    await asyncio.sleep(1.0)
                 else:
                     logger.warning(f"OpenRouter returned error {res.status_code}: {res.text}")
         except Exception as e:
@@ -301,10 +344,14 @@ async def chat_completion(
             
             for model_slug in groq_models:
                 try:
-                    payload = {
+                    payload: Dict[str, Any] = {
                         "messages": formatted_messages,
                         "model": model_slug
                     }
+                    if max_tokens is not None:
+                        payload["max_tokens"] = max_tokens
+                    if temperature is not None:
+                        payload["temperature"] = temperature
                     if json_mode:
                         payload["response_format"] = {"type": "json_object"}
 
@@ -320,6 +367,11 @@ async def chat_completion(
                             content = data["choices"][0]["message"]["content"]
                             logger.info(f"Groq fallback success. Model: {model_slug}")
                             return content, f"groq/{model_slug}"
+                        elif _is_rate_limited(res.status_code):
+                            logger.warning(f"Groq {model_slug} returned 429 (rate limited).")
+                            await asyncio.sleep(1.0)
+                        elif _is_payment_required(res.status_code):
+                            logger.warning(f"Groq {model_slug} returned 402. Skipping.")
                         else:
                             logger.warning(f"Groq {model_slug} returned error {res.status_code}: {res.text}")
                 except Exception as e:
@@ -333,7 +385,10 @@ async def chat_completion(
         for model_name in gemini_models:
             try:
                 logger.info(f"Attempting Gemini SDK (Last Resort): {model_name}...")
-                content = await gemini_chat_completion(messages, system_prompt, model_name, json_mode=json_mode)
+                content = await gemini_chat_completion(
+                    messages, system_prompt, model_name,
+                    json_mode=json_mode, max_tokens=max_tokens, temperature=temperature
+                )
                 if content:
                     logger.info(f"Gemini fallback success: {model_name}")
                     return content, f"gemini/{model_name}"
@@ -344,11 +399,19 @@ async def chat_completion(
     ollama_host = os.getenv("OLLAMA_HOST", "http://localhost:11434")
     try:
         logger.info(f"Attempting Ollama local Fallback ({ollama_host})...")
-        payload = {
+        payload: Dict[str, Any] = {
             "model": "llama3",
             "messages": formatted_messages,
             "stream": False
         }
+        # Ollama accepts sampling params under an "options" object.
+        options: Dict[str, Any] = {}
+        if max_tokens is not None:
+            options["num_predict"] = max_tokens
+        if temperature is not None:
+            options["temperature"] = temperature
+        if options:
+            payload["options"] = options
         if json_mode:
             payload["format"] = "json"
 
