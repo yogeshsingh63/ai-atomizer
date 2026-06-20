@@ -18,7 +18,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { XIcon } from "@/components/ui/x-icon";
 import { 
   Project, GeneratedAsset, Highlight, 
-  getProject, getAssets, getHighlights, regenerateAsset 
+  getProject, getAssets, getHighlights, regenerateAsset, resolveImageUrl 
 } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
@@ -33,6 +33,7 @@ export default function ProjectDashboardPage() {
   const [assets, setAssets] = useState<GeneratedAsset[]>([]);
   const [highlights, setHighlights] = useState<Highlight[]>([]);
   const [selectedAsset, setSelectedAsset] = useState<GeneratedAsset | null>(null);
+  const [showHighlights, setShowHighlights] = useState(false);
   const [loading, setLoading] = useState(true);
 
   // Preview options tab in details drawer
@@ -101,7 +102,7 @@ export default function ProjectDashboardPage() {
   const handleExport = (asset: GeneratedAsset) => {
     if (asset.asset_type === "thumbnail") {
       const a = document.createElement("a");
-      a.href = asset.content;
+      a.href = resolveImageUrl(asset.content);
       a.download = `${project?.title || "repurposed"}-thumbnail.png`;
       a.target = "_blank";
       document.body.appendChild(a);
@@ -184,32 +185,32 @@ export default function ProjectDashboardPage() {
       asset: blogAsset,
       className: "md:col-span-2 row-span-2",
       header: (
-        <div className="h-44 bg-neutral-950 rounded-xl flex flex-col justify-between p-5 border border-neutral-900 relative overflow-hidden group/header">
-          {/* Subtle brand background gradient */}
-          <div className="absolute inset-0 bg-gradient-to-br from-brand-muted/20 via-transparent to-transparent opacity-50 group-hover/header:opacity-80 transition-opacity" />
+        <div className="h-44 bg-[#0a0a0d] rounded-xl flex flex-col justify-between p-5 border border-[#1a1a20] relative overflow-hidden group/header">
+          {/* Subtle brand gradient that intensifies on hover */}
+          <div className="absolute inset-0 bg-gradient-to-br from-brand-muted/15 via-transparent to-transparent opacity-60 group-hover/header:opacity-90 transition-opacity duration-300" />
           
           <div className="flex justify-between items-start relative z-10">
-            <span className="text-[9px] uppercase font-bold text-brand tracking-widest brand-badge px-2.5 py-0.5 rounded-full">Editorial Article</span>
-            <span className="text-[10px] text-neutral-400 flex items-center gap-1 font-semibold">
-              <Sparkles className="w-3.5 h-3.5 text-brand" />
+            <span className="text-[9px] uppercase font-bold text-brand tracking-widest bg-brand-muted/50 border border-brand-border px-2.5 py-0.5 rounded-full">Editorial Article</span>
+            <span className="text-[10px] text-neutral-500 flex items-center gap-1 font-semibold">
+              <Sparkles className="w-3 h-3 text-brand" />
               {blogAsset?.model_used ? blogAsset.model_used.split("/").pop() : "Auto"}
             </span>
           </div>
           
           {/* Styled Document Lines */}
-          <div className="flex flex-col gap-2 mt-4 relative z-10 grow justify-center">
-            <div className="w-3/4 h-2 bg-brand-border/80 rounded-full" />
-            <div className="w-full h-1.5 bg-neutral-900 rounded-full" />
-            <div className="w-5/6 h-1.5 bg-neutral-900 rounded-full" />
-            <div className="w-2/3 h-1.5 bg-neutral-900 rounded-full" />
+          <div className="flex flex-col gap-2 mt-3 relative z-10 grow justify-center">
+            <div className="w-3/4 h-2 bg-brand/40 rounded-full" />
+            <div className="w-full h-1.5 bg-[#1a1a20] rounded-full" />
+            <div className="w-5/6 h-1.5 bg-[#1a1a20] rounded-full" />
+            <div className="w-2/3 h-1.5 bg-[#1a1a20] rounded-full" />
           </div>
 
-          <div className="flex flex-col gap-1.5 mt-auto relative z-10">
-            <h4 className="text-sm font-bold text-neutral-200 truncate group-hover/header:text-brand transition-colors">
+          <div className="flex flex-col gap-1 mt-auto relative z-10">
+            <h4 className="text-sm font-bold text-neutral-100 truncate group-hover/header:text-brand transition-colors duration-200">
               {project?.title || "Repurposed Blog Article"}
             </h4>
-            <p className="text-[11px] text-neutral-500 line-clamp-1">
-              Ready-to-publish long-form post structured with headers, quotes, and highlights.
+            <p className="text-[11px] text-neutral-600 line-clamp-1">
+              Ready-to-publish long-form post with headers, quotes, and highlights.
             </p>
           </div>
         </div>
@@ -335,9 +336,10 @@ export default function ProjectDashboardPage() {
       header: (
         <div className="h-32 bg-neutral-950 rounded-xl overflow-hidden border border-neutral-900 relative group/thumb">
           <img 
-            src={thumbnailAssets[0]?.content || DEFAULT_THUMBNAIL_PLACEHOLDER} 
+            src={resolveImageUrl(thumbnailAssets[0]?.content) || DEFAULT_THUMBNAIL_PLACEHOLDER} 
             alt="Thumbnail" 
             className="w-full h-full object-cover group-hover/thumb:scale-105 transition-transform duration-300"
+            onError={(e) => { (e.target as HTMLImageElement).src = DEFAULT_THUMBNAIL_PLACEHOLDER; }}
           />
           <div className="absolute inset-0 bg-neutral-950/40 group-hover/thumb:bg-neutral-950/20 transition-colors" />
         </div>
@@ -438,11 +440,13 @@ export default function ProjectDashboardPage() {
               icon={item.icon}
               onClick={() => {
                 setPreviewTab("preview"); // Reset tab on click
-                if (item.type === "clip") {
+                if (item.type === "highlights") {
+                  setShowHighlights(true);
+                } else if (item.type === "clip") {
                   setSelectedAsset(clipAssets[0] || null);
                 } else if (item.type === "thumbnail") {
                   setSelectedAsset(thumbnailAssets[0] || null);
-                } else if (item.type !== "highlights") {
+                } else {
                   setSelectedAsset(item.asset || null);
                 }
               }}
@@ -548,9 +552,10 @@ export default function ProjectDashboardPage() {
                       <div key={thumb.id} className="flex flex-col gap-3 rounded-xl bg-neutral-950 border border-neutral-900 p-4 hover:border-neutral-800 transition-colors">
                         <div className="aspect-video w-full rounded-lg overflow-hidden border border-neutral-900 relative">
                           <img 
-                            src={thumb.content} 
+                            src={resolveImageUrl(thumb.content)} 
                             alt="Cover thumbnail" 
                             className="absolute inset-0 w-full h-full object-cover"
+                            onError={(e) => { (e.target as HTMLImageElement).src = DEFAULT_THUMBNAIL_PLACEHOLDER; }}
                           />
                         </div>
                         <div className="flex items-center justify-between text-[10px] text-neutral-500">
@@ -611,7 +616,7 @@ export default function ProjectDashboardPage() {
                             <BlogPreview 
                               content={selectedAsset.content} 
                               title={project?.title} 
-                              coverUrl={thumbnailAssets[0]?.content || DEFAULT_THUMBNAIL_PLACEHOLDER}
+                              coverUrl={resolveImageUrl(thumbnailAssets[0]?.content) || DEFAULT_THUMBNAIL_PLACEHOLDER}
                             />
                           )}
                           {selectedAsset.asset_type === "thread" && (
@@ -725,6 +730,82 @@ export default function ProjectDashboardPage() {
             </div>
           </motion.div>
         </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Drawer Overlay for highlights detail */}
+      <AnimatePresence>
+        {showHighlights && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs p-0 sm:p-6"
+            onClick={() => setShowHighlights(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 12 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 12 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
+              className="w-full max-w-2xl h-full sm:h-[650px] sm:max-h-[85vh] bg-[#121215] border-0 sm:border border-neutral-900 rounded-none sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden relative border-brand-border/20"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Modal Header */}
+              <div className="p-4 border-b border-neutral-900 flex items-center justify-between gap-4 bg-neutral-950/10 shrink-0">
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className="p-2 sm:p-2.5 rounded-xl bg-neutral-950 border border-neutral-900 shrink-0 hidden sm:flex">
+                    <Sparkles className="w-4 h-4 text-brand" />
+                  </span>
+                  <div className="flex flex-col gap-0.5 min-w-0">
+                    <h3 className="text-sm font-bold text-neutral-100 truncate">
+                      Key Highlights
+                    </h3>
+                    <span className="text-[10px] text-neutral-500 font-medium truncate">
+                      {highlights.length} high-impact moments extracted from the source
+                    </span>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowHighlights(false)}
+                  className="text-neutral-400 hover:text-neutral-200 transition-all cursor-pointer p-1.5 hover:bg-neutral-900 rounded-lg border border-transparent hover:border-neutral-800 shrink-0"
+                  title="Close View"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Content Body */}
+              <div className="flex-1 overflow-y-auto p-3 sm:p-6 md:p-8 no-scrollbar bg-neutral-900/10">
+                <div className="flex flex-col gap-4">
+                  {highlights.length === 0 && (
+                    <div className="text-center py-12 text-xs text-neutral-500 italic">
+                      No highlights were extracted from this source.
+                    </div>
+                  )}
+                  {highlights.map((h, idx) => (
+                    <div key={h.id} className="p-5 rounded-2xl bg-neutral-950 border border-neutral-900 hover:border-neutral-800 transition-colors flex flex-col gap-3">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-neutral-900 pb-3">
+                        <div className="flex items-center gap-2">
+                          <h4 className="text-xs font-bold text-neutral-200">Highlight #{idx + 1}</h4>
+                          <span className="text-[10px] bg-neutral-900 border border-neutral-800 px-2 py-0.5 rounded text-neutral-300 font-semibold tracking-wide">
+                            {formatTimestamp(h.start_seconds)}s - {formatTimestamp(h.end_seconds)}s
+                          </span>
+                        </div>
+                      </div>
+                      <div className="p-3.5 rounded-lg bg-neutral-900/50 border border-neutral-900 text-xs italic text-neutral-400 leading-relaxed">
+                        &ldquo;{h.quote}&rdquo;
+                      </div>
+                      <div className="text-[11px] text-neutral-500 leading-relaxed">
+                        <span className="text-brand font-semibold">Why it matters: </span>{h.reason}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>
