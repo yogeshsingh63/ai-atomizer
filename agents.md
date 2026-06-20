@@ -2,6 +2,8 @@
 
 Welcome, AI Agent! This file is a machine-readable specification and set of instructions for building and modifying the AI Content Repurposing Engine (AI Atomizer). Read this file fully before starting any code modifications to ensure architectural consistency.
 
+For detailed configurations, redirect rules, cache-busting logic, API findings, and the fallback matrix, consult [CONTEXT.md](file:///home/yogesh/workspace/ai_atomizer/CONTEXT.md).
+
 ---
 
 ## 1. Project Overview & Tech Stack

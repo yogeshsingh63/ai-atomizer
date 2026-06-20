@@ -27,11 +27,15 @@ Prism AI is a content refraction engine that ingests long-form video URLs, audio
 - **Mouthpiece (Client to Backend):** The backend project router expects form fields (`Form(...)` / `File(...)`) to handle file uploads.
 - **Client implementation:** All project creations in [api.ts](client/lib/api.ts) must be submitted using `FormData` (even if no file is uploaded and raw text/URL is sent). Do NOT set a manual `Content-Type` header (let the browser auto-calculate the multipart boundary) to avoid `422 Unprocessable Entity` validation errors.
 
-### 2. Status-Aware Dashboard Redirects
-- **Dashboard Guard:** The frontend project dashboard (`/project/[id]`) checks the project's database status on mount.
-- **Redirection:** If the project status is not `"done"`, the client instantly redirects the user to `/project/[id]/processing`. Once the backend SSE event stream updates the status to `"done"`, the processing loader automatically forwards the user back to the active dashboard.
+### 2. Status-Aware Dashboard Redirects & Anti-Caching Guards
+- **Dashboard Guard:** The frontend project dashboard (`/project/[id]`) checks the project's database status on mount. If the status is not `"done"`, it redirects to `/project/[id]/processing` using `router.replace()`.
+- **Termination State & SSE Sync:** Since thumbnail generation is bypassed in the backend pipeline for efficiency, the pipeline ends at the **`Running Critic Review`** stage. The SSE events generator stops streaming once this stage is complete, and the client SSE listener (`subscribeToEvents`) closes the connection.
+- **Race Condition Prevention:** The backend commits `project.status = "done"` to the database **before** broadcasting the final completed stage event. This prevents the client from fetching a stale state.
+- **Cache-Busting & Refreshing:** To prevent next.js and browsers from rendering stale layout states after completion, the API client (`client/lib/api.ts`) appends a cache-busting timestamp `?t=${Date.now()}` to all GET requests for projects, assets, and highlights. The processing page also calls `router.refresh()` on redirect to force segment layout re-validation.
 
-### 3. Twitter/X Thread Formatting & Copy Blocks
+### 3. Twitter/X Thread & LinkedIn Dashboard Card Previews
+- **Dynamic Bento Headers:** Bento Grid cards dynamically render actual generated content previews inside their header elements (first tweet from parsed thread for X/Twitter, and generated copy for LinkedIn) instead of using hardcoded mock messages.
+- **Fallback Cover Template:** Because thumbnail assets are not generated in the main pipeline, the client dashboard uses a default high-quality Unsplash image (`DEFAULT_THUMBNAIL_PLACEHOLDER`) as a visual fallback in place of empty links or broken icons.
 - **Character Constraint:** Each tweet in an X thread must remain strictly **under 280 characters** (free tier post limit). This is enforced in both the initial prompt (`pipeline.py`) and the Critic pass instructions.
 - **Split-Copy Cards:** The dashboard details modal parses the thread by tweet index and renders multiple copyable cards with individual `"Copy Tweet"` actions and character counters instead of a single long text block.
 
