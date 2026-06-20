@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Sparkles, Pin, ChevronDown, Check } from "lucide-react";
 import { Model, getModels } from "@/lib/api";
 import { cn } from "@/lib/utils";
@@ -14,6 +14,13 @@ interface ModelSelectorProps {
   dropup?: boolean;
 }
 
+const PROVIDER_LABELS: Record<string, string> = {
+  nvidia: "NVIDIA NIM",
+  gemini: "Gemini",
+  openrouter: "OpenRouter",
+  groq: "Groq",
+};
+
 export const ModelSelector = ({
   mode,
   pinnedModel,
@@ -25,6 +32,7 @@ export const ModelSelector = ({
   const [isOpen, setIsOpen] = useState(false);
   const [models, setModels] = useState<Model[]>([]);
   const [loading, setLoading] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     async function loadModels() {
@@ -44,13 +52,32 @@ export const ModelSelector = ({
       }
     }
     loadModels();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Outside-click + Escape to close the dropdown
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleClick = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setIsOpen(false);
+    };
+    document.addEventListener("mousedown", handleClick);
+    document.addEventListener("keydown", handleKey);
+    return () => {
+      document.removeEventListener("mousedown", handleClick);
+      document.removeEventListener("keydown", handleKey);
+    };
+  }, [isOpen]);
 
   const handleModeChange = (newMode: "auto" | "pinned") => {
     if (newMode === "auto") {
       onChange("auto", null);
     } else {
-      // Pick first non-auto model if pinnedModel is null
       const defaultPin = pinnedModel || models.find(m => m.id !== 'auto')?.id || null;
       onChange("pinned", defaultPin);
     }
@@ -63,14 +90,22 @@ export const ModelSelector = ({
 
   const selectedModel = models.find(m => m.id === pinnedModel) || models[0];
 
+  // Group non-auto models by provider for the dropdown
+  const selectableModels = models.filter(m => m.id !== 'auto');
+  const grouped = selectableModels.reduce<Record<string, Model[]>>((acc, m) => {
+    const p = m.provider || 'openrouter';
+    (acc[p] = acc[p] || []).push(m);
+    return acc;
+  }, {});
+  const providerOrder = ['nvidia', 'gemini', 'openrouter', 'groq'];
+
   return (
-    <div className={cn("flex flex-col gap-2 relative", className)}>
+    <div className={cn("flex flex-col gap-2 relative", className)} ref={containerRef}>
       <label className="text-xs font-semibold text-neutral-400 tracking-wider uppercase">
         Generation Model Setting
       </label>
       
       <div className="flex bg-neutral-900 border border-neutral-800 rounded-xl p-0.5 gap-0.5 w-full max-w-sm">
-        {/* Auto Tab */}
         {/* Auto Tab */}
         <button
           type="button"
@@ -117,43 +152,54 @@ export const ModelSelector = ({
                 {selectedModel?.name || "Loading..."}
               </span>
               <span className="text-[10px] text-neutral-500">
-                {selectedModel?.is_free ? "Free Model" : `Paid: Prompt $${selectedModel?.pricing?.prompt || '0'} / Completion $${selectedModel?.pricing?.completion || '0'}`}
+                {selectedModel?.is_free
+                  ? `Free · ${PROVIDER_LABELS[selectedModel?.provider] || 'OpenRouter'}`
+                  : `Paid: Prompt $${selectedModel?.pricing?.prompt || '0'} / Completion $${selectedModel?.pricing?.completion || '0'}`}
               </span>
             </div>
-            <ChevronDown className="w-4 h-4 text-neutral-500 shrink-0" />
+            <ChevronDown className={cn("w-4 h-4 text-neutral-500 shrink-0 transition-transform", isOpen && "rotate-180")} />
           </button>
 
           {isOpen && (
             <div className={cn(
-              "absolute left-0 z-50 w-full max-w-sm bg-neutral-900 border border-neutral-800 rounded-2xl shadow-2xl p-1.5 max-h-60 overflow-y-auto no-scrollbar",
+              "absolute left-0 z-50 w-full max-w-sm bg-neutral-900 border border-neutral-800 rounded-2xl shadow-2xl p-1.5 max-h-72 overflow-y-auto",
               dropup ? "bottom-full mb-1.5" : "top-full mt-1.5"
             )}>
               {loading ? (
                 <div className="text-center py-4 text-xs text-neutral-500">Loading models...</div>
               ) : (
-                models
-                  .filter(m => m.id !== 'auto')
-                  .map((m) => (
-                    <button
-                      key={m.id}
-                      type="button"
-                      onClick={() => handleModelSelect(m.id)}
-                      className={cn(
-                        "flex items-center justify-between text-left px-3 py-2 rounded-xl text-xs w-full transition-colors cursor-pointer",
-                        pinnedModel === m.id
-                          ? "bg-neutral-800/80 text-neutral-200"
-                          : "text-neutral-400 hover:bg-neutral-950 hover:text-neutral-200"
-                      )}
-                    >
-                      <div className="flex flex-col min-w-0">
-                        <span className="font-medium truncate">{m.name}</span>
-                        <span className="text-[9px] text-neutral-500">
-                          {m.is_free ? "Free" : `Prompt $${m.pricing?.prompt} / Completion $${m.pricing?.completion}`}
-                        </span>
+                providerOrder.map((provider) => {
+                  const group = grouped[provider];
+                  if (!group || group.length === 0) return null;
+                  return (
+                    <div key={provider} className="mb-1">
+                      <div className="px-3 py-1.5 text-[9px] font-bold uppercase tracking-widest text-neutral-600">
+                        {PROVIDER_LABELS[provider] || provider}
                       </div>
-                      {pinnedModel === m.id && <Check className="w-3.5 h-3.5 text-neutral-300" />}
-                    </button>
-                  ))
+                      {group.map((m) => (
+                        <button
+                          key={m.id}
+                          type="button"
+                          onClick={() => handleModelSelect(m.id)}
+                          className={cn(
+                            "flex items-center justify-between text-left px-3 py-2 rounded-xl text-xs w-full transition-colors cursor-pointer",
+                            pinnedModel === m.id
+                              ? "bg-neutral-800/80 text-neutral-200"
+                              : "text-neutral-400 hover:bg-neutral-950 hover:text-neutral-200"
+                          )}
+                        >
+                          <div className="flex flex-col min-w-0">
+                            <span className="font-medium truncate">{m.name}</span>
+                            <span className="text-[9px] text-neutral-500">
+                              {m.is_free ? "Free" : `Prompt $${m.pricing?.prompt} / Completion $${m.pricing?.completion}`}
+                            </span>
+                          </div>
+                          {pinnedModel === m.id && <Check className="w-3.5 h-3.5 text-neutral-300 shrink-0" />}
+                        </button>
+                      ))}
+                    </div>
+                  );
+                })
               )}
             </div>
           )}
