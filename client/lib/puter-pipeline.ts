@@ -164,25 +164,46 @@ export interface PuterPipelineOptions {
  *    servers can't reach http://localhost:8000/... URLs.
  * 3. If neither works, throw — never call the backend's AI.
  */
+/**
+ * Convert a Blob/File to a base64 data URI string. Used to wrap audio bytes
+ * before sending to Puter — Puter rejects URLs pointing to localhost (the
+ * dev backend) but accepts data: URIs.
+ */
+async function blobToDataUri(blob: Blob): Promise<string> {
+  return await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(blob);
+  });
+}
+
 async function transcribeAudio(opts: {
   file?: File;
   audioUrl?: string;
 }): Promise<any> {
+  let blob: Blob | undefined;
   if (opts.file) {
-    return await puter.ai.speech2txt(opts.file);
-  }
-  if (opts.audioUrl) {
-    // Fetch the audio bytes client-side and pass as File (Puter rejects
-    // localhost URLs with "localhost URLs are not allowed").
+    blob = opts.file;
+  } else if (opts.audioUrl) {
+    console.log("[Puter audio] fetching URL:", opts.audioUrl);
     const audioRes = await fetch(opts.audioUrl);
     if (!audioRes.ok) {
       throw new Error(`Failed to fetch audio from ${opts.audioUrl}: HTTP ${audioRes.status}`);
     }
-    const blob = await audioRes.blob();
-    const audioFile = new File([blob], "audio.mp3", { type: blob.type || "audio/mpeg" });
-    return await puter.ai.speech2txt(audioFile);
+    blob = await audioRes.blob();
   }
-  throw new Error("Audio file or URL required for transcription");
+  if (!blob || blob.size === 0) {
+    throw new Error("Audio file is empty or missing (0 bytes). Backend download likely failed.");
+  }
+  console.log("[Puter audio] blob ready:", { size: blob.size, type: blob.type });
+  // Convert to data URI ourselves and pass the string directly to Puter.
+  // This bypasses Puter's internal blobToDataUri (which has had issues with
+  // our File/Blob types in the past) and ensures the server receives a
+  // data: URI instead of any URL.
+  const dataUri = await blobToDataUri(blob);
+  console.log("[Puter audio] data URI prefix:", dataUri.slice(0, 60) + "...");
+  return await puter.ai.speech2txt(dataUri);
 }
 
 /**
