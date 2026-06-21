@@ -277,75 +277,10 @@ async def run_pipeline(project_id: int):
                 db.add(transcript)
                 await db.commit()
 
-            # --- STEP 3: Extract Highlights ---
-            project.status = "extracting"
-            await db.commit()
-            await update_job_status(db, project_id, "Extracting Highlights", "running")
-            
-            transcript_input = "\n".join([f"[{s['start_seconds']}s - {s['end_seconds']}s]: {s['text']}" for s in segments])
-            messages = [{"role": "user", "content": f"Transcript:\n{transcript_input}"}]
-            
-            hcfg = get_asset_config("highlights")
-            # Execute highlights LLM request
-            logger.info("Requesting highlights extraction...")
-            res_content, model_used = await chat_completion(
-                messages,
-                system_prompt=HIGHLIGHTS_PROMPT,
-                model_mode=project.default_model_mode,
-                pinned_model=project.default_pinned_model,
-                json_mode=True,
-                max_tokens=hcfg["max_tokens"],
-                temperature=hcfg["temperature"],
-            )
-            
-            # Parse highlights JSON safely with retry
-            try:
-                highlights_data = extract_and_parse_json(res_content)
-            except json.JSONDecodeError:
-                # Simple correction retry on decode fail
-                logger.warning("Failed to decode highlights JSON. Retrying correction prompt...")
-                correction_msg = [
-                    {"role": "user", "content": f"Transcript:\n{transcript_input}"},
-                    {"role": "assistant", "content": res_content},
-                    {"role": "user", "content": "Your response was not valid JSON. Fix it and return ONLY the valid JSON object."}
-                ]
-                res_content, model_used = await chat_completion(
-                    correction_msg,
-                    system_prompt=HIGHLIGHTS_PROMPT,
-                    model_mode=project.default_model_mode,
-                    pinned_model=project.default_pinned_model,
-                    json_mode=True,
-                    max_tokens=hcfg["max_tokens"],
-                    temperature=hcfg["temperature"],
-                )
-                highlights_data = extract_and_parse_json(res_content)
-
-            # Store Highlights
-            highlights_list = []
-            for h in highlights_data.get("highlights", []):
-                highlight = Highlight(
-                    project_id=project_id,
-                    start_seconds=int(h.get("start_seconds", 0)),
-                    end_seconds=int(h.get("end_seconds", 0)),
-                    quote=h.get("quote", ""),
-                    reason=h.get("reason", "")
-                )
-                db.add(highlight)
-                highlights_list.append(highlight)
-            
-            await db.commit()
-            # Fetch stored items with IDs
-            await db.flush()
-            await update_job_status(db, project_id, "Extracting Highlights", "completed", model_used=model_used)
-
-            # --- STEP 4: Generate Content ---
-            project.status = "generating"
-            await db.commit()
-            await update_job_status(db, project_id, "Generating Assets", "running")
-
-            # Parse target_assets to decide which assets to generate. Defaults
-            # to all if unset/empty — this lets users skip assets they don't
-            # need, cutting pipeline time significantly.
+            # --- STEP 3: Extract Highlights (only if clips are selected) ---
+            # Parse target_assets early to decide if we need highlights at all.
+            # Highlights are only used for clip generation — skip the LLM call
+            # entirely if clips aren't selected, saving ~5-10s per project.
             try:
                 target = json.loads(project.target_assets) if project.target_assets else []
             except (json.JSONDecodeError, TypeError):
@@ -355,6 +290,70 @@ async def run_pipeline(project_id: int):
             if not target_set:
                 target_set = ALL_ASSETS  # default: generate everything
             logger.info(f"Project {project_id} target assets: {sorted(target_set)}")
+
+            highlights_list = []
+            if "clip" in target_set:
+                project.status = "extracting"
+                await db.commit()
+                await update_job_status(db, project_id, "Extracting Highlights", "running")
+                
+                transcript_input = "\n".join([f"[{s['start_seconds']}s - {s['end_seconds']}s]: {s['text']}" for s in segments])
+                messages = [{"role": "user", "content": f"Transcript:\n{transcript_input}"}]
+                
+                hcfg = get_asset_config("highlights")
+                logger.info("Requesting highlights extraction...")
+                res_content, model_used = await chat_completion(
+                    messages,
+                    system_prompt=HIGHLIGHTS_PROMPT,
+                    model_mode=project.default_model_mode,
+                    pinned_model=project.default_pinned_model,
+                    json_mode=True,
+                    max_tokens=hcfg["max_tokens"],
+                    temperature=hcfg["temperature"],
+                )
+                
+                try:
+                    highlights_data = extract_and_parse_json(res_content)
+                except json.JSONDecodeError:
+                    logger.warning("Failed to decode highlights JSON. Retrying correction prompt...")
+                    correction_msg = [
+                        {"role": "user", "content": f"Transcript:\n{transcript_input}"},
+                        {"role": "assistant", "content": res_content},
+                        {"role": "user", "content": "Your response was not valid JSON. Fix it and return ONLY the valid JSON object."}
+                    ]
+                    res_content, model_used = await chat_completion(
+                        correction_msg,
+                        system_prompt=HIGHLIGHTS_PROMPT,
+                        model_mode=project.default_model_mode,
+                        pinned_model=project.default_pinned_model,
+                        json_mode=True,
+                        max_tokens=hcfg["max_tokens"],
+                        temperature=hcfg["temperature"],
+                    )
+                    highlights_data = extract_and_parse_json(res_content)
+
+                # Store Highlights
+                for h in highlights_data.get("highlights", []):
+                    highlight = Highlight(
+                        project_id=project_id,
+                        start_seconds=int(h.get("start_seconds", 0)),
+                        end_seconds=int(h.get("end_seconds", 0)),
+                        quote=h.get("quote", ""),
+                        reason=h.get("reason", "")
+                    )
+                    db.add(highlight)
+                    highlights_list.append(highlight)
+                
+                await db.commit()
+                await db.flush()
+                await update_job_status(db, project_id, "Extracting Highlights", "completed", model_used=model_used)
+            else:
+                logger.info(f"Project {project_id}: skipping highlights extraction (clips not selected)")
+
+            # --- STEP 4: Generate Content ---
+            project.status = "generating"
+            await db.commit()
+            await update_job_status(db, project_id, "Generating Assets", "running")
 
             highlights_summary = "\n".join([f"- Quote: \"{h.quote}\" (Reason: {h.reason})" for h in highlights_list])
             user_content = f"Source Transcript:\n{full_text}\n\nKey Highlights to cover:\n{highlights_summary}"
