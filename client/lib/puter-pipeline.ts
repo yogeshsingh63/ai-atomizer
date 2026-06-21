@@ -330,17 +330,15 @@ export async function runPuterPipeline(
   let thumbnailContent: string | null = null;
   let thumbnailModel = "";
   if (targetAssets.includes("blog")) {
-    try {
-      const desc = await callPuter(PROMPTS.thumbDesc, `Reference: ${title}`, 300, 0.7);
-      const img: any = await puter.ai.txt2img(desc, {
-        model: "openai-image-generation",
-        quality: "medium",
-      });
-      thumbnailContent = img?.src || img?.image_url || null;
-      thumbnailModel = `puter/${imgModel}`;
-    } catch (e) {
-      thumbnailContent = null;
-    }
+    // No silent fallback — if Puter image gen fails, surface the error to the UI
+    // so the user knows their Puter model didn't produce a thumbnail.
+    const desc = await callPuter(PROMPTS.thumbDesc, `Reference: ${title}`, 300, 0.7);
+    const img: any = await puter.ai.txt2img(desc, {
+      model: "openai-image-generation",
+      quality: "medium",
+    });
+    thumbnailContent = img?.src || img?.image_url || null;
+    thumbnailModel = `puter/${imgModel}`;
   }
 
   emit("Running Critic Review", "completed");
