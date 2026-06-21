@@ -32,6 +32,8 @@ export const ModelSelector = ({
   const [isOpen, setIsOpen] = useState(false);
   const [models, setModels] = useState<Model[]>([]);
   const [loading, setLoading] = useState(false);
+  const [autoDropup, setAutoDropup] = useState(false);
+  const buttonRef = useRef<HTMLButtonElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -88,6 +90,20 @@ export const ModelSelector = ({
     setIsOpen(false);
   };
 
+  // When opening, auto-detect if the button is in the bottom half of the
+  // viewport — if so, flip the dropdown to open upward so it never
+  // overflows the screen edge.
+  const handleToggle = () => {
+    if (!isOpen && !dropup && typeof window !== "undefined" && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom;
+      setAutoDropup(spaceBelow < 280);
+    }
+    setIsOpen(!isOpen);
+  };
+
+  const effectiveDropup = dropup || autoDropup;
+
   const selectedModel = models.find(m => m.id === pinnedModel) || models[0];
 
   // Group non-auto models by provider for the dropdown
@@ -140,8 +156,9 @@ export const ModelSelector = ({
       {mode === "pinned" && (
         <div className="relative mt-1">
           <button
+            ref={buttonRef}
             type="button"
-            onClick={() => setIsOpen(!isOpen)}
+            onClick={handleToggle}
             className={cn(
               "flex items-center justify-between gap-2 bg-neutral-900 border border-neutral-800 hover:border-neutral-700 transition-all rounded-xl w-full max-w-sm text-left text-xs text-neutral-300 cursor-pointer",
               size === "sm" ? "px-3 py-2" : "px-4 py-2.5"
@@ -163,7 +180,7 @@ export const ModelSelector = ({
           {isOpen && (
             <div className={cn(
               "absolute left-0 z-50 w-full max-w-sm bg-neutral-900 border border-neutral-800 rounded-2xl shadow-2xl p-1.5 max-h-72 overflow-y-auto",
-              dropup ? "bottom-full mb-1.5" : "top-full mt-1.5"
+              effectiveDropup ? "bottom-full mb-1.5" : "top-full mt-1.5"
             )}>
               {loading ? (
                 <div className="text-center py-4 text-xs text-neutral-500">Loading models...</div>

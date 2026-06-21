@@ -189,11 +189,11 @@ export default function ProjectDashboardPage() {
           {/* Subtle brand gradient that intensifies on hover */}
           <div className="absolute inset-0 bg-gradient-to-br from-brand-muted/15 via-transparent to-transparent opacity-60 group-hover/header:opacity-90 transition-opacity duration-300" />
           
-          <div className="flex justify-between items-start relative z-10">
-            <span className="text-[9px] uppercase font-bold text-brand tracking-widest bg-brand-muted/50 border border-brand-border px-2.5 py-0.5 rounded-full">Editorial Article</span>
-            <span className="text-[10px] text-neutral-500 flex items-center gap-1 font-semibold">
-              <Sparkles className="w-3 h-3 text-brand" />
-              {blogAsset?.model_used ? blogAsset.model_used.split("/").pop() : "Auto"}
+          <div className="flex justify-between items-center gap-2 relative z-10">
+            <span className="text-[9px] uppercase font-bold text-brand tracking-widest bg-brand-muted/50 border border-brand-border px-2.5 py-0.5 rounded-full shrink-0">Editorial Article</span>
+            <span className="text-[10px] text-neutral-500 flex items-center gap-1 font-semibold min-w-0">
+              <Sparkles className="w-3 h-3 text-brand shrink-0" />
+              <span className="truncate">{blogAsset?.model_used ? blogAsset.model_used.split("/").pop() : "Auto"}</span>
             </span>
           </div>
           

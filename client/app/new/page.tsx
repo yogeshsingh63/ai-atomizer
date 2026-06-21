@@ -382,6 +382,7 @@ export default function NewProjectPage() {
                       setModelMode(mode);
                       setPinnedModel(model);
                     }}
+                    dropup={true}
                   />
                 </div>
               </div>
