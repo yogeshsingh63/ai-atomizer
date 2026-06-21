@@ -32,6 +32,7 @@ class ProjectCreate(BaseModel):
     default_pinned_model: Optional[str] = None
     target_assets: Optional[str] = None  # JSON array string of asset types to generate
     puter_user_id: Optional[str] = None  # Puter.js user UUID (links project to Puter account)
+    pipeline_mode: str = "backend"  # "backend" | "puter"
 
 class ProjectResponse(ORMModel):
     id: int
@@ -43,6 +44,7 @@ class ProjectResponse(ORMModel):
     default_pinned_model: Optional[str]
     target_assets: Optional[str] = None
     puter_user_id: Optional[str] = None
+    pipeline_mode: str = "backend"
     user_id: int
     created_at: datetime
 

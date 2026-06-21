@@ -12,6 +12,8 @@ interface ModelSelectorProps {
   className?: string;
   size?: "sm" | "md";
   dropup?: boolean;
+  /** When true, Puter.js models are shown at the top (curated, user-pays). */
+  puterAuthed?: boolean;
 }
 
 const PROVIDER_LABELS: Record<string, string> = {
@@ -19,6 +21,7 @@ const PROVIDER_LABELS: Record<string, string> = {
   gemini: "Gemini",
   openrouter: "OpenRouter",
   groq: "Groq",
+  puter: "Puter.js (Your Account)",
 };
 
 export const ModelSelector = ({
@@ -28,6 +31,7 @@ export const ModelSelector = ({
   className,
   size = "md",
   dropup = false,
+  puterAuthed = false,
 }: ModelSelectorProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [models, setModels] = useState<Model[]>([]);
@@ -113,7 +117,9 @@ export const ModelSelector = ({
     (acc[p] = acc[p] || []).push(m);
     return acc;
   }, {});
-  const providerOrder = ['nvidia', 'gemini', 'openrouter', 'groq'];
+  const providerOrder = puterAuthed
+    ? ['puter', 'nvidia', 'gemini', 'openrouter', 'groq']
+    : ['nvidia', 'gemini', 'openrouter', 'groq'];
 
   return (
     <div className={cn("flex flex-col gap-2 relative", className)} ref={containerRef}>

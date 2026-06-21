@@ -28,6 +28,7 @@ async def create_new_project(
     default_pinned_model: Optional[str] = Form(None),
     target_assets: Optional[str] = Form(None),  # JSON array string
     puter_user_id: Optional[str] = Form(None),  # Puter.js user UUID
+    pipeline_mode: str = Form("backend"),  # "backend" | "puter"
     file: Optional[UploadFile] = File(None),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
@@ -63,6 +64,7 @@ async def create_new_project(
         default_pinned_model=default_pinned_model,
         target_assets=target_assets,
         puter_user_id=puter_user_id,
+        pipeline_mode=pipeline_mode,
         user_id=current_user.id
     )
     
@@ -89,10 +91,80 @@ async def create_new_project(
             await db.commit()
             raise HTTPException(status_code=500, detail="Failed to save uploaded file.")
 
-    # 5. Kick off backend pipeline task
-    background_tasks.add_task(run_pipeline, project.id)
+    # 5. Kick off backend pipeline task (only for guest/backend mode).
+    # Puter.js users run the pipeline in the browser via puter.ai.*,
+    # then save results via POST /{id}/save-results.
+    if pipeline_mode != "puter":
+        background_tasks.add_task(run_pipeline, project.id)
+    else:
+        # Puter mode: backend still does free, non-LLM work so the browser
+        # pipeline has everything it needs.
+        if source_type == "youtube_url":
+            # Download the YouTube audio (no AI cost — just yt-dlp) so the
+            # browser can fetch it and transcribe via puter.ai.speech2txt().
+            background_tasks.add_task(
+                _download_youtube_audio_for_puter, project.id, source_ref
+            )
+        elif source_type == "upload":
+            # File was already saved in step 4. Mark as ready immediately.
+            project.status = "audio_ready"
+            await db.commit()
+        elif source_type == "article_text":
+            # Text source — no audio needed.
+            project.status = "audio_ready"
+            await db.commit()
 
     return {"project_id": project.id}
+
+
+async def _download_youtube_audio_for_puter(project_id: int, url: str):
+    """Download YouTube audio for a Puter-mode project. No AI cost — just
+    yt-dlp + ffmpeg. Sets project.status to 'audio_ready' on success or
+    'failed' on error so the processing page knows when to proceed."""
+    import yt_dlp
+    from app.db import async_session
+    from app.models import Project
+    from sqlalchemy.future import select
+
+    upload_dir = os.path.join(os.getenv("UPLOAD_DIR", "./uploads"), str(project_id))
+    os.makedirs(upload_dir, exist_ok=True)
+    audio_path = os.path.join(upload_dir, "audio.mp3")
+
+    ydl_opts = {
+        "format": "bestaudio/best",
+        "outtmpl": os.path.join(upload_dir, "audio.%(ext)s"),
+        "postprocessors": [{
+            "key": "FFmpegExtractAudio",
+            "preferredcodec": "mp3",
+            "preferredquality": "192",
+        }],
+        "quiet": True,
+        "no_warnings": True,
+    }
+
+    try:
+        def _download():
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                ydl.download([url])
+
+        await asyncio.to_thread(_download)
+
+        # Mark as ready
+        async with async_session() as db:
+            result = await db.execute(select(Project).where(Project.id == project_id))
+            project = result.scalars().first()
+            if project:
+                project.status = "audio_ready"
+                await db.commit()
+        logger.info(f"YouTube audio ready for Puter project {project_id}")
+    except Exception as e:
+        logger.error(f"YouTube audio download failed for project {project_id}: {e}")
+        async with async_session() as db:
+            result = await db.execute(select(Project).where(Project.id == project_id))
+            project = result.scalars().first()
+            if project:
+                project.status = "failed"
+                await db.commit()
 
 @router.get("", response_model=List[ProjectResponse])
 async def list_user_projects(
@@ -139,6 +211,28 @@ async def get_project_highlights(
         select(Highlight).where(Highlight.project_id == id)
     )
     return highlights_result.scalars().all()
+
+
+@router.get("/{id}/transcript")
+async def get_project_transcript(
+    id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Returns the transcript's full_text (for Puter client-side regen)."""
+    result = await db.execute(select(Project).where(Project.id == id))
+    project = result.scalars().first()
+    if not project or project.user_id != current_user.id:
+        raise HTTPException(status_code=404, detail="Project not found.")
+
+    from app.models import Transcript as TranscriptModel
+    t_result = await db.execute(
+        select(TranscriptModel).where(TranscriptModel.project_id == id)
+    )
+    transcript = t_result.scalars().first()
+    if not transcript:
+        return {"full_text": "", "segments": []}
+    return {"full_text": transcript.full_text, "segments": transcript.segments or []}
 
 @router.get("/{id}/events")
 async def get_project_events_stream(

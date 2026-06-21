@@ -99,6 +99,26 @@ export default function ProjectDashboardPage() {
     return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
   };
 
+  // Helpers for Puter client-side regeneration — fetch the project's
+  // transcript text and highlights so we can re-inject them as context.
+  const fetchTranscript = async (pid: number): Promise<string> => {
+    try {
+      const { getTranscript } = await import("@/lib/api");
+      return await getTranscript(pid);
+    } catch {
+      return "";
+    }
+  };
+  const fetchHighlightsForRegen = async (pid: number): Promise<Array<{ quote: string; reason: string }>> => {
+    try {
+      const { getHighlights } = await import("@/lib/api");
+      const hs = await getHighlights(pid);
+      return hs.map((h) => ({ quote: h.quote, reason: h.reason }));
+    } catch {
+      return [];
+    }
+  };
+
   const handleExport = (asset: GeneratedAsset) => {
     if (asset.asset_type === "thumbnail") {
       const a = document.createElement("a");
@@ -122,7 +142,49 @@ export default function ProjectDashboardPage() {
     URL.revokeObjectURL(url);
   };
 
-  const handleRegenerate = async () => {
+  // Puter.js client-side regeneration (used when project.pipeline_mode === "puter")
+  const handleRegeneratePuter = async (opts: { prompt?: string | null; model?: string | null; model_mode?: string | null }) => {
+    if (!selectedAsset) return;
+    if (selectedAsset.asset_type === "thumbnail") {
+      // Thumbnail regen not supported via Puter for now — fall back to backend
+      await handleRegenerateBackend();
+      return;
+    }
+    setRegenerating(true);
+    try {
+      // Fetch the project's transcript + highlights for the critic pass
+      const { getProject: getProj, updateAssetContent } = await import("@/lib/api");
+      const { regenSingleAssetPuter } = await import("@/lib/puter-pipeline");
+      const proj = await getProj(projectId);
+      const model = opts.model || proj.default_pinned_model || "gpt-5.4-mini";
+      const criticModel = "claude-sonnet-4";
+      const transcript = await fetchTranscript(projectId);
+      const highlights = await fetchHighlightsForRegen(projectId);
+
+      const newContent = await regenSingleAssetPuter(
+        selectedAsset.asset_type as "blog" | "thread" | "linkedin" | "clip",
+        transcript,
+        highlights,
+        model,
+        criticModel,
+        opts.prompt || undefined
+      );
+
+      // Save updated content to backend
+      const updated = await updateAssetContent(projectId, selectedAsset.id, newContent, model);
+      const nextAssets = assets.map(a => a.id === selectedAsset.id ? updated : a);
+      setAssets(nextAssets);
+      setSelectedAsset(updated);
+    } catch (e) {
+      console.error("Puter regen failed:", e);
+      alert("Failed to regenerate. Your Puter account may have insufficient credits.");
+    } finally {
+      setRegenerating(false);
+    }
+  };
+
+  // Backend regeneration (existing flow for guest users)
+  const handleRegenerateBackend = async () => {
     if (!selectedAsset) return;
     setRegenerating(true);
     try {
@@ -131,8 +193,6 @@ export default function ProjectDashboardPage() {
         selectedAsset.id,
         { model: regenMode === "pinned" ? regenModel : null, model_mode: regenMode }
       );
-      
-      // Update lists
       const nextAssets = assets.map(a => a.id === selectedAsset.id ? updated : a);
       setAssets(nextAssets);
       setSelectedAsset(updated);
@@ -144,11 +204,62 @@ export default function ProjectDashboardPage() {
     }
   };
 
+  const handleRegenerate = async () => {
+    if (!selectedAsset) return;
+    if (project?.pipeline_mode === "puter" && selectedAsset.asset_type !== "thumbnail") {
+      await handleRegeneratePuter({
+        model: regenMode === "pinned" ? regenModel : null,
+        model_mode: regenMode,
+      });
+    } else {
+      await handleRegenerateBackend();
+    }
+  };
+
   // Per-card regenerate (from the inline CardRegenPanel beneath each bento card)
   const handleCardRegen = async (
     assetId: number,
     opts: { prompt?: string | null; model?: string | null; model_mode?: string | null }
   ) => {
+    // For Puter projects, run client-side regen
+    if (project?.pipeline_mode === "puter") {
+      const target = assets.find(a => a.id === assetId);
+      if (!target || target.asset_type === "thumbnail") {
+        // Fall back to backend for thumbnails
+        const updated = await regenerateAsset(projectId, assetId, opts);
+        const nextAssets = assets.map(a => a.id === assetId ? updated : a);
+        setAssets(nextAssets);
+        return;
+      }
+      setRegenerating(true);
+      try {
+        const { getProject: getProj, updateAssetContent } = await import("@/lib/api");
+        const { regenSingleAssetPuter } = await import("@/lib/puter-pipeline");
+        const proj = await getProj(projectId);
+        const model = opts.model || proj.default_pinned_model || "gpt-5.4-mini";
+        const criticModel = "claude-sonnet-4";
+        const transcript = await fetchTranscript(projectId);
+        const highlights = await fetchHighlightsForRegen(projectId);
+        const newContent = await regenSingleAssetPuter(
+          target.asset_type as "blog" | "thread" | "linkedin" | "clip",
+          transcript,
+          highlights,
+          model,
+          criticModel,
+          opts.prompt || undefined
+        );
+        const updated = await updateAssetContent(projectId, assetId, newContent, model);
+        const nextAssets = assets.map(a => a.id === assetId ? updated : a);
+        setAssets(nextAssets);
+      } catch (e) {
+        console.error("Puter card regen failed:", e);
+        alert("Failed to regenerate. Your Puter account may have insufficient credits.");
+      } finally {
+        setRegenerating(false);
+      }
+      return;
+    }
+    // Guest (backend) flow
     const updated = await regenerateAsset(projectId, assetId, opts);
     const nextAssets = assets.map(a => a.id === assetId ? updated : a);
     setAssets(nextAssets);

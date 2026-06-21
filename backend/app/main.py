@@ -66,6 +66,16 @@ async def lifespan(app: FastAPI):
             logger.info("Added puter_user_id column to projects table.")
         except Exception:
             pass
+        # Same idempotent migration for pipeline_mode
+        try:
+            await conn.execute(
+                __import__("sqlalchemy").text(
+                    "ALTER TABLE projects ADD COLUMN pipeline_mode VARCHAR DEFAULT 'backend'"
+                )
+            )
+            logger.info("Added pipeline_mode column to projects table.")
+        except Exception:
+            pass
     logger.info("Database initialized successfully.")
     yield
     logger.info("Disposing database connections...")
@@ -96,6 +106,8 @@ app.include_router(models_api.router, prefix="/api")
 
 # Mount static generated thumbnails directory
 app.mount("/generated", StaticFiles(directory=GENERATED_DIR), name="generated")
+# Mount static uploads directory (Puter.js users fetch audio from here for transcription)
+app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 
 @app.get("/health", tags=["Health"])
 async def health_check():

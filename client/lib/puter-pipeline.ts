@@ -100,6 +100,7 @@ Respond ONLY with the generated visual instruction prompt (approx 45-60 words). 
 export type PuterAssetType = "blog" | "thread" | "linkedin" | "clip";
 
 export interface PuterHighlight {
+  id: number;
   start_seconds: number;
   end_seconds: number;
   quote: string;
@@ -129,8 +130,26 @@ export interface PuterPipelineOptions {
   title: string;
   sourceType: "youtube_url" | "upload" | "article_text";
   sourceRef: string;
+  /** Audio file for transcription (for upload source_type). */
   file?: File;
+  /** Audio URL for transcription (for youtube_url / upload — fetched from backend). */
+  audioUrl?: string;
+  /** Optional model override for the critic pass. Defaults to `model`. */
+  criticModel?: string;
+  /** Optional model override for image generation. */
+  imageModel?: string;
   onProgress?: (stage: string, status: string) => void;
+}
+
+/**
+ * Fetch an audio file from a URL and convert to a File object (for Puter
+ * speech2txt which accepts File | Blob).
+ */
+async function fetchAudioFile(url: string, filename = "audio.mp3"): Promise<File> {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Failed to fetch audio: ${res.status}`);
+  const blob = await res.blob();
+  return new File([blob], filename, { type: blob.type || "audio/mpeg" });
 }
 
 /**
@@ -140,11 +159,14 @@ export interface PuterPipelineOptions {
 export async function runPuterPipeline(
   opts: PuterPipelineOptions
 ): Promise<PuterPipelineResult> {
-  const { model, targetAssets, title, sourceType, sourceRef, file, onProgress } = opts;
+  const { model, targetAssets, title, sourceType, sourceRef, file, audioUrl, criticModel, imageModel, onProgress } = opts;
 
   const emit = (stage: string, status: string) => {
     onProgress?.(stage, status);
   };
+  // Use a separate critic model if provided, else reuse the main model.
+  const critic = criticModel || model;
+  const imgModel = imageModel || "gpt-image-1-mini";
 
   // --- Step 1: Transcription ---
   emit("Transcribing", "running");
@@ -156,12 +178,15 @@ export async function runPuterPipeline(
     };
   } else {
     // For YouTube URLs and uploads, transcribe the audio via Puter.
-    // For YouTube: caller should have already provided a file or we download via backend first.
-    // For uploads: pass the file directly to speech2txt.
-    if (!file) {
-      throw new Error("Audio file required for transcription");
+    // Prefer an in-memory File; fall back to fetching from audioUrl.
+    let audioFile: File | undefined = file;
+    if (!audioFile && audioUrl) {
+      audioFile = await fetchAudioFile(audioUrl);
     }
-    const result: any = await puter.ai.speech2txt(file);
+    if (!audioFile) {
+      throw new Error("Audio file or URL required for transcription");
+    }
+    const result: any = await puter.ai.speech2txt(audioFile);
     const text = typeof result === "string" ? result : extractText(result) || result?.text || "";
     transcript = {
       full_text: text,
@@ -210,14 +235,14 @@ export async function runPuterPipeline(
   // Helper to call Puter chat and return plain text. System prompt is
   // prepended to the messages array (Puter's ChatOptions doesn't support a
   // separate 'system' field for the messages-array overload).
-  const callPuter = (sysPrompt: string, content: string, maxTokens: number, temp: number) =>
+  const callPuter = (sysPrompt: string, content: string, maxTokens: number, temp: number, useModel?: string) =>
     puter.ai
       .chat(
         [
           { role: "system", content: sysPrompt, images: [] },
           { role: "user", content, images: [] },
         ],
-        { model, max_tokens: maxTokens, temperature: temp }
+        { model: useModel || model, max_tokens: maxTokens, temperature: temp }
       )
       .then(extractText);
 
@@ -252,16 +277,16 @@ export async function runPuterPipeline(
     );
   }
 
-  // --- Step 4: Critic pass (parallel) ---
+  // --- Step 4: Critic pass (parallel) — uses `critic` model (often a stronger one) ---
   emit("Running Critic Review", "running");
   const criticTasks = drafts.map(async (d) => {
     const criticMsg = `Source Transcript:\n${transcript.full_text}\n\nDraft (${d.type}):\n${d.text}`;
-    const text = await callPuter(PROMPTS.critic, criticMsg, 4096, 0.35);
+    const text = await callPuter(PROMPTS.critic, criticMsg, 4096, 0.35, critic);
     return { type: d.type, text };
   });
   const clipCriticTasks = clipResults.map(async (c) => {
     const criticMsg = `Source Transcript:\n${transcript.full_text}\n\nDraft (clip suggestion):\n${c.text}`;
-    const text = await callPuter(PROMPTS.critic, criticMsg, 600, 0.35);
+    const text = await callPuter(PROMPTS.critic, criticMsg, 600, 0.35, critic);
     return { highlightIndex: c.highlightIndex, text };
   });
   const [criticResults, clipCriticResults] = await Promise.all([
@@ -280,7 +305,7 @@ export async function runPuterPipeline(
         quality: "medium",
       });
       thumbnailContent = img?.src || img?.image_url || null;
-      thumbnailModel = "puter/gpt-image-1-mini";
+      thumbnailModel = `puter/${imgModel}`;
     } catch (e) {
       thumbnailContent = null;
     }
@@ -317,3 +342,60 @@ export async function runPuterPipeline(
 
   return { transcript, highlights, assets };
 }
+
+/**
+ * Regenerate a single asset (blog/thread/linkedin/clip) via Puter.js
+ * (bypasses the backend — Puter users pay via their own Puter account).
+ * Returns the new asset content string.
+ */
+export async function regenSingleAssetPuter(
+  assetType: "blog" | "thread" | "linkedin" | "clip",
+  transcriptText: string,
+  highlights: Array<{ quote: string; reason: string }>,
+  model: string,
+  criticModel: string,
+  customPrompt?: string
+): Promise<string> {
+  const sysKey =
+    assetType === "blog"
+      ? "blog"
+      : assetType === "thread"
+      ? "thread"
+      : assetType === "linkedin"
+      ? "linkedin"
+      : "clip";
+
+  const highlightsSummary = highlights
+    .map((h) => `- Quote: "${h.quote}" (Reason: ${h.reason})`)
+    .join("\n");
+  const userContent = `Source Transcript:\n${transcriptText}\n\nKey Highlights to cover:\n${highlightsSummary}`;
+
+  const callPuter = (sysPrompt: string, content: string, maxTokens: number, temp: number, useModel: string) =>
+    puter.ai
+      .chat(
+        [
+          { role: "system", content: sysPrompt, images: [] },
+          { role: "user", content, images: [] },
+        ],
+        { model: useModel, max_tokens: maxTokens, temperature: temp }
+      )
+      .then(extractText);
+
+  // Inject custom prompt as additional user instructions
+  const finalContent = customPrompt
+    ? `Additional user instructions (honor these while writing):\n${customPrompt}\n\n${userContent}`
+    : userContent;
+
+  // Step 1: Draft
+  const draft = await callPuter(PROMPTS[sysKey], finalContent,
+    assetType === "blog" ? 4096 : assetType === "thread" ? 2048 : assetType === "linkedin" ? 1200 : 600,
+    assetType === "clip" ? 0.8 : assetType === "thread" ? 0.85 : 0.7,
+    model
+  );
+
+  // Step 2: Critic rewrite
+  const criticMsg = `Source Transcript:\n${transcriptText}\n\nDraft (${assetType}):\n${draft}${customPrompt ? `\n\nAdditional user instructions to prioritize during this rewrite:\n${customPrompt}` : ""}`;
+  const final = await callPuter(PROMPTS.critic, criticMsg, 4096, 0.35, criticModel);
+  return final;
+}
+

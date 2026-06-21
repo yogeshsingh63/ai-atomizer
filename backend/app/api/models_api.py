@@ -67,6 +67,71 @@ GEMINI_MODELS = [
     ),
 ]
 
+# Puter.js curated models (from 400+ available). These are paid by the
+# user's Puter account (developer pays $0). Curated for best quality-to-cost
+# ratio for content repurposing tasks. Default per task:
+#   - Blog/LinkedIn/Highlights: gpt-5.4-mini (best balance)
+#   - Thread/Clips: gpt-5.4-nano (fastest, cheapest for short content)
+#   - Critic: claude-sonnet-4 (best editing/fact-checking)
+PUTER_MODELS = [
+    ModelResponse(
+        id="gpt-5.4-mini",
+        name="GPT 5.4 Mini (Recommended)",
+        pricing=ModelPricing(prompt="0.15", completion="0.60"),
+        is_free=False,
+        provider="puter",
+    ),
+    ModelResponse(
+        id="gpt-5.4-nano",
+        name="GPT 5.4 Nano (Fastest)",
+        pricing=ModelPricing(prompt="0.05", completion="0.40"),
+        is_free=False,
+        provider="puter",
+    ),
+    ModelResponse(
+        id="gpt-5.4",
+        name="GPT 5.4 (High Quality)",
+        pricing=ModelPricing(prompt="2.50", completion="10.00"),
+        is_free=False,
+        provider="puter",
+    ),
+    ModelResponse(
+        id="claude-sonnet-4",
+        name="Claude Sonnet 4 (Best for editing)",
+        pricing=ModelPricing(prompt="3.00", completion="15.00"),
+        is_free=False,
+        provider="puter",
+    ),
+    ModelResponse(
+        id="claude-sonnet-4-5",
+        name="Claude Sonnet 4.5 (Premium)",
+        pricing=ModelPricing(prompt="3.00", completion="15.00"),
+        is_free=False,
+        provider="puter",
+    ),
+    ModelResponse(
+        id="gpt-4o-mini",
+        name="GPT-4o Mini (Budget)",
+        pricing=ModelPricing(prompt="0.15", completion="0.60"),
+        is_free=False,
+        provider="puter",
+    ),
+    ModelResponse(
+        id="gpt-4.1",
+        name="GPT 4.1 (Reliable)",
+        pricing=ModelPricing(prompt="2.00", completion="8.00"),
+        is_free=False,
+        provider="puter",
+    ),
+    ModelResponse(
+        id="gemini-2.5-flash-lite",
+        name="Gemini 2.5 Flash Lite (Free tier)",
+        pricing=ModelPricing(prompt="0", completion="0"),
+        is_free=True,
+        provider="puter",
+    ),
+]
+
 
 @router.get("", response_model=List[ModelResponse])
 async def list_available_models():
@@ -92,6 +157,10 @@ async def list_available_models():
 
         # Gemini SDK models
         models.extend(GEMINI_MODELS)
+
+        # Puter.js curated models (user-pays, always available regardless of
+        # backend API key status — these are the models Puter.js users pick from)
+        models.extend(PUTER_MODELS)
 
         # OpenRouter live catalog (free models + a few notable paid ones)
         raw_models = await get_all_openrouter_models()
@@ -141,6 +210,7 @@ def get_fallback_models() -> List[ModelResponse]:
         ModelResponse(id="auto", name="Auto (free, fastest)", pricing=ModelPricing(prompt="0", completion="0"), is_free=True, provider="auto"),
         *NVIDIA_MODELS,
         *GEMINI_MODELS,
+        *PUTER_MODELS,
         ModelResponse(id="deepseek/deepseek-chat:free", name="DeepSeek V3 (Free)", pricing=ModelPricing(prompt="0", completion="0"), is_free=True, provider="openrouter"),
         ModelResponse(id="qwen/qwen-2.5-72b-instruct:free", name="Qwen 2.5 72B (Free)", pricing=ModelPricing(prompt="0", completion="0"), is_free=True, provider="openrouter"),
         ModelResponse(id="anthropic/claude-3.5-sonnet", name="Claude 3.5 Sonnet (Paid)", pricing=ModelPricing(prompt="0.003", completion="0.015"), is_free=False, provider="openrouter"),

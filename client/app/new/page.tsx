@@ -90,6 +90,9 @@ export default function NewProjectPage() {
       const ok = await puterSignIn();
       if (ok) {
         setPuterAuthed(true);
+        // Default to Puter's recommended model for content repurposing
+        setModelMode("pinned");
+        setPinnedModel("gpt-5.4-mini");
         // Also create a backend guest session for API access
         await loginAsGuest();
         setIsAuthenticated(true);
@@ -139,6 +142,9 @@ export default function NewProjectPage() {
         default_pinned_model: pinnedModel,
         target_assets: targetAssets,
         puter_user_id: puterUser?.uuid || null,
+        // Puter-authed users run the pipeline in the browser via puter.ai.*;
+        // the app pays $0, the user pays via their Puter account.
+        pipeline_mode: puterAuthed ? "puter" : "backend",
         file: selectedFile || undefined,
       });
 
@@ -416,6 +422,7 @@ export default function NewProjectPage() {
                       setPinnedModel(model);
                     }}
                     dropup={true}
+                    puterAuthed={puterAuthed}
                   />
                 </div>
               </div>
