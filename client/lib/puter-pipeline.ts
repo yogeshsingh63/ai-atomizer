@@ -26,19 +26,28 @@ function extractText(resp: any): string {
 // These mirror the prompts in backend/app/services/prompts.py
 
 const PROMPTS = {
-  blog: `You are an elite technology blogger and technical writer. Write a high-quality, comprehensive long-form blog post (700-1000 words) based on the provided transcript and key highlights.
+  blog: `You are an elite long-form technology blogger who writes in-depth, comprehensive articles for serious readers. You don't write for clicks — you write to be the definitive resource on the topic.
+
+Write a thorough, long-form blog post (1200-1800 words) based on the provided transcript and key highlights. The article should feel like a senior practitioner's deep dive — not a summary, not a quick take.
 
 Structuring Guidelines:
-- Create a catchy, high-conversion H1 title.
-- Divide the post into logical H2 and H3 sections to keep the reader engaged.
-- Integrate at least two exact, relevant quotes from the transcript inside blockquotes (> "quote") to establish credibility.
-- Use bullet points, bold key concepts, and formatted lists to make the article highly scannable.
+- Create a specific, high-conversion H1 title that names the actual insight (not clickbait, not vague).
+- Open with a 2-3 sentence cold-open hook that states the core claim or counter-intuitive insight from the transcript. No 'In this article…' intros.
+- Use 4-6 H2 sections. Each section should explore a distinct angle, sub-claim, or implication — not repeat the same idea.
+- Each H2 section should be 2-4 paragraphs (4-6 sentences per paragraph) with real depth: setup → evidence from the transcript → why it matters.
+- Integrate 2-3 EXACT quotes from the transcript inside blockquotes (> "quote") spread across the article — not all stacked at the top.
+- Use bullet points and bolded key concepts to make dense sections scannable, but don't bullet-ify everything.
+- Include a short 'Key Takeaways' section near the end (3-5 bullets) that distills the article for skimmers.
+- End with a 'The Bottom Line' section: 2-3 sentences on what the reader should do with this information, not a generic wrap-up.
 
 Writing & Style Rules:
-- Tone must be authoritative, clear, and direct. Avoid corporate speak or marketing hype.
-- DO NOT use generic AI intro/outro filler phrases. Start directly with a compelling hook.
-- Ground all claims, statistics, and examples strictly in the transcript data. Do not make up external facts.
-- Focus on creating value-dense, deep-dive content.
+- Tone: authoritative, conversational, specific. Like a senior engineer or researcher writing for peers at a conference — confident but not preachy.
+- NEVER use generic AI filler: no 'In today's fast-paced digital landscape', no 'Let's dive in', no 'In conclusion', no 'It is important to note that', no 'Furthermore'. Cut every sentence that could appear in any article on any topic.
+- Ground ALL claims strictly in the transcript. No external facts, no invented statistics, no padding. If the transcript doesn't cover an angle, don't invent it — go deeper on what it does cover.
+- Be specific: use exact numbers, named tools, concrete examples from the transcript. Vague generalities are forbidden.
+- Vary sentence length. Mix short punchy sentences with longer explanatory ones for rhythm.
+- Paragraphs can be 2-6 sentences — don't artificially fragment everything into one-liners.
+- The article should be the kind of post a smart reader bookmarks and sends to a colleague.
 
 Respond ONLY with the final blog post markdown. No intro/outro commentary.`,
   thread: `You are a master of social copywriting and Twitter/X storytelling. Write an engaging 5-8 tweet thread based on the provided transcript.
@@ -82,9 +91,9 @@ Respond ONLY with a valid JSON object: {"highlights": [{"start_seconds": 0, "end
 Strict Rules:
 1. ELIMINATE ALL FILLER: Scan for and delete generic assertions, cliché intros/outros, and buzzwords.
 2. GROUND IN DATA: Cross-reference every single claim with the source transcript. If the draft references anything not explicitly mentioned or supported by the transcript, delete or correct it.
-3. READABILITY & FLOW: Improve sentence structure. Make the voice sound human, active, and direct.
+3. READABILITY & FLOW: Improve sentence structure. Make the voice sound human, active, and direct. Vary sentence length. No padding.
 4. FORMAT COMPLIANCE: Keep the native layout of the asset (H1/H2 markdown headers for blogs, numbered format for Twitter threads, spacing for LinkedIn).
-5. LENGTH AUDIT: If the draft is a Twitter thread, verify that every single numbered tweet remains strictly under 280 characters. Trim, split, or compress sentences if they exceed this limit.
+5. LENGTH AUDIT: If the draft is a blog post, it MUST remain in the 1200-1800 word range — do not cut it down to a short summary. Preserve the depth, the multiple H2 sections, and the integrated quotes. If a section is genuinely weak, deepen it with transcript detail rather than removing it. If the draft is a Twitter thread, verify that every single numbered tweet remains strictly under 280 characters. Trim, split, or compress sentences if they exceed this limit.
 6. OUTPUT FORMAT: Respond ONLY with the finalized, audited, and rewritten draft. Do NOT include any intro/outro commentary, audit notes, change lists, explanations, or rejection alerts. The output must be a direct drop-in replacement for the asset.`,
   thumbDesc: `You are a senior creative director designing premium graphics for tech and business content. Based on the provided title/reference, generate a highly detailed, professional visual prompt for an image generation model (like FLUX.1).
 
@@ -153,17 +162,18 @@ async function fetchAudioFile(url: string, filename = "audio.mp3"): Promise<File
 }
 
 /**
- * Transcribe audio with a 3-tier fallback:
- *   1. puter.ai.speech2txt(audioUrl) — pass URL directly (Puter fetches it)
- *   2. puter.ai.speech2txt(file) — if a File was provided
- *   3. Backend Whisper fallback — if Puter fails entirely (charges no AI credits
- *      to the user; uses the app's free Whisper fallback chain)
+ * Transcribe audio using Puter.js only (user-pays). No backend fallback —
+ * the entire point of Puter mode is that the user pays for their own AI
+ * credits, not the app.
+ *
+ * Tries URL first (Puter fetches it server-side), then falls back to a
+ * File object if a URL isn't publicly reachable (e.g. localhost).
  */
 async function transcribeAudio(opts: {
   file?: File;
   audioUrl?: string;
 }): Promise<any> {
-  // Tier 1: Pass URL directly to Puter
+  // Tier 1: Pass URL directly to Puter (works when URL is publicly reachable)
   if (opts.audioUrl) {
     try {
       return await puter.ai.speech2txt(opts.audioUrl);
@@ -171,32 +181,14 @@ async function transcribeAudio(opts: {
       console.warn("Puter speech2txt (URL) failed, trying File:", e1);
     }
   }
-  // Tier 2: Try with File object
+  // Tier 2: Fetch audio and pass as File (needed for localhost dev where
+  // Puter's servers can't reach the URL)
   let audioFile = opts.file;
   if (!audioFile && opts.audioUrl) {
-    try {
-      audioFile = await fetchAudioFile(opts.audioUrl);
-    } catch (e2) {
-      console.warn("fetchAudioFile failed:", e2);
-    }
+    audioFile = await fetchAudioFile(opts.audioUrl);
   }
   if (audioFile) {
-    try {
-      return await puter.ai.speech2txt(audioFile);
-    } catch (e3) {
-      console.warn("Puter speech2txt (File) failed, falling back to backend:", e3);
-    }
-  }
-  // Tier 3: Backend Whisper fallback (free, no AI credits to user)
-  if (opts.audioUrl) {
-    try {
-      const { transcribeAudioBackend } = await import("./api");
-      return await transcribeAudioBackend(opts.audioUrl);
-    } catch (e4) {
-      throw new Error(
-        "All transcription methods failed. Puter may have rejected the audio, and the backend fallback also failed."
-      );
-    }
+    return await puter.ai.speech2txt(audioFile);
   }
   throw new Error("Audio file or URL required for transcription");
 }
@@ -251,9 +243,9 @@ export async function runPuterPipeline(
       .join("\n");
     const highlightsRaw = await puter.ai.chat(
       [
-        { role: "system", content: PROMPTS.highlights, images: [] },
-        { role: "user", content: `Transcript:\n${transcriptInput}`, images: [] },
-      ],
+        { role: "system", content: PROMPTS.highlights },
+        { role: "user", content: `Transcript:\n${transcriptInput}` },
+      ] as any,
       { model, temperature: 0.4, max_tokens: 2048 }
     );
     const highlightsText = extractText(highlightsRaw);
@@ -280,15 +272,16 @@ export async function runPuterPipeline(
   const userContent = `Source Transcript:\n${transcript.full_text}\n\nKey Highlights to cover:\n${highlightsSummary}`;
 
   // Helper to call Puter chat and return plain text. System prompt is
-  // prepended to the messages array (Puter's ChatOptions doesn't support a
-  // separate 'system' field for the messages-array overload).
+  // prepended to the messages array. We omit the `images` field entirely —
+  // including `images: []` causes Puter's API to try processing images and
+  // fail with "this model does not support image input".
   const callPuter = (sysPrompt: string, content: string, maxTokens: number, temp: number, useModel?: string) =>
     puter.ai
       .chat(
         [
-          { role: "system", content: sysPrompt, images: [] },
-          { role: "user", content, images: [] },
-        ],
+          { role: "system", content: sysPrompt },
+          { role: "user", content },
+        ] as any,
         { model: useModel || model, max_tokens: maxTokens, temperature: temp }
       )
       .then(extractText);
@@ -297,7 +290,7 @@ export async function runPuterPipeline(
   const draftTasks: Array<Promise<{ type: PuterAssetType; text: string }>> = [];
   if (targetAssets.includes("blog")) {
     draftTasks.push(
-      callPuter(PROMPTS.blog, userContent, 4096, 0.7).then((text) => ({ type: "blog" as const, text }))
+      callPuter(PROMPTS.blog, userContent, 6144, 0.7).then((text) => ({ type: "blog" as const, text }))
     );
   }
   if (targetAssets.includes("thread")) {
@@ -328,7 +321,7 @@ export async function runPuterPipeline(
   emit("Running Critic Review", "running");
   const criticTasks = drafts.map(async (d) => {
     const criticMsg = `Source Transcript:\n${transcript.full_text}\n\nDraft (${d.type}):\n${d.text}`;
-    const text = await callPuter(PROMPTS.critic, criticMsg, 4096, 0.35, critic);
+    const text = await callPuter(PROMPTS.critic, criticMsg, 6144, 0.35, critic);
     return { type: d.type, text };
   });
   const clipCriticTasks = clipResults.map(async (c) => {
@@ -421,9 +414,9 @@ export async function regenSingleAssetPuter(
     puter.ai
       .chat(
         [
-          { role: "system", content: sysPrompt, images: [] },
-          { role: "user", content, images: [] },
-        ],
+          { role: "system", content: sysPrompt },
+          { role: "user", content },
+        ] as any,
         { model: useModel, max_tokens: maxTokens, temperature: temp }
       )
       .then(extractText);
@@ -435,14 +428,14 @@ export async function regenSingleAssetPuter(
 
   // Step 1: Draft
   const draft = await callPuter(PROMPTS[sysKey], finalContent,
-    assetType === "blog" ? 4096 : assetType === "thread" ? 2048 : assetType === "linkedin" ? 1200 : 600,
+    assetType === "blog" ? 6144 : assetType === "thread" ? 2048 : assetType === "linkedin" ? 1200 : 600,
     assetType === "clip" ? 0.8 : assetType === "thread" ? 0.85 : 0.7,
     model
   );
 
   // Step 2: Critic rewrite
   const criticMsg = `Source Transcript:\n${transcriptText}\n\nDraft (${assetType}):\n${draft}${customPrompt ? `\n\nAdditional user instructions to prioritize during this rewrite:\n${customPrompt}` : ""}`;
-  const final = await callPuter(PROMPTS.critic, criticMsg, 4096, 0.35, criticModel);
+  const final = await callPuter(PROMPTS.critic, criticMsg, 6144, 0.35, criticModel);
   return final;
 }
 
