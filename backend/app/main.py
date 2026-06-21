@@ -89,10 +89,20 @@ app = FastAPI(
 )
 
 # CORS configurations
-# Allowing client localhost default, Vercel deployments, and all request types
+# Default origins: localhost:3000 (dev) + the configured CLIENT_REDIRECT_URI (Vercel).
+# Override via ALLOWED_ORIGINS env var (comma-separated) for additional domains.
+_default_origins = [
+    "http://localhost:3000",
+    os.getenv("CLIENT_REDIRECT_URI", "http://localhost:3000"),
+]
+_extra = os.getenv("ALLOWED_ORIGINS", "")
+if _extra:
+    _default_origins += [o.strip() for o in _extra.split(",") if o.strip()]
+# Dedup
+allow_origins = list(dict.fromkeys(_default_origins))
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "https://ai-atomizer.vercel.app"],
+    allow_origins=allow_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -16,12 +16,23 @@ Prism AI is a content refraction engine that ingests long-form video URLs, audio
 
 - **Frontend Client:** Next.js 16 (TypeScript, React 19, Tailwind v4, Framer Motion) running on port `3000`.
 - **Backend API:** FastAPI (Python) running on port `8000`.
-- **Database:** SQLite (`backend/app.db`) managed via SQLAlchemy + `aiosqlite`.
-- **Local Dev Server Execution Warning:** Avoid running uvicorn with `--reload` when testing SQLite writes. Uvicorn will detect SQLite file changes (`app.db`) or file uploads (`uploads/`, `generated/`) and trigger infinite server restarts.
+- **Database:** SQLite (`backend/app.db`) for local dev, PostgreSQL via Supabase for production.
+- **Deployment:** Backend → Render (Web Service with disk mount for uploads); Frontend → Vercel; DB → Supabase.
+- **Local Dev Server Execution Warning:** Avoid running uvicorn with `--reload` when testing SQLite writes. Uvicorn detects file changes in `app.db` or `uploads/`/`generated/` and triggers infinite restarts.
 
 ### Two Pipeline Modes
-- **Guest users** (no auth): The backend runs the full pipeline (transcribe → highlights → blog/thread/linkedin/clips → critic → cover thumbnail) using the app's free API key fallback chain (NVIDIA NIM primary, Gemini, Groq, OpenRouter).
-- **Puter.js users** (browser SSO): The entire pipeline runs **in the browser** via `puter.ai.chat()` / `puter.ai.txt2img()` / `puter.ai.speech2txt()`. The user pays for their own LLM credits — the app costs $0. Results are saved to the backend DB via `POST /api/projects/{id}/save-results`.
+- **Guest users** (no auth or Guest login): The backend runs the full pipeline (transcribe → highlights → blog/thread/linkedin/clips → critic → cover thumbnail) using the app's free API key fallback chain (NVIDIA NIM primary, Gemini, Groq, OpenRouter).
+- **Puter.js users** (browser SSO): The entire pipeline runs **in the browser** via `puter.ai.chat()` / `puter.ai.txt2img()` / `puter.ai.speech2txt()`. The user pays for their own LLM credits via their Puter account — the app costs $0. Results are saved to the backend DB via `POST /api/projects/{id}/save-results`. Per-asset regeneration also runs client-side via `regenSingleAssetPuter()`.
+
+### Puter.js Curated Models (from 400+ available, picked for best quality-to-cost ratio)
+| Task | Default Model | Why |
+|---|---|---|
+| Blog, LinkedIn, Highlights | `gpt-5.4-mini` | Best balance of quality and cost for long-form |
+| X Thread, Clip captions | `gpt-5.4-nano` | Fastest/cheapest for short content |
+| Critic pass | `claude-sonnet-4` | Best editing/fact-checking quality |
+| Thumbnail | `gpt-image-1-mini` (via txt2img) | Cost-effective image gen |
+
+Puter's full curated model list (8 models) is exposed in `GET /api/models` with `provider: "puter"`. Puter-authed users see Puter models at the top of the model selector; guests see backend models.
 
 ---
 
@@ -30,12 +41,14 @@ Prism AI is a content refraction engine that ingests long-form video URLs, audio
 ### 1. Unified Project Creation Payload
 - **Mouthpiece (Client to Backend):** The backend project router expects form fields (`Form(...)` / `File(...)`) to handle file uploads.
 - **Client implementation:** All project creations in [api.ts](client/lib/api.ts) must be submitted using `FormData` (even if no file is uploaded and raw text/URL is sent). Do NOT set a manual `Content-Type` header (let the browser auto-calculate the multipart boundary) to avoid `422 Unprocessable Entity` validation errors.
+- **Pipeline mode routing:** The `pipeline_mode` field is set to `"puter"` when the user is signed in via Puter.js, otherwise `"backend"`. The backend skips `run_pipeline` for Puter users and instead waits for results to be saved via the `save-results` endpoint.
 
 ### 2. Status-Aware Dashboard Redirects & Anti-Caching Guards
 - **Dashboard Guard:** The frontend project dashboard (`/project/[id]`) checks the project's database status on mount. If the status is not `"done"`, it redirects to `/project/[id]/processing` using `router.replace()`.
 - **Mount-Time Status Check:** The processing page first calls `getProject(id)` on mount — if the project is already `"done"`, it redirects immediately without waiting for SSE events.
 - **Termination State & SSE Sync:** The pipeline ends at the **`Running Critic Review`** stage (blog cover thumbnail generation runs in parallel with the critic pass, not as a separate stage). The SSE events generator stops streaming once this stage is complete, and the client SSE listener (`subscribeToEvents`) closes the connection.
 - **SSE Polling Fallback:** `subscribeToEvents` runs a 3s safety poll **alongside** SSE (not just on error). If `getProject(id).status === "done"`, it calls `onComplete`. This handles server restarts mid-pipeline and missed events gracefully.
+- **Puter Mode Processing:** When `pipeline_mode === "puter"`, the processing page runs the full Puter pipeline in the browser (`runPuterPipeline()`), saves results via `saveClientPipelineResults()`, then redirects to dashboard.
 - **Race Condition Prevention:** The backend commits `project.status = "done"` to the database **before** broadcasting the final completed stage event. This prevents the client from fetching a stale state.
 - **Cache-Busting & Refreshing:** To prevent next.js and browsers from rendering stale layout states after completion, the API client (`client/lib/api.ts`) appends a cache-busting timestamp `?t=${Date.now()}` to all GET requests for projects, assets, and highlights. The processing page also calls `router.refresh()` on redirect to force segment layout re-validation.
 
@@ -43,7 +56,10 @@ Prism AI is a content refraction engine that ingests long-form video URLs, audio
 - **Dynamic Bento Headers:** Bento Grid cards dynamically render actual generated content previews inside their header elements (first tweet from parsed thread for X/Twitter, generated copy for LinkedIn, real highlight timestamps for clips) instead of using hardcoded mock messages.
 - **Premium Card Aesthetic:** Solid `bg-[#0a0a0d]` base with `border-[#1a1a20]`, gradient accent line on top that lights up on hover, refined hover lift (`-translate-y-1`), and platform-specific avatar gradients (X/LinkedIn). **No glassmorphism.**
 - **Per-Card Regeneration Panel:** Each social asset card (blog, X thread, LinkedIn, clip, thumbnail) has an inline `CardRegenPanel` beneath it with a custom-prompt textarea (asset-specific placeholder), a `ModelSelector`, and a confirm button. Clicks inside the panel are isolated (`stopPropagation`) so they don't trigger the card's drawer-open `onClick`.
-- **Custom Prompt Backend:** The regenerate endpoint `POST /api/projects/{id}/assets/{assetId}/regenerate` accepts `{ model, prompt, model_mode }`. When `prompt` is provided, it's injected as "Additional user instructions" at the top of the generation message and appended to the critic message.
+- **Regeneration Routing:** `handleRegenerate()` and `handleCardRegen()` check `project.pipeline_mode`:
+  - **`"puter"`** → calls `regenSingleAssetPuter()` (browser-side `puter.ai.chat()`), saves result via `updateAssetContent()`.
+  - **`"backend"`** → calls `regenerateAsset()` (backend AI chain).
+- **Custom Prompt Backend:** The backend regenerate endpoint `POST /api/projects/{id}/assets/{assetId}/regenerate` accepts `{ model, prompt, model_mode }`. When `prompt` is provided, it's injected as "Additional user instructions" at the top of the generation message and appended to the critic message.
 - **Highlights Card:** A 6th bento card shows extracted key moments (timestamps + quotes), filling the previous trailing grid gap on desktop. Opens a dedicated drawer view.
 - **Character Constraint:** Each tweet in an X thread must remain strictly **under 280 characters** (free tier post limit). This is enforced in the prompt, the Critic pass instructions, AND a programmatic validation re-roll in `pipeline.py` (`_thread_is_valid`).
 - **Split-Copy Cards:** The dashboard details modal parses the thread by tweet index and renders multiple copyable cards with individual `"Copy Tweet"` actions and character counters instead of a single long text block.
@@ -55,8 +71,8 @@ Prism AI is a content refraction engine that ingests long-form video URLs, audio
 - **Content Validation Re-Roll:** After generation, `pipeline.py` validates blog word count (≥400 words) and thread tweet lengths (≤280 chars each). If validation fails, a single re-roll is attempted with a correction instruction.
 - **Asset Selector:** Users can choose which assets to generate via `target_assets` (JSON array: `["blog","thread","linkedin","clip"]`). Pipeline skips unselected assets. Highlights extraction is also skipped when clips aren't selected.
 
-### 5. Image Path Resolution
-- **Cross-Origin Issue:** Backend stores thumbnail paths as relative URLs (`/generated/{project_id}/blog_cover.png`) served from port 8000. The frontend uses `resolveImageUrl()` (in `client/lib/api.ts`) to prepend `BACKEND_BASE` (`http://localhost:8000`) so the browser resolves against the correct origin. Without this, browsers load from `http://localhost:3000/generated/...` which 404s.
+### 5. Image & Audio Path Resolution
+- **Cross-Origin Issue:** Backend stores thumbnail and audio paths as relative URLs (`/generated/{project_id}/blog_cover.png` or `/uploads/{project_id}/audio.mp3`) served from port 8000. The frontend uses `resolveImageUrl()` (in `client/lib/api.ts`) to prepend `BACKEND_BASE` (`http://localhost:8000`) so the browser resolves against the correct origin. Without this, browsers load from `http://localhost:3000/generated/...` which 404s.
 
 ### 6. Mock Data — Explicit Demo Mode Only
 - **No Silent Fallback:** All API functions in `api.ts` throw clear errors when the backend is unreachable. Mock data is **never** silently injected into the real UI.
@@ -66,10 +82,18 @@ Prism AI is a content refraction engine that ingests long-form video URLs, audio
 ### 7. Puter.js Integration
 - **NPM Package:** `@heyputer/puter.js` (installed in `client/`).
 - **Auth:** `puter.auth.signIn()` popup → `puter.auth.getUser()` for identity. Custom hook `usePuterAuth()` in `client/lib/puter.ts`.
-- **Client-Side Pipeline:** `client/lib/puter-pipeline.ts` is a TypeScript port of the Python pipeline. Uses `puter.ai.chat()` for text, `puter.ai.txt2img()` for images, `puter.ai.speech2txt()` for transcription.
+- **Client-Side Pipeline:** `client/lib/puter-pipeline.ts` is a TypeScript port of the Python pipeline. Uses `puter.ai.chat()` for text, `puter.ai.txt2img()` for images, `puter.ai.speech2txt()` for transcription. For YouTube URLs and uploads, the backend downloads the audio first, the frontend fetches it from `/uploads/{id}/audio.mp3` and passes to `puter.ai.speech2txt()`.
 - **Save Results:** Client-side pipeline results are POSTed to `POST /api/projects/{id}/save-results` which persists transcript, highlights, and assets to the DB.
+- **Per-Asset Regen:** `regenSingleAssetPuter()` in `client/lib/puter-pipeline.ts` regenerates a single asset via Puter. Results saved via `PUT /api/projects/{id}/assets/{asset_id}/content`.
 - **Cost Model:** User pays via their Puter account — the app costs $0 for Puter users. Guest users use the backend's free fallback chain.
 - **Test Mode:** Puter supports `testMode: true` for development without consuming credits.
+- **Project Linking:** Projects created by Puter users have `puter_user_id` set to the user's Puter UUID, so projects follow the user's account and can be retrieved by filtering on `puter_user_id`.
+
+### 8. Deployment
+- **Backend → Render:** `render.yaml` defines the web service. Uses `uvicorn app.main:app --host 0.0.0.0 --port $PORT`. Persistent disk at `/data` for uploads and generated images. All env vars set in Render dashboard.
+- **Frontend → Vercel:** Set `NEXT_PUBLIC_BACKEND_URL` to the Render backend URL. No build config needed (Next.js 16 + Turbopack auto-detected).
+- **Database → Supabase:** Use the pooled connection string (PgBouncer-compatible). Set as `DATABASE_URL=postgresql+asyncpg://...` in Render. `asyncpg` is in `requirements.txt`. `create_all` + idempotent migrations (`ALTER TABLE ADD COLUMN ...`) create the schema on first boot.
+- **CORS:** The backend reads `ALLOWED_ORIGINS` env var (comma-separated) and `CLIENT_REDIRECT_URI` to build the allow_origins list. Set `ALLOWED_ORIGINS=https://prism-ai.vercel.app` in production.
 
 ---
 
@@ -79,20 +103,23 @@ When working on text, transcription, or image generations, the backend relies on
 
 | Service | Primary Provider | Fallback 1 | Fallback 2 | Fallback 3 | Fallback 4 (No-Key Catchall) |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Text LLM** | **NVIDIA NIM** *(Llama 3.3 70B — Free)* | **Gemini API** *(2.5 Flash)* | **OpenRouter** *(Free model array)* | **Groq API** *(Llama 3.3)* / **Ollama** *(Local)* | *RuntimeError* |
-| **Audio Transcription** | **Local `faster-whisper`** *(if `WHISPER_PROVIDER=local`)* | **AssemblyAI** | **Groq Whisper API** | **OpenAI Whisper API** | *Mock Fallback* |
-| **Image Generation** | **HuggingFace FLUX.1-dev** *(quality mode)* | **HuggingFace FLUX.1-schnell** *(fast mode)* | **Pollinations AI** | **Generated Gradient Placeholder** *(on-brand PNG)* | *Unsplash URL* |
+| **Text LLM (guest)** | **NVIDIA NIM** *(Llama 3.3 70B — Free)* | **Gemini API** *(2.5 Flash)* | **OpenRouter** *(Free model array)* | **Groq API** *(Llama 3.3)* / **Ollama** *(Local)* | *RuntimeError* |
+| **Audio transcription (guest)** | **Local `faster-whisper`** *(if `WHISPER_PROVIDER=local`)* | **AssemblyAI** | **Groq Whisper API** | **OpenAI Whisper API** | *Mock Fallback* |
+| **Image Generation (guest)** | **HuggingFace FLUX.1-dev** *(quality mode)* | **HuggingFace FLUX.1-schnell** *(fast mode)* | **Pollinations AI** | **Generated Gradient Placeholder** *(on-brand PNG)* | *Unsplash URL* |
+| **Puter.js (user-pays)** | **`puter.ai.chat()`** *(in browser)* | `puter.ai.txt2img()` | `puter.ai.speech2txt()` | *n/a — user account only* | *n/a* |
 
 ### Key API Discoveries:
-1. **NVIDIA NIM is the Primary LLM:** `NVIDIA_API_KEY` is set and active, so all "auto" mode text generation hits NVIDIA Build API (`integrate.api.nvidia.com`) first with 5 verified models. NVIDIA NIM models are now exposed in `GET /api/models` grouped by provider so users can explicitly pin them. The `model_used` returned is the slug as-is (e.g., `meta/llama-3.3-70b-instruct`), NOT double-prefixed.
-2. **OpenRouter Rate Limits:** Free-tier keys frequently encounter `429 Too Many Requests` (daily limits) and `402 Payment Required` (credits block). OpenRouter is now a deep fallback (position 3), not primary. The matrix handles 429 with a 1s backoff and 402 with an immediate skip.
-3. **Gemini Image Models are Paid/Quota-Limited:** `imagen-4.0-*` requires a paid plan (400 error). `gemini-2.5-flash-image` / `gemini-3.1-flash-image` return 429 (quota exhausted on free tier). Image generation therefore uses HuggingFace FLUX models (free, verified working) as primary.
-4. **HuggingFace FLUX.1-dev + FLUX.1-schnell:** Both verified working with `HF_API_KEY`. FLUX.1-dev produces higher quality; FLUX.1-schnell is faster (used in the main pipeline with `quality="fast"`). Regenerate uses `quality="quality"` (FLUX.1-dev).
-5. **Generated Gradient Placeholder:** When all image providers fail, `imagegen.py` generates an on-brand dark-gradient PNG with the project title using Pillow (replaces the previous single hardcoded Unsplash URL — every project gets a unique fallback).
-6. **Blog Cover Thumbnail Re-enabled:** The pipeline now generates one blog cover thumbnail in parallel with the critic pass (via `asyncio.gather`), adding near-zero wall-clock time. Per-clip thumbnails remain manual-regenerate only.
-7. **Clips Parallelized + Highlights Skipped When Unselected:** Clip draft generation and clip critic passes run via `asyncio.gather`. When `target_assets` doesn't include `"clip"`, the highlights extraction step is skipped entirely, saving ~5-10s per project.
-8. **Gemini Direct SDK JSON Constraints:**
+1. **NVIDIA NIM is the Primary LLM (backend):** `NVIDIA_API_KEY` is set and active, so all "auto" mode text generation hits NVIDIA Build API (`integrate.api.nvidia.com`) first with 5 verified models. NVIDIA NIM models are now exposed in `GET /api/models` grouped by provider so users can explicitly pin them. The `model_used` returned is the slug as-is (e.g., `meta/llama-3.3-70b-instruct`), NOT double-prefixed.
+2. **Puter.js is the Primary LLM (client-side):** Puter-authed users run the pipeline in the browser via `puter.ai.*`. The user pays via their Puter account. 400+ models available; 8 curated models (best quality-to-cost ratio) exposed in the model selector.
+3. **OpenRouter Rate Limits:** Free-tier keys frequently encounter `429 Too Many Requests` (daily limits) and `402 Payment Required` (credits block). OpenRouter is now a deep fallback (position 3), not primary. The matrix handles 429 with a 1s backoff and 402 with an immediate skip.
+4. **Gemini Image Models are Paid/Quota-Limited:** `imagen-4.0-*` requires a paid plan (400 error). `gemini-2.5-flash-image` / `gemini-3.1-flash-image` return 429 (quota exhausted on free tier). Image generation therefore uses HuggingFace FLUX models (free, verified working) as primary.
+5. **HuggingFace FLUX.1-dev + FLUX.1-schnell:** Both verified working with `HF_API_KEY`. FLUX.1-dev produces higher quality; FLUX.1-schnell is faster (used in the main pipeline with `quality="fast"`). Regenerate uses `quality="quality"` (FLUX.1-dev).
+6. **Generated Gradient Placeholder:** When all image providers fail, `imagegen.py` generates an on-brand dark-gradient PNG with the project title using Pillow (replaces the previous single hardcoded Unsplash URL — every project gets a unique fallback).
+7. **Blog Cover Thumbnail Re-enabled:** The pipeline now generates one blog cover thumbnail in parallel with the critic pass (via `asyncio.gather`), adding near-zero wall-clock time. Per-clip thumbnails remain manual-regenerate only.
+8. **Clips Parallelized + Highlights Skipped When Unselected:** Clip draft generation and clip critic passes run via `asyncio.gather`. When `target_assets` doesn't include `"clip"`, the highlights extraction step is skipped entirely, saving ~5-10s per project.
+9. **Gemini Direct SDK JSON Constraints:**
    - Enforce native JSON response structures in the direct Gemini API fallback by passing `config={"response_mime_type": "application/json"}` to `model.models.generate_content`.
    - Never trust the LLM to return naked JSON. Always pass raw output through `extract_and_parse_json()` in `pipeline.py` which trims conversational text and strips markdown formatting wrapper backticks (`` ```json ... ``` ``).
-9. **Groq Whisper (Transcription):** Groq's `/v1/audio/transcriptions` endpoint has a strict **25 MB file upload limit**. Audio >4MB is compressed via ffmpeg (mono 32kbps) before cloud upload.
-10. **Image Validity Check:** `imagegen.py` uses `PIL.Image.verify()` to validate generated image bytes (replaces the crude `len > 1000` check that could pass tiny error images).
+10. **Groq Whisper (Transcription):** Groq's `/v1/audio/transcriptions` endpoint has a strict **25 MB file upload limit**. Audio >4MB is compressed via ffmpeg (mono 32kbps) before cloud upload.
+11. **Image Validity Check:** `imagegen.py` uses `PIL.Image.verify()` to validate generated image bytes (replaces the crude `len > 1000` check that could pass tiny error images).
+12. **YouTube Audio for Puter Users:** The backend downloads YouTube audio via yt-dlp (no AI cost) and sets `project.status = "audio_ready"`. The frontend then fetches `/uploads/{id}/audio.mp3` and transcribes via `puter.ai.speech2txt()`.

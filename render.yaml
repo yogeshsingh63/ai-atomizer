@@ -1,0 +1,42 @@
+services:
+  - type: web
+    name: prism-ai-backend
+    runtime: python
+    plan: starter
+    buildCommand: "pip install --upgrade pip && pip install -r requirements.txt"
+    startCommand: "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+    healthCheckPath: /health
+    envVars:
+      # Database — set this to your Supabase pooled connection string in
+      # Render's dashboard. Format: postgresql+asyncpg://USER:PASS@HOST:PORT/DBNAME
+      - key: DATABASE_URL
+        sync: false
+      # CORS — add your Vercel frontend URL
+      - key: CLIENT_REDIRECT_URI
+        sync: false
+      # Storage paths
+      - key: UPLOAD_DIR
+        value: /data/uploads
+      - key: GENERATED_DIR
+        value: /data/generated
+      # LLM API keys (all optional — pipeline works with whatever's set)
+      - key: NVIDIA_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: HF_API_KEY
+        sync: false
+      - key: ASSEMBLYAI_API_KEY
+        sync: false
+      - key: CRITIC_MODEL
+        value: meta/llama-3.3-70b-instruct
+      - key: WHISPER_PROVIDER
+        value: groq
+    disk:
+      name: prism-data
+      mountPath: /data
+      sizeGB: 5
