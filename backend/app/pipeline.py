@@ -66,8 +66,10 @@ def _parse_tweets(thread_text: str) -> List[str]:
     return [p.strip() for p in parts if p.strip()]
 
 def _blog_is_valid(content: str) -> bool:
-    """Blog must reach a minimum length (reject truncated/short drafts)."""
-    return _word_count(content) >= 400
+    """Blog must reach the long-form depth target (reject truncated/short drafts).
+    Target is 1200-1800 words; we gate at 1000 to allow minor variance from the
+    model while still rejecting anything that is obviously a quick summary."""
+    return _word_count(content) >= 1000
 
 def _thread_is_valid(content: str) -> bool:
     """Every tweet in the thread must stay under 280 chars."""
@@ -163,7 +165,9 @@ async def _generate_with_reroll(
     if asset_type == "blog" and not _blog_is_valid(content):
         logger.warning(f"Blog draft too short ({_word_count(content)} words). Re-rolling once...")
         retry_msg = build_generation_message(
-            f"Your previous draft was too short. Write the FULL 700-1000 word blog post.\n\n{user_content}",
+            f"Your previous draft was too short. Write the FULL 1200-1800 word long-form blog post. "
+            f"Include all 4-6 H2 sections, multiple blockquote quotes from the transcript, "
+            f"a Key Takeaways section, and a The Bottom Line section. Do not summarize.\n\n{user_content}",
             custom_prompt,
         )
         content, model_used = await chat_completion(
