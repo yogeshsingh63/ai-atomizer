@@ -323,6 +323,32 @@ export async function getTranscript(id: number): Promise<string> {
   return data?.full_text || "";
 }
 
+/**
+ * Backend Whisper transcription fallback (used when Puter.js speech2txt
+ * fails). Fetches the audio from the given URL, sends it to the backend's
+ * /api/transcribe endpoint which uses the free fallback chain (AssemblyAI →
+ * Groq Whisper → OpenAI Whisper → faster-whisper).
+ */
+export async function transcribeAudioBackend(audioUrl: string): Promise<string> {
+  // Fetch the audio as a blob
+  const audioRes = await fetch(audioUrl);
+  if (!audioRes.ok) throw new Error(`Failed to fetch audio: ${audioRes.status}`);
+  const audioBlob = await audioRes.blob();
+  const audioFile = new File([audioBlob], "audio.mp3", { type: audioBlob.type || "audio/mpeg" });
+
+  const formData = new FormData();
+  formData.append("file", audioFile);
+
+  const res = await fetchWithRetry(`${BACKEND_URL}/transcribe`, {
+    method: "POST",
+    headers: getAuthHeaders(),
+    body: formData,
+  });
+  if (!res.ok) throw new Error(`Backend transcription failed: HTTP ${res.status}`);
+  const data = await res.json();
+  return data?.text || data?.full_text || "";
+}
+
 // Save client-side pipeline results (Puter.js users run the pipeline
 // in the browser and POST the results here for persistence).
 export async function saveClientPipelineResults(

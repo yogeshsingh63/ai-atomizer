@@ -153,6 +153,55 @@ async function fetchAudioFile(url: string, filename = "audio.mp3"): Promise<File
 }
 
 /**
+ * Transcribe audio with a 3-tier fallback:
+ *   1. puter.ai.speech2txt(audioUrl) — pass URL directly (Puter fetches it)
+ *   2. puter.ai.speech2txt(file) — if a File was provided
+ *   3. Backend Whisper fallback — if Puter fails entirely (charges no AI credits
+ *      to the user; uses the app's free Whisper fallback chain)
+ */
+async function transcribeAudio(opts: {
+  file?: File;
+  audioUrl?: string;
+}): Promise<any> {
+  // Tier 1: Pass URL directly to Puter
+  if (opts.audioUrl) {
+    try {
+      return await puter.ai.speech2txt(opts.audioUrl);
+    } catch (e1) {
+      console.warn("Puter speech2txt (URL) failed, trying File:", e1);
+    }
+  }
+  // Tier 2: Try with File object
+  let audioFile = opts.file;
+  if (!audioFile && opts.audioUrl) {
+    try {
+      audioFile = await fetchAudioFile(opts.audioUrl);
+    } catch (e2) {
+      console.warn("fetchAudioFile failed:", e2);
+    }
+  }
+  if (audioFile) {
+    try {
+      return await puter.ai.speech2txt(audioFile);
+    } catch (e3) {
+      console.warn("Puter speech2txt (File) failed, falling back to backend:", e3);
+    }
+  }
+  // Tier 3: Backend Whisper fallback (free, no AI credits to user)
+  if (opts.audioUrl) {
+    try {
+      const { transcribeAudioBackend } = await import("./api");
+      return await transcribeAudioBackend(opts.audioUrl);
+    } catch (e4) {
+      throw new Error(
+        "All transcription methods failed. Puter may have rejected the audio, and the backend fallback also failed."
+      );
+    }
+  }
+  throw new Error("Audio file or URL required for transcription");
+}
+
+/**
  * Run the full content repurposing pipeline in the browser using Puter.js.
  * LLM costs are billed to the user's Puter account (user-pays model).
  */
@@ -177,16 +226,14 @@ export async function runPuterPipeline(
       segments: [{ start_seconds: 0, end_seconds: 0, text: sourceRef }],
     };
   } else {
-    // For YouTube URLs and uploads, transcribe the audio via Puter.
-    // Prefer an in-memory File; fall back to fetching from audioUrl.
-    let audioFile: File | undefined = file;
-    if (!audioFile && audioUrl) {
-      audioFile = await fetchAudioFile(audioUrl);
-    }
-    if (!audioFile) {
-      throw new Error("Audio file or URL required for transcription");
-    }
-    const result: any = await puter.ai.speech2txt(audioFile);
+    // For YouTube URLs and uploads, transcribe via Puter.
+    // Try passing the URL directly to puter.ai.speech2txt() first (it accepts
+    // URL strings). Fall back to fetching and creating a File. If Puter
+    // can't transcribe, fall back to the backend's Whisper.
+    const result: any = await transcribeAudio({
+      file,
+      audioUrl,
+    });
     const text = typeof result === "string" ? result : extractText(result) || result?.text || "";
     transcript = {
       full_text: text,

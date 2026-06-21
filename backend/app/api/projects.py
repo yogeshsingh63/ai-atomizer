@@ -350,3 +350,39 @@ async def save_client_pipeline_results(
     await db.commit()
 
     return {"status": "saved", "project_id": id}
+
+
+# --- Standalone transcription endpoint (fallback for Puter.js users) ---
+@router.post("/transcribe")
+async def transcribe_audio_endpoint(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Standalone audio transcription using the backend's free fallback chain
+    (AssemblyAI → Groq Whisper → OpenAI Whisper → faster-whisper). Used as a
+    fallback when Puter.js's speech2txt rejects an audio file.
+    """
+    from app.services.transcribe import transcribe_audio
+
+    # Save the uploaded file to a temp path for transcribe_audio
+    upload_dir = os.path.join(os.getenv("UPLOAD_DIR", "./uploads"), "transcribe")
+    os.makedirs(upload_dir, exist_ok=True)
+    audio_path = os.path.join(upload_dir, f"{current_user.id}_{file.filename or 'audio.mp3'}")
+
+    try:
+        contents = await file.read()
+        with open(audio_path, "wb") as f:
+            f.write(contents)
+        full_text, segments = await transcribe_audio(audio_path)
+        return {"text": full_text, "segments": segments or []}
+    except Exception as e:
+        logger.error(f"Transcription endpoint failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Transcription failed: {str(e)}")
+    finally:
+        # Clean up temp file
+        try:
+            if os.path.exists(audio_path):
+                os.remove(audio_path)
+        except Exception:
+            pass
