@@ -27,6 +27,7 @@ async def create_new_project(
     default_model_mode: str = Form("auto"),
     default_pinned_model: Optional[str] = Form(None),
     target_assets: Optional[str] = Form(None),  # JSON array string
+    puter_user_id: Optional[str] = Form(None),  # Puter.js user UUID
     file: Optional[UploadFile] = File(None),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
@@ -61,6 +62,7 @@ async def create_new_project(
         default_model_mode=default_model_mode,
         default_pinned_model=default_pinned_model,
         target_assets=target_assets,
+        puter_user_id=puter_user_id,
         user_id=current_user.id
     )
     
@@ -243,6 +245,11 @@ async def save_client_pipeline_results(
             status="done",
         )
         db.add(asset)
+
+    # Link project to Puter user if provided
+    puter_id = payload.get("puter_user_id")
+    if puter_id:
+        project.puter_user_id = puter_id
 
     # Mark project as done
     project.status = "done"

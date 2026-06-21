@@ -14,6 +14,7 @@ export interface Project {
   default_model_mode: 'auto' | 'pinned';
   default_pinned_model: string | null;
   target_assets: string | null; // JSON array string of asset types
+  puter_user_id: string | null; // Puter.js user UUID
   created_at: string;
 }
 
@@ -205,6 +206,7 @@ export async function createProject(data: {
   default_model_mode: 'auto' | 'pinned';
   default_pinned_model: string | null;
   target_assets?: string[]; // array of asset types to generate
+  puter_user_id?: string | null; // Puter.js user UUID
   file?: File;
 }): Promise<{ project_id: number }> {
   // Demo mode only — no silent mock fallback on transient errors.
@@ -219,6 +221,7 @@ export async function createProject(data: {
       default_model_mode: data.default_model_mode,
       default_pinned_model: data.default_pinned_model,
       target_assets: data.target_assets ? JSON.stringify(data.target_assets) : null,
+      puter_user_id: data.puter_user_id || null,
       created_at: new Date().toISOString(),
     };
     mockProjects.push(newProject);
@@ -235,6 +238,9 @@ export async function createProject(data: {
   if (data.default_pinned_model) formData.append('default_pinned_model', data.default_pinned_model);
   if (data.target_assets && data.target_assets.length > 0) {
     formData.append('target_assets', JSON.stringify(data.target_assets));
+  }
+  if (data.puter_user_id) {
+    formData.append('puter_user_id', data.puter_user_id);
   }
   if (data.file) formData.append('file', data.file);
 
@@ -272,6 +278,7 @@ function getMockProject(id: number): Project {
     default_model_mode: 'auto',
     default_pinned_model: null,
     target_assets: null,
+    puter_user_id: null,
     created_at: new Date().toISOString(),
   };
   mockProjects.push(autoProj);
@@ -297,6 +304,7 @@ export async function saveClientPipelineResults(
     transcript: { full_text: string; segments: any[] };
     highlights: Array<{ id: number; start_seconds: number; end_seconds: number; quote: string; reason: string }>;
     assets: Array<{ asset_type: string; content: string; related_highlight_id: number | null; model_used: string }>;
+    puter_user_id?: string | null;
   }
 ): Promise<{ status: string; project_id: number }> {
   const res = await fetchWithRetry(

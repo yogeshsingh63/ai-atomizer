@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { 
   Youtube, Upload, FileText, ArrowRight, Sparkles, 
-  AlertCircle, ArrowLeft, LogIn, ShieldAlert 
+  AlertCircle, ArrowLeft, LogIn, ShieldAlert, Zap
 } from "lucide-react";
 import { Tabs } from "@/components/ui/tabs";
 import { HoverBorderGradient } from "@/components/ui/hover-border-gradient";
@@ -12,6 +12,7 @@ import { Dropzone } from "@/components/dropzone";
 import { ModelSelector } from "@/components/model-selector";
 import { AssetSelector, TargetAsset } from "@/components/asset-selector";
 import { createProject, SourceType, loginAsGuest, logout } from "@/lib/api";
+import { usePuterAuth } from "@/lib/puter";
 import { BackgroundBeams } from "@/components/ui/background-beams";
 import { PrismLogo } from "@/components/ui/prism-logo";
 
@@ -75,9 +76,35 @@ export default function NewProjectPage() {
     }
   };
 
+  // Puter.js auth — user signs in via Puter's SSO popup. After successful
+  // auth, we also create a guest backend session (for API access to save
+  // pipeline results). Puter users pay for their own LLM credits.
+  const { user: puterUser, signIn: puterSignIn } = usePuterAuth();
+  const [puterAuthed, setPuterAuthed] = useState(false);
+  const [puterLoading, setPuterLoading] = useState(false);
+
+  const handlePuterSignIn = async () => {
+    setError(null);
+    setPuterLoading(true);
+    try {
+      const ok = await puterSignIn();
+      if (ok) {
+        setPuterAuthed(true);
+        // Also create a backend guest session for API access
+        await loginAsGuest();
+        setIsAuthenticated(true);
+      }
+    } catch (e: any) {
+      setError(e?.message || "Puter.js sign-in failed.");
+    } finally {
+      setPuterLoading(false);
+    }
+  };
+
   const handleLogout = () => {
     logout();
     setIsAuthenticated(false);
+    setPuterAuthed(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -111,6 +138,7 @@ export default function NewProjectPage() {
         default_model_mode: modelMode,
         default_pinned_model: pinnedModel,
         target_assets: targetAssets,
+        puter_user_id: puterUser?.uuid || null,
         file: selectedFile || undefined,
       });
 
@@ -262,26 +290,53 @@ export default function NewProjectPage() {
                 <h1 className="text-xl font-extrabold tracking-tight text-neutral-100 mt-4">
                   Authenticate Session
                 </h1>
-                <p className="text-xs text-neutral-500 max-w-xs leading-relaxed mt-1">
-                  Continue as a guest to use the free model fallback chain, or sign in with Puter.js to run the pipeline on your own AI credits.
+                <p className="text-[10px] text-brand font-semibold tracking-widest uppercase mt-0.5">
+                  Own Your Projects
+                </p>
+                <p className="text-xs text-neutral-500 max-w-xs leading-relaxed mt-2">
+                  Refract long-form media in under 90 seconds — and keep every project tied to your account so you can revisit, regenerate, or export anytime.
                 </p>
               </div>
 
               <div className="flex flex-col gap-3">
+                {/* Puter.js sign-in — primary action. Your projects follow your account. */}
                 <button
-                  onClick={handleGuestLogin}
-                  disabled={authLoading}
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-brand-border bg-brand-muted hover:bg-brand/20 text-xs font-bold text-brand hover:text-white transition-all cursor-pointer active:scale-95 duration-150 disabled:opacity-50"
+                  onClick={handlePuterSignIn}
+                  disabled={puterLoading || authLoading}
+                  className="w-full flex items-center justify-center gap-2.5 py-3 rounded-xl border border-brand-border bg-gradient-to-r from-brand-muted to-brand/20 hover:from-brand/30 hover:to-brand/30 text-xs font-bold text-neutral-100 transition-all cursor-pointer active:scale-95 duration-150 disabled:opacity-50"
                 >
-                  {authLoading ? (
+                  {puterLoading ? (
                     <div className="w-3.5 h-3.5 border-t border-brand rounded-full animate-spin" />
                   ) : (
-                    <LogIn className="w-3.5 h-3.5 text-brand" />
+                    <Zap className="w-3.5 h-3.5 text-brand" />
+                  )}
+                  Sign in with Puter.js
+                </button>
+                <p className="text-[10px] text-neutral-600 text-center -mt-1">
+                  Your projects save to your Puter account — revisit them anytime.
+                </p>
+
+                <div className="flex items-center gap-3 my-1">
+                  <div className="flex-1 h-px bg-neutral-800" />
+                  <span className="text-[9px] text-neutral-600 uppercase font-bold tracking-widest">or</span>
+                  <div className="flex-1 h-px bg-neutral-800" />
+                </div>
+
+                {/* Guest — no account, free fallback chain, session is temporary */}
+                <button
+                  onClick={handleGuestLogin}
+                  disabled={authLoading || puterLoading}
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-neutral-800 bg-neutral-950 hover:bg-neutral-900 text-xs font-semibold text-neutral-300 hover:text-white transition-all cursor-pointer active:scale-95 duration-150 disabled:opacity-50"
+                >
+                  {authLoading ? (
+                    <div className="w-3.5 h-3.5 border-t border-neutral-300 rounded-full animate-spin" />
+                  ) : (
+                    <LogIn className="w-3.5 h-3.5 text-neutral-500" />
                   )}
                   Continue as Guest
                 </button>
-                <p className="text-[10px] text-neutral-600 text-center">
-                  Or sign in with Puter.js from the project page for AI on your own credits.
+                <p className="text-[10px] text-neutral-600 text-center -mt-1">
+                  Free to try — no account needed, data is temporary.
                 </p>
               </div>
 

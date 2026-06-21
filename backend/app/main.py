@@ -51,6 +51,21 @@ async def lifespan(app: FastAPI):
         except Exception:
             # Column already exists — expected on subsequent boots.
             pass
+        # Same idempotent migration for puter_user_id
+        try:
+            await conn.execute(
+                __import__("sqlalchemy").text(
+                    "ALTER TABLE projects ADD COLUMN puter_user_id VARCHAR"
+                )
+            )
+            await conn.execute(
+                __import__("sqlalchemy").text(
+                    "CREATE INDEX IF NOT EXISTS ix_projects_puter_user_id ON projects (puter_user_id)"
+                )
+            )
+            logger.info("Added puter_user_id column to projects table.")
+        except Exception:
+            pass
     logger.info("Database initialized successfully.")
     yield
     logger.info("Disposing database connections...")
