@@ -88,12 +88,6 @@ export function resolveImageUrl(path: string | null | undefined): string {
 }
 
 // Authentication helpers
-export function redirectToGoogleLogin() {
-  if (typeof window !== 'undefined') {
-    window.location.href = `${BACKEND_URL}/auth/google`;
-  }
-}
-
 export async function loginAsGuest(): Promise<{ access_token: string; user: any }> {
   const res = await fetch(`${BACKEND_URL}/auth/guest`, {
     method: 'POST',
