@@ -167,18 +167,41 @@ async function isBackendOnline(): Promise<boolean> {
   }
 }
 
-export async function getModels(): Promise<Model[]> {
-  if (await isBackendOnline()) {
+// Explicit demo mode — only enabled via ?demo=1 URL param. Prevents the
+// frontend from silently showing fake data when the backend is briefly
+// unavailable (which caused mock data to leak into the real UI).
+function isDemoMode(): boolean {
+  if (typeof window === "undefined") return false;
+  return new URLSearchParams(window.location.search).has("demo");
+}
+
+// fetchWithRetry — retries a fetch up to `retries` times with short delays
+// to absorb transient backend drops (e.g. uvicorn --reload restarts).
+async function fetchWithRetry(
+  url: string,
+  options: RequestInit = {},
+  retries = 2
+): Promise<Response> {
+  let lastErr: unknown = null;
+  for (let i = 0; i <= retries; i++) {
     try {
-      const res = await fetch(`${BACKEND_URL}/models`, {
-        headers: getAuthHeaders(),
-      });
-      if (res.ok) return await res.json();
+      const res = await fetch(url, options);
+      // Don't retry on 4xx (client errors) — only on network errors and 5xx
+      if (res.ok || (res.status >= 400 && res.status < 500)) return res;
+      lastErr = new Error(`HTTP ${res.status}`);
     } catch (e) {
-      console.warn('Failed to fetch models from backend, falling back to mock:', e);
+      lastErr = e;
     }
+    if (i < retries) await new Promise((r) => setTimeout(r, 500 * (i + 1)));
   }
-  return MOCK_MODELS;
+  throw lastErr instanceof Error ? lastErr : new Error("fetchWithRetry failed");
+}
+
+export async function getModels(): Promise<Model[]> {
+  if (isDemoMode()) return MOCK_MODELS;
+  const res = await fetchWithRetry(`${BACKEND_URL}/models`, { headers: getAuthHeaders() });
+  if (!res.ok) throw new Error(`Failed to load models (HTTP ${res.status})`);
+  return await res.json();
 }
 
 export async function createProject(data: {
@@ -190,118 +213,96 @@ export async function createProject(data: {
   target_assets?: string[]; // array of asset types to generate
   file?: File;
 }): Promise<{ project_id: number }> {
-  // If backend is active
-  if (await isBackendOnline()) {
-    try {
-      const formData = new FormData();
-      formData.append('title', data.title);
-      formData.append('source_type', data.source_type);
-      formData.append('default_model_mode', data.default_model_mode);
-      if (data.source_ref) {
-        formData.append('source_ref', data.source_ref);
-      }
-      if (data.default_pinned_model) {
-        formData.append('default_pinned_model', data.default_pinned_model);
-      }
-      if (data.target_assets && data.target_assets.length > 0) {
-        formData.append('target_assets', JSON.stringify(data.target_assets));
-      }
-      if (data.file) {
-        formData.append('file', data.file);
-      }
-
-      const res = await fetch(`${BACKEND_URL}/projects`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: formData,
-      });
-      if (res.ok) return await res.json();
-    } catch (e) {
-      console.warn('Failed to post project to backend, using mock:', e);
-    }
+  // Demo mode only — no silent mock fallback on transient errors.
+  if (isDemoMode()) {
+    const projectId = Math.floor(Math.random() * 900000) + 100000;
+    const newProject: Project = {
+      id: projectId,
+      title: data.title || (data.source_type === 'youtube_url' ? 'YouTube Content' : 'Pasted Article'),
+      source_type: data.source_type,
+      source_ref: data.source_type === 'upload' ? data.file?.name || 'uploaded-file.mp3' : data.source_ref,
+      status: 'pending',
+      default_model_mode: data.default_model_mode,
+      default_pinned_model: data.default_pinned_model,
+      target_assets: data.target_assets ? JSON.stringify(data.target_assets) : null,
+      created_at: new Date().toISOString(),
+    };
+    mockProjects.push(newProject);
+    setupMockProjectData(projectId, data.title, data.source_type);
+    return { project_id: projectId };
   }
 
-  // Frontend-only Mock pipeline execution
-  const projectId = Math.floor(Math.random() * 900000) + 100000;
-  const newProject: Project = {
-    id: projectId,
-    title: data.title || (data.source_type === 'youtube_url' ? 'YouTube Content' : 'Pasted Article'),
-    source_type: data.source_type,
-    source_ref: data.source_type === 'upload' ? data.file?.name || 'uploaded-file.mp3' : data.source_ref,
-    status: 'pending',
-    default_model_mode: data.default_model_mode,
-    default_pinned_model: data.default_pinned_model,
-    target_assets: data.target_assets ? JSON.stringify(data.target_assets) : null,
-    created_at: new Date().toISOString(),
-  };
+  // Build FormData and POST to backend. No silent mock fallback.
+  const formData = new FormData();
+  formData.append('title', data.title);
+  formData.append('source_type', data.source_type);
+  formData.append('default_model_mode', data.default_model_mode);
+  if (data.source_ref) formData.append('source_ref', data.source_ref);
+  if (data.default_pinned_model) formData.append('default_pinned_model', data.default_pinned_model);
+  if (data.target_assets && data.target_assets.length > 0) {
+    formData.append('target_assets', JSON.stringify(data.target_assets));
+  }
+  if (data.file) formData.append('file', data.file);
 
-  mockProjects.push(newProject);
-  
-  // Set up mock content that will be populated after processing
-  setupMockProjectData(projectId, data.title, data.source_type);
-
-  return { project_id: projectId };
+  const res = await fetchWithRetry(
+    `${BACKEND_URL}/projects`,
+    { method: 'POST', headers: getAuthHeaders(), body: formData }
+  );
+  if (!res.ok) throw new Error(`Project creation failed (HTTP ${res.status})`);
+  return await res.json();
 }
 
 export async function getProject(id: number): Promise<Project> {
-  if (await isBackendOnline()) {
-    try {
-      const res = await fetch(`${BACKEND_URL}/projects/${id}?t=${Date.now()}`, {
-        headers: getAuthHeaders(),
-      });
-      if (res.ok) return await res.json();
-    } catch (e) {
-      console.warn(`Failed to fetch project ${id} from backend, using mock:`, e);
-    }
+  if (isDemoMode()) {
+    // Explicit demo mode only — never fall back to mock on transient errors.
+    return getMockProject(id);
   }
+  // No silent mock fallback — throw a clear error if the backend is down.
+  const res = await fetchWithRetry(
+    `${BACKEND_URL}/projects/${id}?t=${Date.now()}`,
+    { headers: getAuthHeaders() }
+  );
+  if (!res.ok) throw new Error(`Failed to load project ${id} (HTTP ${res.status})`);
+  return await res.json();
+}
 
+function getMockProject(id: number): Project {
   const p = mockProjects.find(item => item.id === id);
-  if (!p) {
-    // If refreshed/loaded directly, auto-generate project
-    const autoProj: Project = {
-      id,
-      title: 'Repurposed Content Demo',
-      source_type: 'article_text',
-      source_ref: 'Mock Ref',
-      status: 'done',
-      default_model_mode: 'auto',
-      default_pinned_model: null,
-      target_assets: null,
-      created_at: new Date().toISOString(),
-    };
-    mockProjects.push(autoProj);
-    setupMockProjectData(id, autoProj.title, autoProj.source_type);
-    return autoProj;
-  }
-  return p;
+  if (p) return p;
+  const autoProj: Project = {
+    id,
+    title: 'Repurposed Content Demo',
+    source_type: 'article_text',
+    source_ref: 'Mock Ref',
+    status: 'done',
+    default_model_mode: 'auto',
+    default_pinned_model: null,
+    target_assets: null,
+    created_at: new Date().toISOString(),
+  };
+  mockProjects.push(autoProj);
+  setupMockProjectData(id, autoProj.title, autoProj.source_type);
+  return autoProj;
 }
 
 export async function getHighlights(id: number): Promise<Highlight[]> {
-  if (await isBackendOnline()) {
-    try {
-      const res = await fetch(`${BACKEND_URL}/projects/${id}/highlights?t=${Date.now()}`, {
-        headers: getAuthHeaders(),
-      });
-      if (res.ok) return await res.json();
-    } catch (e) {
-      console.warn('Failed to fetch highlights from backend, using mock:', e);
-    }
-  }
-  return mockHighlights[id] || [];
+  if (isDemoMode()) return mockHighlights[id] || [];
+  const res = await fetchWithRetry(
+    `${BACKEND_URL}/projects/${id}/highlights?t=${Date.now()}`,
+    { headers: getAuthHeaders() }
+  );
+  if (!res.ok) throw new Error(`Failed to load highlights for project ${id} (HTTP ${res.status})`);
+  return await res.json();
 }
 
 export async function getAssets(id: number): Promise<GeneratedAsset[]> {
-  if (await isBackendOnline()) {
-    try {
-      const res = await fetch(`${BACKEND_URL}/projects/${id}/assets?t=${Date.now()}`, {
-        headers: getAuthHeaders(),
-      });
-      if (res.ok) return await res.json();
-    } catch (e) {
-      console.warn('Failed to fetch assets from backend, using mock:', e);
-    }
-  }
-  return mockAssets[id] || [];
+  if (isDemoMode()) return mockAssets[id] || [];
+  const res = await fetchWithRetry(
+    `${BACKEND_URL}/projects/${id}/assets?t=${Date.now()}`,
+    { headers: getAuthHeaders() }
+  );
+  if (!res.ok) throw new Error(`Failed to load assets for project ${id} (HTTP ${res.status})`);
+  return await res.json();
 }
 
 export async function regenerateAsset(
@@ -310,35 +311,40 @@ export async function regenerateAsset(
   options: { model?: string | null; prompt?: string | null; model_mode?: string | null } = {}
 ): Promise<GeneratedAsset> {
   const { model = null, prompt = null, model_mode = null } = options;
-  if (await isBackendOnline()) {
-    try {
-      const res = await fetch(`${BACKEND_URL}/projects/${id}/assets/${assetId}/regenerate`, {
-        method: 'POST',
-        headers: getAuthHeaders('application/json'),
-        body: JSON.stringify({ model, prompt, model_mode }),
-      });
-      if (res.ok) return await res.json();
-    } catch (e) {
-      console.warn('Failed to regenerate asset on backend, using mock:', e);
+  if (isDemoMode()) {
+    return regenerateAssetMock(id, assetId, model);
+  }
+  const res = await fetchWithRetry(
+    `${BACKEND_URL}/projects/${id}/assets/${assetId}/regenerate`,
+    {
+      method: 'POST',
+      headers: getAuthHeaders('application/json'),
+      body: JSON.stringify({ model, prompt, model_mode }),
     }
-  }
+  );
+  if (!res.ok) throw new Error(`Regeneration failed (HTTP ${res.status})`);
+  return await res.json();
+}
 
+function regenerateAssetMock(
+  id: number,
+  assetId: number,
+  model: string | null
+): GeneratedAsset {
   const assets = mockAssets[id] || [];
-  const index = assets.findIndex(a => a.id === assetId);
-  if (index !== -1) {
-    const asset = assets[index];
-    const modelUsed = model || 'google/gemini-2.5-flash';
-    const updated: GeneratedAsset = {
-      ...asset,
-      status: 'done',
-      model_used: modelUsed,
-      content: getRegeneratedContentMock(asset.asset_type, modelUsed),
-    };
-    assets[index] = updated;
-    mockAssets[id] = assets;
-    return updated;
-  }
-  throw new Error('Asset not found');
+  const index = assets.findIndex((a) => a.id === assetId);
+  if (index === -1) throw new Error('Asset not found');
+  const asset = assets[index];
+  const modelUsed = model || 'google/gemini-2.5-flash';
+  const updated: GeneratedAsset = {
+    ...asset,
+    status: 'done',
+    model_used: modelUsed,
+    content: getRegeneratedContentMock(asset.asset_type, modelUsed),
+  };
+  assets[index] = updated;
+  mockAssets[id] = assets;
+  return updated;
 }
 
 // Subscribe to progress stream via SSE, with polling fallback if SSE drops.
@@ -571,6 +577,11 @@ Stop playing the volume game. Master the leverage game.
 }
 
 function getRegeneratedContentMock(type: AssetType, model: string): string {
+  if (type === "thumbnail") {
+    // Return a proper image URL for thumbnails, not text (which would be
+    // used as an img src and 404).
+    return "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=600&auto=format&fit=crop";
+  }
   return `[Regenerated with ${model}]
 
 Here is your updated ${type} asset. We've refined the styling and adjusted the voice tone to sound more professional and direct.
