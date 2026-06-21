@@ -171,9 +171,11 @@ export default function ProcessingPage() {
       } catch (e: any) {
         console.error("Puter pipeline error:", e);
         if (!cancelled) {
+          const raw = e?.message || String(e);
           setErrorMsg(
-            e?.message ||
-              "Puter.js pipeline failed. Your Puter account may have insufficient credits. Try Guest mode."
+            `Puter pipeline failed (no backend fallback in Puter mode — you pay for your own credits). ` +
+            `Error: ${raw}. ` +
+            `Check your Puter account at https://puter.com or switch to Guest mode to use the app's free backend.`
           );
         }
       }

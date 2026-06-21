@@ -151,43 +151,35 @@ export interface PuterPipelineOptions {
 }
 
 /**
- * Fetch an audio file from a URL and convert to a File object (for Puter
- * speech2txt which accepts File | Blob).
- */
-async function fetchAudioFile(url: string, filename = "audio.mp3"): Promise<File> {
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`Failed to fetch audio: ${res.status}`);
-  const blob = await res.blob();
-  return new File([blob], filename, { type: blob.type || "audio/mpeg" });
-}
-
-/**
- * Transcribe audio using Puter.js only (user-pays). No backend fallback —
- * the entire point of Puter mode is that the user pays for their own AI
- * credits, not the app.
+ * Transcribe audio using Puter.js ONLY (user-pays). No backend AI fallback.
+ * Puter users pay for their own credits — if Puter can't transcribe, we fail
+ * loudly so the user knows the Puter model didn't work, instead of silently
+ * routing to the app's free-tier backend (which defeats the user-pays model).
  *
- * Tries URL first (Puter fetches it server-side), then falls back to a
- * File object if a URL isn't publicly reachable (e.g. localhost).
+ * Flow:
+ * 1. If we have a local File (user upload), pass it to Puter directly.
+ * 2. If we only have a URL (YouTube — backend already downloaded the audio
+ *    via yt-dlp), fetch the audio bytes in the browser and pass a File to
+ *    Puter. This is client-side plumbing (no AI call), needed because Puter
+ *    servers can't reach http://localhost:8000/... URLs.
+ * 3. If neither works, throw — never call the backend's AI.
  */
 async function transcribeAudio(opts: {
   file?: File;
   audioUrl?: string;
 }): Promise<any> {
-  // Tier 1: Pass URL directly to Puter (works when URL is publicly reachable)
+  if (opts.file) {
+    return await puter.ai.speech2txt(opts.file);
+  }
   if (opts.audioUrl) {
-    try {
-      return await puter.ai.speech2txt(opts.audioUrl);
-    } catch (e1) {
-      console.warn("Puter speech2txt (URL) failed, trying File:", e1);
+    // Fetch the audio bytes client-side and pass as File (Puter rejects
+    // localhost URLs with "localhost URLs are not allowed").
+    const audioRes = await fetch(opts.audioUrl);
+    if (!audioRes.ok) {
+      throw new Error(`Failed to fetch audio from ${opts.audioUrl}: HTTP ${audioRes.status}`);
     }
-  }
-  // Tier 2: Fetch audio and pass as File (needed for localhost dev where
-  // Puter's servers can't reach the URL)
-  let audioFile = opts.file;
-  if (!audioFile && opts.audioUrl) {
-    audioFile = await fetchAudioFile(opts.audioUrl);
-  }
-  if (audioFile) {
+    const blob = await audioRes.blob();
+    const audioFile = new File([blob], "audio.mp3", { type: blob.type || "audio/mpeg" });
     return await puter.ai.speech2txt(audioFile);
   }
   throw new Error("Audio file or URL required for transcription");
@@ -218,10 +210,10 @@ export async function runPuterPipeline(
       segments: [{ start_seconds: 0, end_seconds: 0, text: sourceRef }],
     };
   } else {
-    // For YouTube URLs and uploads, transcribe via Puter.
-    // Try passing the URL directly to puter.ai.speech2txt() first (it accepts
-    // URL strings). Fall back to fetching and creating a File. If Puter
-    // can't transcribe, fall back to the backend's Whisper.
+    // For YouTube URLs and uploads, transcribe via Puter ONLY.
+    // No backend fallback — if Puter speech2txt fails, the user sees the error
+    // (so they know their Puter model didn't work, instead of being silently
+    // routed to the app's free-tier backend).
     const result: any = await transcribeAudio({
       file,
       audioUrl,
