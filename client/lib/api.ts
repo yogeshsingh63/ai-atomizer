@@ -295,6 +295,28 @@ export async function getHighlights(id: number): Promise<Highlight[]> {
   return await res.json();
 }
 
+// Save client-side pipeline results (Puter.js users run the pipeline
+// in the browser and POST the results here for persistence).
+export async function saveClientPipelineResults(
+  projectId: number,
+  results: {
+    transcript: { full_text: string; segments: any[] };
+    highlights: Array<{ id: number; start_seconds: number; end_seconds: number; quote: string; reason: string }>;
+    assets: Array<{ asset_type: string; content: string; related_highlight_id: number | null; model_used: string }>;
+  }
+): Promise<{ status: string; project_id: number }> {
+  const res = await fetchWithRetry(
+    `${BACKEND_URL}/projects/${projectId}/save-results`,
+    {
+      method: 'POST',
+      headers: getAuthHeaders('application/json'),
+      body: JSON.stringify(results),
+    }
+  );
+  if (!res.ok) throw new Error(`Failed to save results (HTTP ${res.status})`);
+  return await res.json();
+}
+
 export async function getAssets(id: number): Promise<GeneratedAsset[]> {
   if (isDemoMode()) return mockAssets[id] || [];
   const res = await fetchWithRetry(

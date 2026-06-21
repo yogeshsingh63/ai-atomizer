@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from app.db import get_db
-from app.models import Project, User, Highlight
+from app.models import Project, User, Highlight, Transcript, GeneratedAsset
 from app.schemas import ProjectResponse, HighlightResponse, ProjectCreate
 from app.services.auth import get_current_user, JWT_SECRET, JWT_ALGORITHM
 from app.pipeline import run_pipeline, get_project_queue, remove_project_queue
@@ -183,3 +183,69 @@ async def get_project_events_stream(
             remove_project_queue(id, q)
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")
+
+
+# --- Client-side pipeline save endpoint (Puter.js users) ---
+@router.post("/{id}/save-results", response_model=dict)
+async def save_client_pipeline_results(
+    id: int,
+    payload: dict,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Saves the results of a client-side pipeline run (Puter.js users).
+    Accepts the transcript, highlights, and assets produced by the
+    browser-side pipeline and persists them to the DB.
+    """
+    # Validate project ownership
+    result = await db.execute(select(Project).where(Project.id == id))
+    project = result.scalars().first()
+    if not project or project.user_id != current_user.id:
+        raise HTTPException(status_code=404, detail="Project not found.")
+
+    # Save transcript
+    transcript_data = payload.get("transcript", {})
+    if transcript_data:
+        transcript = Transcript(
+            project_id=id,
+            full_text=transcript_data.get("full_text", ""),
+            segments=transcript_data.get("segments", []),
+        )
+        db.add(transcript)
+
+    # Save highlights
+    highlight_id_map = {}
+    for h in payload.get("highlights", []):
+        highlight = Highlight(
+            project_id=id,
+            start_seconds=int(h.get("start_seconds", 0)),
+            end_seconds=int(h.get("end_seconds", 0)),
+            quote=h.get("quote", ""),
+            reason=h.get("reason", ""),
+        )
+        db.add(highlight)
+        await db.flush()
+        highlight_id_map[h.get("id", 0)] = highlight.id
+
+    # Save assets
+    for a in payload.get("assets", []):
+        related_id = a.get("related_highlight_id")
+        # Map client-side highlight IDs to DB IDs
+        if related_id is not None and related_id in highlight_id_map:
+            related_id = highlight_id_map[related_id]
+        asset = GeneratedAsset(
+            project_id=id,
+            asset_type=a.get("asset_type", "blog"),
+            content=a.get("content", ""),
+            related_highlight_id=related_id,
+            model_used=a.get("model_used", "puter"),
+            status="done",
+        )
+        db.add(asset)
+
+    # Mark project as done
+    project.status = "done"
+    await db.commit()
+
+    return {"status": "saved", "project_id": id}
