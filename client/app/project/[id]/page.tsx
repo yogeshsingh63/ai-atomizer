@@ -230,9 +230,9 @@ export default function ProjectDashboardPage() {
         const threadTweets = threadAsset?.content ? parseThreadIntoTweets(threadAsset.content) : [];
         const firstTweet = threadTweets.length > 0 ? threadTweets[0] : "1/ We built the world's fastest database by breaking assumption...";
         return (
-          <div className="h-32 bg-neutral-950 rounded-xl flex flex-col p-4 border border-neutral-900 relative overflow-hidden text-left justify-center select-none text-[11px] text-[#71767b]">
+          <div className="h-32 bg-[#0a0a0d] rounded-xl flex flex-col p-4 border border-[#1a1a20] relative overflow-hidden text-left justify-center select-none text-[11px] text-[#71767b]">
             <div className="flex gap-2 items-start">
-              <div className="w-6 h-6 rounded-full bg-neutral-800 border border-[#2f3336] shrink-0" />
+              <div className="w-6 h-6 rounded-full bg-gradient-to-br from-brand-muted to-brand/40 border border-brand-border shrink-0" />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1 flex-wrap">
                   <span className="font-bold text-[#e7e9ea] text-[10.5px]">Yogesh</span>
@@ -263,11 +263,11 @@ export default function ProjectDashboardPage() {
       asset: linkedinAsset,
       className: "md:col-span-1",
       header: (
-        <div className="h-32 bg-neutral-950 rounded-xl flex flex-col p-4 border border-neutral-900 relative overflow-hidden text-left justify-center select-none text-[11px] text-neutral-400">
+        <div className="h-32 bg-[#0a0a0d] rounded-xl flex flex-col p-4 border border-[#1a1a20] relative overflow-hidden text-left justify-center select-none text-[11px] text-neutral-400">
           <div className="flex gap-2 items-center">
-            <div className="w-6 h-6 rounded-full bg-neutral-800 border border-neutral-900 shrink-0" />
+            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#0a66c2]/30 to-[#0a66c2]/10 border border-[#0a66c2]/40 shrink-0" />
             <div className="flex flex-col min-w-0">
-              <span className="font-bold text-neutral-200 text-[10.5px]">Yogesh</span>
+              <span className="font-bold text-neutral-100 text-[10.5px]">Yogesh</span>
               <span className="text-[9px] text-[#71767b] truncate">AI Content Strategist</span>
             </div>
           </div>
@@ -296,19 +296,19 @@ export default function ProjectDashboardPage() {
         const totalHighlights = highlights.length || 1;
         const progressPct = totalHighlights > 0 ? Math.round((clipAssets.length / totalHighlights) * 100) : 0;
         return (
-          <div className="h-32 bg-neutral-950 rounded-xl flex flex-col justify-between p-5 border border-neutral-900 relative overflow-hidden">
+          <div className="h-32 bg-[#0a0a0d] rounded-xl flex flex-col justify-between p-5 border border-[#1a1a20] relative overflow-hidden">
             <div className="flex justify-between items-center">
-              <span className="text-[9px] uppercase font-bold text-neutral-400 tracking-wider">TIMESTAMPS</span>
-              <span className="brand-badge text-[9px] font-bold px-2 py-0.5 rounded-full">{clipAssets.length} Clips</span>
+              <span className="text-[9px] uppercase font-bold text-neutral-500 tracking-wider">TIMESTAMPS</span>
+              <span className="bg-brand-muted/50 border border-brand-border text-brand text-[9px] font-bold px-2 py-0.5 rounded-full">{clipAssets.length} Clips</span>
             </div>
             
             <div className="flex gap-1.5 items-center my-2">
-              <span className="text-[10px] font-mono bg-neutral-900 border border-neutral-800 px-1.5 py-0.5 rounded text-neutral-400">{startTime}</span>
+              <span className="text-[10px] font-mono bg-[#121215] border border-[#1a1a20] px-1.5 py-0.5 rounded text-neutral-300">{startTime}</span>
               <span className="text-neutral-700">&rarr;</span>
-              <span className="text-[10px] font-mono bg-neutral-900 border border-neutral-800 px-1.5 py-0.5 rounded text-neutral-400">{endTime}</span>
+              <span className="text-[10px] font-mono bg-[#121215] border border-[#1a1a20] px-1.5 py-0.5 rounded text-neutral-300">{endTime}</span>
             </div>
    
-            <div className="w-full bg-neutral-900 h-1 rounded-full overflow-hidden">
+            <div className="w-full bg-[#121215] h-1 rounded-full overflow-hidden">
               <div className="bg-brand h-full transition-all" style={{ width: `${Math.max(progressPct, 8)}%` }} />
             </div>
           </div>
@@ -334,14 +334,14 @@ export default function ProjectDashboardPage() {
       },
       className: "md:col-span-1",
       header: (
-        <div className="h-32 bg-neutral-950 rounded-xl overflow-hidden border border-neutral-900 relative group/thumb">
+        <div className="h-32 bg-[#0a0a0d] rounded-xl overflow-hidden border border-[#1a1a20] relative group/thumb">
           <img 
             src={resolveImageUrl(thumbnailAssets[0]?.content) || DEFAULT_THUMBNAIL_PLACEHOLDER} 
             alt="Thumbnail" 
             className="w-full h-full object-cover group-hover/thumb:scale-105 transition-transform duration-300"
             onError={(e) => { (e.target as HTMLImageElement).src = DEFAULT_THUMBNAIL_PLACEHOLDER; }}
           />
-          <div className="absolute inset-0 bg-neutral-950/40 group-hover/thumb:bg-neutral-950/20 transition-colors" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0d]/60 to-transparent" />
         </div>
       ),
       footer: thumbnailAssets[0] ? (
@@ -356,10 +356,10 @@ export default function ProjectDashboardPage() {
       asset: null,
       className: "md:col-span-1",
       header: (
-        <div className="h-32 bg-neutral-950 rounded-xl flex flex-col p-4 border border-neutral-900 relative overflow-hidden text-left justify-center">
+        <div className="h-32 bg-[#0a0a0d] rounded-xl flex flex-col p-4 border border-[#1a1a20] relative overflow-hidden text-left justify-center">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[9px] uppercase font-bold text-neutral-400 tracking-wider">Extracted Moments</span>
-            <span className="brand-badge text-[9px] font-bold px-2 py-0.5 rounded-full">{highlights.length}</span>
+            <span className="text-[9px] uppercase font-bold text-neutral-500 tracking-wider">Extracted Moments</span>
+            <span className="bg-brand-muted/50 border border-brand-border text-brand text-[9px] font-bold px-2 py-0.5 rounded-full">{highlights.length}</span>
           </div>
           <div className="flex flex-col gap-1.5">
             {highlights.slice(0, 3).map((h, i) => (
@@ -393,7 +393,7 @@ export default function ProjectDashboardPage() {
           <span>Back to Dashboard</span>
         </button>
 
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-neutral-900 pb-8">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-[#1a1a20] pb-8">
           <div className="flex flex-col gap-2">
             <h1 className="text-2xl font-extrabold text-neutral-100 sm:text-3xl tracking-tight">
               {project?.title}
@@ -401,27 +401,27 @@ export default function ProjectDashboardPage() {
             <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-1">
               <div className="flex items-center gap-1.5 shrink-0">
                 <span className="text-[10px] text-neutral-500 uppercase font-bold tracking-wider">Source Ref:</span>
-                <span className="text-xs text-neutral-300 font-mono bg-[#121215] border border-neutral-900 px-2 py-0.5 rounded-lg inline-block truncate max-w-[180px] sm:max-w-xs md:max-w-md align-bottom" title={project?.source_ref}>{project?.source_ref}</span>
+                <span className="text-xs text-neutral-300 font-mono bg-[#0a0a0d] border border-[#1a1a20] px-2 py-0.5 rounded-lg inline-block truncate max-w-[180px] sm:max-w-xs md:max-w-md align-bottom" title={project?.source_ref}>{project?.source_ref}</span>
               </div>
               
               <span className="text-neutral-800 hidden sm:inline select-none">•</span>
               
               <div className="flex items-center gap-1.5 shrink-0">
                 <span className="text-[10px] text-neutral-500 uppercase font-bold tracking-wider">Input:</span>
-                <span className="brand-badge text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase">{project?.source_type.replace('_', ' ')}</span>
+                <span className="bg-brand-muted/50 border border-brand-border text-brand text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase">{project?.source_type.replace('_', ' ')}</span>
               </div>
               
               <span className="text-neutral-800 hidden sm:inline select-none">•</span>
               
               <div className="flex items-center gap-1.5 shrink-0">
                 <span className="text-[10px] text-neutral-500 uppercase font-bold tracking-wider">Model Routing:</span>
-                <span className="brand-badge text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase">{project?.default_model_mode}</span>
+                <span className="bg-brand-muted/50 border border-brand-border text-brand text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase">{project?.default_model_mode}</span>
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 bg-brand-muted/30 border border-brand-border px-4 py-2 rounded-xl text-brand text-xs font-bold shadow-sm w-fit">
-            <Check className="w-4 h-4 text-brand shrink-0 animate-pulse" />
+          <div className="flex items-center gap-2 bg-brand-muted/40 border border-brand-border px-4 py-2 rounded-xl text-brand text-xs font-bold w-fit">
+            <Check className="w-4 h-4 text-brand shrink-0" />
             <span>Pipeline Complete</span>
           </div>
         </div>
@@ -472,13 +472,13 @@ export default function ProjectDashboardPage() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 12 }}
               transition={{ duration: 0.25, ease: "easeOut" }}
-              className="w-full max-w-2xl h-full sm:h-[650px] sm:max-h-[85vh] bg-[#121215] border-0 sm:border border-neutral-900 rounded-none sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden relative border-brand-border/20"
+              className="w-full max-w-2xl h-full sm:h-[650px] sm:max-h-[85vh] bg-[#0a0a0d] border-0 sm:border border-[#1a1a20] rounded-none sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden relative border-brand-border/20"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Modal Header */}
-              <div className="p-4 border-b border-neutral-900 flex items-center justify-between gap-4 bg-neutral-950/10 shrink-0">
+              <div className="p-4 border-b border-[#1a1a20] flex items-center justify-between gap-4 bg-[#0a0a0d] shrink-0">
                 <div className="flex items-center gap-3 min-w-0">
-                  <span className="p-2 sm:p-2.5 rounded-xl bg-neutral-950 border border-neutral-900 shrink-0 hidden sm:flex">
+                  <span className="p-2 sm:p-2.5 rounded-xl bg-[#0a0a0d] border border-[#1a1a20] shrink-0 hidden sm:flex">
                     {selectedAsset.asset_type === "blog" && <FileText className="w-4 h-4 text-brand" />}
                     {selectedAsset.asset_type === "thread" && <XIcon className="w-4 h-4 text-[#e7e9ea]" />}
                     {selectedAsset.asset_type === "linkedin" && <Linkedin className="w-4 h-4 text-[#0a66c2]" />}
@@ -500,13 +500,13 @@ export default function ProjectDashboardPage() {
                 <div className="flex items-center gap-3 shrink-0">
                   {/* Platform Preview Toggle */}
                   {["blog", "thread", "linkedin"].includes(selectedAsset.asset_type) && (
-                    <div className="flex bg-neutral-950 border border-neutral-900 rounded-lg p-0.5 shrink-0">
+                    <div className="flex bg-[#0a0a0d] border border-[#1a1a20] rounded-lg p-0.5 shrink-0">
                       <button
                         onClick={() => setPreviewTab("preview")}
                         className={cn(
                           "flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-bold cursor-pointer transition-all",
                           previewTab === "preview" 
-                            ? "bg-neutral-800 text-neutral-200" 
+                            ? "bg-[#1a1a20] text-neutral-200" 
                             : "text-neutral-500 hover:text-neutral-400"
                         )}
                       >
@@ -518,7 +518,7 @@ export default function ProjectDashboardPage() {
                         className={cn(
                           "flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-bold cursor-pointer transition-all",
                           previewTab === "raw" 
-                            ? "bg-neutral-800 text-neutral-200" 
+                            ? "bg-[#1a1a20] text-neutral-200" 
                             : "text-neutral-500 hover:text-neutral-400"
                         )}
                       >
@@ -531,7 +531,7 @@ export default function ProjectDashboardPage() {
                   {/* Close Button inline inside the flex flow */}
                   <button
                     onClick={() => setSelectedAsset(null)}
-                    className="text-neutral-400 hover:text-neutral-200 transition-all cursor-pointer p-1.5 hover:bg-neutral-900 rounded-lg border border-transparent hover:border-neutral-800 shrink-0"
+                    className="text-neutral-400 hover:text-neutral-200 transition-all cursor-pointer p-1.5 hover:bg-[#121215] rounded-lg border border-transparent hover:border-[#1a1a20] shrink-0"
                     title="Close View"
                   >
                     <X className="w-4 h-4" />
@@ -540,17 +540,17 @@ export default function ProjectDashboardPage() {
               </div>
 
             {/* Content Body */}
-            <div className="flex-1 overflow-y-auto p-3 sm:p-6 md:p-8 no-scrollbar bg-neutral-900/10">
+            <div className="flex-1 overflow-y-auto p-3 sm:p-6 md:p-8 no-scrollbar bg-[#0a0a0d]/30">
               {selectedAsset.asset_type === "thumbnail" ? (
                 <div className="flex flex-col gap-6">
-                  <div className="flex items-center gap-2 p-4 rounded-xl bg-neutral-950 border border-neutral-900 text-neutral-400 text-[11px] leading-relaxed">
-                    <AlertCircle className="w-4 h-4 text-neutral-400 shrink-0" />
+                  <div className="flex items-center gap-2 p-4 rounded-xl bg-[#0a0a0d] border border-[#1a1a20] text-neutral-500 text-[11px] leading-relaxed">
+                    <AlertCircle className="w-4 h-4 text-neutral-500 shrink-0" />
                     These images are automatically generated by the multimodal model using detailed composition descriptions derived from your key moments.
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     {thumbnailAssets.map((thumb) => (
-                      <div key={thumb.id} className="flex flex-col gap-3 rounded-xl bg-neutral-950 border border-neutral-900 p-4 hover:border-neutral-800 transition-colors">
-                        <div className="aspect-video w-full rounded-lg overflow-hidden border border-neutral-900 relative">
+                      <div key={thumb.id} className="flex flex-col gap-3 rounded-xl bg-[#0a0a0d] border border-[#1a1a20] p-4 hover:border-brand-border transition-colors">
+                        <div className="aspect-video w-full rounded-lg overflow-hidden border border-[#1a1a20] relative">
                           <img 
                             src={resolveImageUrl(thumb.content)} 
                             alt="Cover thumbnail" 
@@ -559,10 +559,10 @@ export default function ProjectDashboardPage() {
                           />
                         </div>
                         <div className="flex items-center justify-between text-[10px] text-neutral-500">
-                          <span className="font-semibold text-neutral-400">
+                          <span className="font-semibold text-neutral-300">
                             {thumb.related_highlight_id ? `Clip Suggestion #${thumb.related_highlight_id}` : "Blog Cover Image"}
                           </span>
-                          <span className="font-mono text-[9px] bg-neutral-900 px-1.5 py-0.5 rounded border border-neutral-900">{thumb.model_used.split("/").pop()}</span>
+                          <span className="font-mono text-[9px] bg-[#121215] px-1.5 py-0.5 rounded border border-[#1a1a20]">{thumb.model_used.split("/").pop()}</span>
                         </div>
                       </div>
                     ))}
@@ -570,25 +570,25 @@ export default function ProjectDashboardPage() {
                 </div>
               ) : selectedAsset.asset_type === "clip" ? (
                 <div className="flex flex-col gap-6">
-                  <div className="flex items-center gap-2 p-4 rounded-xl bg-neutral-950 border border-neutral-900 text-neutral-400 text-[11px] leading-relaxed mb-2">
-                    <Clock className="w-4 h-4 text-neutral-400 shrink-0" />
+                  <div className="flex items-center gap-2 p-4 rounded-xl bg-[#0a0a0d] border border-[#1a1a20] text-neutral-500 text-[11px] leading-relaxed mb-2">
+                    <Clock className="w-4 h-4 text-neutral-500 shrink-0" />
                     Viral clip suggestions mapped with exact timestamps, captions, and visual composition overlay instructions.
                   </div>
                   {clipAssets.map((clip, idx) => {
                     const matchHighlight = highlights.find(h => h.id === clip.related_highlight_id);
                     return (
-                      <div key={clip.id} className="p-6 rounded-2xl bg-neutral-950 border border-neutral-900 hover:border-neutral-800 transition-colors flex flex-col gap-4">
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-neutral-900 pb-2 sm:pb-3">
+                      <div key={clip.id} className="p-6 rounded-2xl bg-[#0a0a0d] border border-[#1a1a20] hover:border-[#2a2a32] transition-colors flex flex-col gap-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#1a1a20] pb-2 sm:pb-3">
                           <div className="flex items-center gap-2">
-                            <h4 className="text-xs font-bold text-neutral-200">Clip Suggestion #{idx + 1}</h4>
-                            <span className="text-[10px] bg-neutral-900 border border-neutral-900 px-2 py-0.5 rounded text-neutral-300 font-semibold tracking-wide">
+                            <h4 className="text-xs font-bold text-neutral-100">Clip Suggestion #{idx + 1}</h4>
+                            <span className="text-[10px] bg-[#121215] border border-[#1a1a20] px-2 py-0.5 rounded text-neutral-300 font-semibold tracking-wide">
                               {matchHighlight ? `${matchHighlight.start_seconds}s - ${matchHighlight.end_seconds}s` : "Suggestion"}
                             </span>
                           </div>
                         </div>
 
                         {matchHighlight && (
-                          <div className="p-3.5 rounded-lg bg-neutral-900/50 border border-neutral-900 text-xs italic text-neutral-500 leading-relaxed">
+                          <div className="p-3.5 rounded-lg bg-[#121215] border border-[#1a1a20] text-xs italic text-neutral-400 leading-relaxed">
                             Quote: &ldquo;{matchHighlight.quote}&rdquo;
                           </div>
                         )}
@@ -635,10 +635,10 @@ export default function ProjectDashboardPage() {
                               return (
                                 <div key={idx} className="p-5 rounded-2xl bg-neutral-950 border border-neutral-900 flex flex-col gap-3 relative overflow-hidden group/tweet">
                                   <div className="flex justify-between items-center text-[10px] text-neutral-500 border-b border-neutral-900 pb-2">
-                                    <span className="font-bold text-neutral-400 uppercase tracking-wider">Tweet #{idx + 1}</span>
+                                    <span className="font-bold text-neutral-300 uppercase tracking-wider">Tweet #{idx + 1}</span>
                                     <span className={cn(
                                       "font-mono font-bold px-1.5 py-0.5 rounded",
-                                      isOverLimit ? "text-red-400 bg-red-950/20" : "text-neutral-500 bg-neutral-900"
+                                      isOverLimit ? "text-red-400 bg-red-950/20" : "text-neutral-500 bg-[#121215]"
                                     )}>
                                       {charCount} / 280 chars
                                     </span>
@@ -648,7 +648,7 @@ export default function ProjectDashboardPage() {
                                   </div>
                                   <button
                                     onClick={() => handleCopy(tweet)}
-                                    className="self-end flex items-center gap-1 py-1.5 px-3 rounded-lg border border-neutral-800 hover:border-neutral-700 bg-neutral-900 hover:bg-neutral-950 text-[10px] font-bold text-neutral-300 cursor-pointer active:scale-95 transition-all"
+                                    className="self-end flex items-center gap-1 py-1.5 px-3 rounded-lg border border-[#1a1a20] hover:border-[#2a2a32] bg-[#121215] hover:bg-[#0a0a0d] text-[10px] font-bold text-neutral-300 cursor-pointer active:scale-95 transition-all"
                                   >
                                     <Clipboard className="w-3 h-3" />
                                     Copy Tweet
@@ -658,7 +658,7 @@ export default function ProjectDashboardPage() {
                             })}
                           </div>
                         ) : (
-                          <div className="whitespace-pre-wrap leading-relaxed text-sm text-neutral-400 bg-neutral-950 border border-neutral-900 rounded-2xl p-6 font-mono text-xs">
+                          <div className="whitespace-pre-wrap leading-relaxed text-sm text-neutral-400 bg-[#0a0a0d] border border-[#1a1a20] rounded-2xl p-6 font-mono text-xs">
                             <TextGenerateEffect words={selectedAsset.content} />
                           </div>
                         )
@@ -670,7 +670,7 @@ export default function ProjectDashboardPage() {
             </div>
 
             {/* Footer Options & Actions */}
-            <div className="p-4 sm:p-5 border-t border-neutral-900 bg-neutral-950/40 flex flex-col gap-3.5 shrink-0 z-10">
+            <div className="p-4 sm:p-5 border-t border-[#1a1a20] bg-[#0a0a0d] flex flex-col gap-3.5 shrink-0 z-10">
               {/* Row 1: Model Routing Selector */}
               <div className="w-full">
                 <ModelSelector
@@ -710,7 +710,7 @@ export default function ProjectDashboardPage() {
 
                 <button
                   onClick={() => handleExport(selectedAsset)}
-                  className="flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl border border-neutral-800 hover:border-neutral-700 bg-neutral-900 hover:bg-neutral-950 transition-colors cursor-pointer text-[11px] font-bold text-neutral-200 active:scale-95 duration-150 w-full"
+                  className="flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl border border-[#1a1a20] hover:border-[#2a2a32] bg-[#121215] hover:bg-[#0a0a0d] transition-colors cursor-pointer text-[11px] font-bold text-neutral-100 active:scale-95 duration-150 w-full"
                 >
                   <Download className="w-3.5 h-3.5 shrink-0" />
                   <span className="truncate">
@@ -721,7 +721,7 @@ export default function ProjectDashboardPage() {
                 <button
                   onClick={handleRegenerate}
                   disabled={regenerating}
-                  className="flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl border border-neutral-800 hover:border-neutral-700 bg-neutral-900 hover:bg-neutral-950 transition-colors cursor-pointer text-[11px] font-bold text-neutral-200 active:scale-95 duration-150 w-full disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl border border-[#1a1a20] hover:border-[#2a2a32] bg-[#121215] hover:bg-[#0a0a0d] transition-colors cursor-pointer text-[11px] font-bold text-neutral-100 active:scale-95 duration-150 w-full disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <RefreshCw className={cn("w-3.5 h-3.5 shrink-0", regenerating && "animate-spin")} />
                   <span className="truncate">{regenerating ? "Regenerating" : "Regenerate"}</span>
@@ -749,13 +749,13 @@ export default function ProjectDashboardPage() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 12 }}
               transition={{ duration: 0.25, ease: "easeOut" }}
-              className="w-full max-w-2xl h-full sm:h-[650px] sm:max-h-[85vh] bg-[#121215] border-0 sm:border border-neutral-900 rounded-none sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden relative border-brand-border/20"
+              className="w-full max-w-2xl h-full sm:h-[650px] sm:max-h-[85vh] bg-[#0a0a0d] border-0 sm:border border-[#1a1a20] rounded-none sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden relative border-brand-border/20"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Modal Header */}
-              <div className="p-4 border-b border-neutral-900 flex items-center justify-between gap-4 bg-neutral-950/10 shrink-0">
+              <div className="p-4 border-b border-[#1a1a20] flex items-center justify-between gap-4 bg-[#0a0a0d] shrink-0">
                 <div className="flex items-center gap-3 min-w-0">
-                  <span className="p-2 sm:p-2.5 rounded-xl bg-neutral-950 border border-neutral-900 shrink-0 hidden sm:flex">
+                  <span className="p-2 sm:p-2.5 rounded-xl bg-[#0a0a0d] border border-[#1a1a20] shrink-0 hidden sm:flex">
                     <Sparkles className="w-4 h-4 text-brand" />
                   </span>
                   <div className="flex flex-col gap-0.5 min-w-0">
@@ -769,7 +769,7 @@ export default function ProjectDashboardPage() {
                 </div>
                 <button
                   onClick={() => setShowHighlights(false)}
-                  className="text-neutral-400 hover:text-neutral-200 transition-all cursor-pointer p-1.5 hover:bg-neutral-900 rounded-lg border border-transparent hover:border-neutral-800 shrink-0"
+                  className="text-neutral-400 hover:text-neutral-200 transition-all cursor-pointer p-1.5 hover:bg-[#121215] rounded-lg border border-transparent hover:border-[#1a1a20] shrink-0"
                   title="Close View"
                 >
                   <X className="w-4 h-4" />
@@ -777,7 +777,7 @@ export default function ProjectDashboardPage() {
               </div>
 
               {/* Content Body */}
-              <div className="flex-1 overflow-y-auto p-3 sm:p-6 md:p-8 no-scrollbar bg-neutral-900/10">
+              <div className="flex-1 overflow-y-auto p-3 sm:p-6 md:p-8 no-scrollbar bg-[#0a0a0d]/30">
                 <div className="flex flex-col gap-4">
                   {highlights.length === 0 && (
                     <div className="text-center py-12 text-xs text-neutral-500 italic">
@@ -785,16 +785,16 @@ export default function ProjectDashboardPage() {
                     </div>
                   )}
                   {highlights.map((h, idx) => (
-                    <div key={h.id} className="p-5 rounded-2xl bg-neutral-950 border border-neutral-900 hover:border-neutral-800 transition-colors flex flex-col gap-3">
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-neutral-900 pb-3">
+                    <div key={h.id} className="p-5 rounded-2xl bg-[#0a0a0d] border border-[#1a1a20] hover:border-[#2a2a32] transition-colors flex flex-col gap-3">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#1a1a20] pb-3">
                         <div className="flex items-center gap-2">
-                          <h4 className="text-xs font-bold text-neutral-200">Highlight #{idx + 1}</h4>
-                          <span className="text-[10px] bg-neutral-900 border border-neutral-800 px-2 py-0.5 rounded text-neutral-300 font-semibold tracking-wide">
+                          <h4 className="text-xs font-bold text-neutral-100">Highlight #{idx + 1}</h4>
+                          <span className="text-[10px] bg-[#121215] border border-[#1a1a20] px-2 py-0.5 rounded text-neutral-300 font-semibold tracking-wide">
                             {formatTimestamp(h.start_seconds)}s - {formatTimestamp(h.end_seconds)}s
                           </span>
                         </div>
                       </div>
-                      <div className="p-3.5 rounded-lg bg-neutral-900/50 border border-neutral-900 text-xs italic text-neutral-400 leading-relaxed">
+                      <div className="p-3.5 rounded-lg bg-[#121215] border border-[#1a1a20] text-xs italic text-neutral-400 leading-relaxed">
                         &ldquo;{h.quote}&rdquo;
                       </div>
                       <div className="text-[11px] text-neutral-500 leading-relaxed">
