@@ -294,7 +294,7 @@ export default function LandingPage() {
       </header>
 
       {/* Hero Section */}
-      <section className="flex flex-col items-center text-center justify-center max-w-5xl mx-auto px-4 sm:px-6 pt-28 sm:pt-36 pb-12 sm:pb-16 relative z-10 flex-1">
+      <section className="flex flex-col items-center text-center justify-center max-w-6xl mx-auto px-4 sm:px-6 pt-28 sm:pt-36 pb-12 sm:pb-16 relative z-10 flex-1">
         <div className="flex items-center justify-center gap-1.5 px-3 py-1 rounded-full bg-brand-muted border border-brand-border text-[9px] sm:text-[10px] font-bold text-brand mb-5 sm:mb-6 uppercase tracking-wider text-center">
           <Flame className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" />
           <span>Content Repurposing Pipeline</span>
@@ -328,7 +328,7 @@ export default function LandingPage() {
         </div>
 
         {/* Live Simulator Mockup Section */}
-        <div id="simulator" className="w-full max-w-4xl mt-12 sm:mt-20 relative px-1 scroll-mt-24">
+        <div id="simulator" className="w-full max-w-6xl mt-12 sm:mt-20 relative px-1 scroll-mt-24">
           <div className="border border-neutral-900 rounded-2xl overflow-hidden bg-neutral-900/10 backdrop-blur-md p-1 border-brand-border/40 shadow-xl w-full max-w-full min-w-0">
             
             <div className="bg-neutral-950 rounded-xl border border-neutral-900 p-4 sm:p-6 flex flex-col gap-6 w-full max-w-full min-w-0">
@@ -428,7 +428,7 @@ export default function LandingPage() {
       </section>
 
       {/* Features Grid */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-16 sm:py-24 border-t border-neutral-900 relative z-10 w-full">
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-24 border-t border-neutral-900 relative z-10 w-full">
         <div id="features" className="flex flex-col items-center text-center gap-2 mb-10 sm:mb-16 scroll-mt-24">
           <span className="text-[9px] sm:text-[10px] uppercase font-bold text-brand tracking-widest brand-badge px-2.5 py-1 rounded-full">Features System</span>
           <h2 className="text-lg sm:text-xl md:text-3xl font-extrabold text-neutral-100 tracking-tight mt-3">
@@ -456,7 +456,7 @@ export default function LandingPage() {
       </section>
 
       {/* Action Banner */}
-      <section className="w-full max-w-4xl mx-auto px-4 sm:px-6 pb-16 sm:pb-24 relative z-10 text-center">
+      <section className="w-full max-w-6xl mx-auto px-4 sm:px-6 pb-16 sm:pb-24 relative z-10 text-center">
         <div className="bg-[#0e0e11] border border-neutral-900/60 border-brand-border/20 p-6 sm:p-12 rounded-2xl flex flex-col items-center gap-5 sm:gap-6">
           <h3 className="text-lg sm:text-xl md:text-2xl font-extrabold text-neutral-100">Ready to distribute your voice?</h3>
           <p className="text-xs text-neutral-400 max-w-sm leading-relaxed">
@@ -474,7 +474,7 @@ export default function LandingPage() {
 
       {/* Footer */}
       <footer className="w-full border-t border-neutral-900 bg-neutral-950/40 relative z-10 mt-auto">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 md:py-16 flex flex-col md:flex-row items-center md:items-start justify-between gap-8 sm:gap-10">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12 md:py-16 flex flex-col md:flex-row items-center md:items-start justify-between gap-8 sm:gap-10">
           
           {/* Logo & Vision Block */}
           <div className="flex flex-col items-center md:items-start text-center md:text-left gap-3.5 max-w-sm">
