@@ -101,4 +101,9 @@ When working on text, transcription, or image generations, the backend relies on
    - Never trust the LLM to return naked JSON. Always pass raw output through `extract_and_parse_json()` in `pipeline.py` which trims conversational text and strips markdown formatting wrapper backticks (`` ```json ... ``` ``).
 9. **Groq Whisper (Transcription):** Groq's `/v1/audio/transcriptions` endpoint has a strict **25 MB file upload limit**. Audio >4MB is compressed via ffmpeg (mono 32kbps) before cloud upload.
 10. **Image Validity Check:** `imagegen.py` uses `PIL.Image.verify()` to validate generated image bytes (replaces the crude `len > 1000` check that could pass tiny error images).
+11. **Render Database URL Cleaning:** To prevent database name connection failures (like `database "postgres\n"` catalog errors) from copy-pasting carriage returns in Render, `backend/app/db.py` defensively strips trailing whitespace and newlines from `DATABASE_URL` on startup.
+12. **Header Dropdown Overlay Stacking:** The header container on `/new`, `/dashboard`, and `/project/[id]` routes must use `relative z-40` (or greater) to stay on top of main content elements (`relative z-10`), ensuring absolute dropdown overlays are clickable.
+13. **Navigation Transition Prefetching:** Avoid click-based programmatic `router.push()` for static transitions. Use Next.js `<Link>` components to leverage built-in prefetching and avoid transition lag.
+14. **Production Console Stripping:** Configured `client/next.config.ts` SWC compiler `removeConsole: { exclude: ["error"] }` in production to remove diagnostic verbose logging while retaining error reporting.
+15. **YouTube Bot-Block Bypassing:** YouTube downloads on cloud hosts like Render will trigger bot-verification errors. To bypass this, `yt-dlp` reads cookies from `YOUTUBE_COOKIES_FILE`, `/data/cookies.txt`, or local roots if a Netscape format `cookies.txt` is exported from a real browser session.
 
