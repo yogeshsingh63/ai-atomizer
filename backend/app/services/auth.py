@@ -10,8 +10,9 @@ from sqlalchemy.future import select
 from app.db import get_db
 from app.models import User
 
-# Load secret config
-JWT_SECRET = os.getenv("JWT_SECRET", "super-secret-jwt-signing-key-prism-ai")
+# Load secret config — must be >=32 bytes for HS256 (PyJWT warns otherwise).
+# In production, set JWT_SECRET env var to a 32+ char random string.
+JWT_SECRET = os.getenv("JWT_SECRET", "prism-ai-super-secret-jwt-signing-key-change-me")
 JWT_ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_DAYS = 30  # Keep tokens alive for 30 days for user convenience
 

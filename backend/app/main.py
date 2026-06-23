@@ -102,8 +102,13 @@ app.include_router(models_api.router, prefix="/api")
 
 # Mount static generated thumbnails directory
 app.mount("/generated", StaticFiles(directory=GENERATED_DIR), name="generated")
-# Mount static uploads directory (Puter.js users fetch audio from here for transcription)
+# Mount static uploads directory
 app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
+
+@app.get("/", tags=["Health"])
+async def root_check():
+    """Root health check for deployment platform uptime probes."""
+    return {"status": "ok", "service": "prism-ai-backend"}
 
 @app.get("/health", tags=["Health"])
 async def health_check():
