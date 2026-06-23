@@ -7,6 +7,8 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 load_dotenv()
 
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./app.db")
+if DATABASE_URL:
+    DATABASE_URL = DATABASE_URL.strip()
 
 # Automatically rewrite postgres schemes to use the asyncpg driver
 if DATABASE_URL.startswith("postgres://"):
