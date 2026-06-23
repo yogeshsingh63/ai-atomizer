@@ -115,6 +115,32 @@ export function logout() {
   }
 }
 
+export async function getCurrentUser(): Promise<any> {
+  if (isDemoMode()) {
+    return { id: 1, email: "guest@example.com", name: "Guest User", avatar_url: null, is_guest: true };
+  }
+  const res = await fetchWithRetry(`${BACKEND_URL}/auth/me`, { headers: getAuthHeaders() });
+  if (!res.ok) {
+    if (res.status === 401) {
+      logout();
+      throw new Error("Unauthorized");
+    }
+    throw new Error(`Failed to fetch current user (HTTP ${res.status})`);
+  }
+  return await res.json();
+}
+
+export async function getUserProjects(): Promise<Project[]> {
+  if (isDemoMode()) {
+    return mockProjects;
+  }
+  const res = await fetchWithRetry(`${BACKEND_URL}/projects`, { headers: getAuthHeaders() });
+  if (!res.ok) {
+    throw new Error(`Failed to fetch projects (HTTP ${res.status})`);
+  }
+  return await res.json();
+}
+
 function getAuthHeaders(contentType?: string): HeadersInit {
   const headers: Record<string, string> = {};
   if (contentType) {
