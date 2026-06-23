@@ -226,6 +226,9 @@ async def run_pipeline(project_id: int):
                 logger.info(f"Downloading audio from YouTube URL: {project.source_ref}...")
                 
                  # yt-dlp downloader configuration
+                # Android player client bypasses YouTube's "Sign in to confirm
+                # you're not a bot" block on datacenter IPs (Render, Heroku, etc.)
+                # more often than the default web client.
                 ydl_opts = {
                     "format": "bestaudio/best",
                     "outtmpl": os.path.join(upload_dir, "audio.%(ext)s"),
@@ -235,7 +238,10 @@ async def run_pipeline(project_id: int):
                         "preferredquality": "192",
                     }],
                     "quiet": True,
-                    "no_warnings": True
+                    "no_warnings": True,
+                    "extractor_args": {
+                        "youtube": {"player_client": ["android", "web"]}
+                    },
                 }
                 
                 # Check for cookies file to prevent bot block on cloud platforms like Render
