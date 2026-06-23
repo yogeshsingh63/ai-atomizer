@@ -42,7 +42,12 @@ export default function DashboardPage() {
 
   const formatDate = (dateStr: string) => {
     try {
-      const d = new Date(dateStr);
+      // If the string doesn't contain a timezone suffix, append 'Z' to parse it as UTC
+      let parsedStr = dateStr;
+      if (dateStr && !dateStr.endsWith("Z") && !/([+-]\d{2}:\d{2})$/.test(dateStr)) {
+        parsedStr = `${dateStr}Z`;
+      }
+      const d = new Date(parsedStr);
       return d.toLocaleDateString("en-US", {
         month: "short",
         day: "numeric",
