@@ -16,8 +16,6 @@ async def continue_as_guest(db: AsyncSession = Depends(get_db)):
     """
     Creates a temporary guest user account and issues a JWT token.
     Allows testing the content ingestion pipeline without logging in.
-    Puter.js users also use this endpoint — the frontend creates a
-    Puter user identity client-side and links via the JWT.
     """
     try:
         guest_user = User(

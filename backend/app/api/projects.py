@@ -27,8 +27,6 @@ async def create_new_project(
     default_model_mode: str = Form("auto"),
     default_pinned_model: Optional[str] = Form(None),
     target_assets: Optional[str] = Form(None),  # JSON array string
-    puter_user_id: Optional[str] = Form(None),  # Puter.js user UUID
-    pipeline_mode: str = Form("backend"),  # "backend" | "puter"
     file: Optional[UploadFile] = File(None),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
@@ -63,8 +61,6 @@ async def create_new_project(
         default_model_mode=default_model_mode,
         default_pinned_model=default_pinned_model,
         target_assets=target_assets,
-        puter_user_id=puter_user_id,
-        pipeline_mode=pipeline_mode,
         user_id=current_user.id
     )
     
@@ -91,80 +87,11 @@ async def create_new_project(
             await db.commit()
             raise HTTPException(status_code=500, detail="Failed to save uploaded file.")
 
-    # 5. Kick off backend pipeline task (only for guest/backend mode).
-    # Puter.js users run the pipeline in the browser via puter.ai.*,
-    # then save results via POST /{id}/save-results.
-    if pipeline_mode != "puter":
-        background_tasks.add_task(run_pipeline, project.id)
-    else:
-        # Puter mode: backend still does free, non-LLM work so the browser
-        # pipeline has everything it needs.
-        if source_type == "youtube_url":
-            # Download the YouTube audio (no AI cost — just yt-dlp) so the
-            # browser can fetch it and transcribe via puter.ai.speech2txt().
-            background_tasks.add_task(
-                _download_youtube_audio_for_puter, project.id, source_ref
-            )
-        elif source_type == "upload":
-            # File was already saved in step 4. Mark as ready immediately.
-            project.status = "audio_ready"
-            await db.commit()
-        elif source_type == "article_text":
-            # Text source — no audio needed.
-            project.status = "audio_ready"
-            await db.commit()
+    # 5. Kick off backend pipeline task
+    background_tasks.add_task(run_pipeline, project.id)
 
     return {"project_id": project.id}
 
-
-async def _download_youtube_audio_for_puter(project_id: int, url: str):
-    """Download YouTube audio for a Puter-mode project. No AI cost — just
-    yt-dlp + ffmpeg. Sets project.status to 'audio_ready' on success or
-    'failed' on error so the processing page knows when to proceed."""
-    import yt_dlp
-    from app.db import async_session
-    from app.models import Project
-    from sqlalchemy.future import select
-
-    upload_dir = os.path.join(os.getenv("UPLOAD_DIR", "./uploads"), str(project_id))
-    os.makedirs(upload_dir, exist_ok=True)
-    audio_path = os.path.join(upload_dir, "audio.mp3")
-
-    ydl_opts = {
-        "format": "bestaudio/best",
-        "outtmpl": os.path.join(upload_dir, "audio.%(ext)s"),
-        "postprocessors": [{
-            "key": "FFmpegExtractAudio",
-            "preferredcodec": "mp3",
-            "preferredquality": "192",
-        }],
-        "quiet": True,
-        "no_warnings": True,
-    }
-
-    try:
-        def _download():
-            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                ydl.download([url])
-
-        await asyncio.to_thread(_download)
-
-        # Mark as ready
-        async with async_session() as db:
-            result = await db.execute(select(Project).where(Project.id == project_id))
-            project = result.scalars().first()
-            if project:
-                project.status = "audio_ready"
-                await db.commit()
-        logger.info(f"YouTube audio ready for Puter project {project_id}")
-    except Exception as e:
-        logger.error(f"YouTube audio download failed for project {project_id}: {e}")
-        async with async_session() as db:
-            result = await db.execute(select(Project).where(Project.id == project_id))
-            project = result.scalars().first()
-            if project:
-                project.status = "failed"
-                await db.commit()
 
 @router.get("", response_model=List[ProjectResponse])
 async def list_user_projects(
@@ -213,26 +140,7 @@ async def get_project_highlights(
     return highlights_result.scalars().all()
 
 
-@router.get("/{id}/transcript")
-async def get_project_transcript(
-    id: int,
-    current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
-):
-    """Returns the transcript's full_text (for Puter client-side regen)."""
-    result = await db.execute(select(Project).where(Project.id == id))
-    project = result.scalars().first()
-    if not project or project.user_id != current_user.id:
-        raise HTTPException(status_code=404, detail="Project not found.")
 
-    from app.models import Transcript as TranscriptModel
-    t_result = await db.execute(
-        select(TranscriptModel).where(TranscriptModel.project_id == id)
-    )
-    transcript = t_result.scalars().first()
-    if not transcript:
-        return {"full_text": "", "segments": []}
-    return {"full_text": transcript.full_text, "segments": transcript.segments or []}
 
 @router.get("/{id}/events")
 async def get_project_events_stream(
@@ -281,108 +189,4 @@ async def get_project_events_stream(
     return StreamingResponse(event_generator(), media_type="text/event-stream")
 
 
-# --- Client-side pipeline save endpoint (Puter.js users) ---
-@router.post("/{id}/save-results", response_model=dict)
-async def save_client_pipeline_results(
-    id: int,
-    payload: dict,
-    current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
-):
-    """
-    Saves the results of a client-side pipeline run (Puter.js users).
-    Accepts the transcript, highlights, and assets produced by the
-    browser-side pipeline and persists them to the DB.
-    """
-    # Validate project ownership
-    result = await db.execute(select(Project).where(Project.id == id))
-    project = result.scalars().first()
-    if not project or project.user_id != current_user.id:
-        raise HTTPException(status_code=404, detail="Project not found.")
 
-    # Save transcript
-    transcript_data = payload.get("transcript", {})
-    if transcript_data:
-        transcript = Transcript(
-            project_id=id,
-            full_text=transcript_data.get("full_text", ""),
-            segments=transcript_data.get("segments", []),
-        )
-        db.add(transcript)
-
-    # Save highlights
-    highlight_id_map = {}
-    for h in payload.get("highlights", []):
-        highlight = Highlight(
-            project_id=id,
-            start_seconds=int(h.get("start_seconds", 0)),
-            end_seconds=int(h.get("end_seconds", 0)),
-            quote=h.get("quote", ""),
-            reason=h.get("reason", ""),
-        )
-        db.add(highlight)
-        await db.flush()
-        highlight_id_map[h.get("id", 0)] = highlight.id
-
-    # Save assets
-    for a in payload.get("assets", []):
-        related_id = a.get("related_highlight_id")
-        # Map client-side highlight IDs to DB IDs
-        if related_id is not None and related_id in highlight_id_map:
-            related_id = highlight_id_map[related_id]
-        asset = GeneratedAsset(
-            project_id=id,
-            asset_type=a.get("asset_type", "blog"),
-            content=a.get("content", ""),
-            related_highlight_id=related_id,
-            model_used=a.get("model_used", "puter"),
-            status="done",
-        )
-        db.add(asset)
-
-    # Link project to Puter user if provided
-    puter_id = payload.get("puter_user_id")
-    if puter_id:
-        project.puter_user_id = puter_id
-
-    # Mark project as done
-    project.status = "done"
-    await db.commit()
-
-    return {"status": "saved", "project_id": id}
-
-
-# --- Standalone transcription endpoint (fallback for Puter.js users) ---
-@router.post("/transcribe")
-async def transcribe_audio_endpoint(
-    file: UploadFile = File(...),
-    current_user: User = Depends(get_current_user),
-):
-    """
-    Standalone audio transcription using the backend's free fallback chain
-    (AssemblyAI → Groq Whisper → OpenAI Whisper → faster-whisper). Used as a
-    fallback when Puter.js's speech2txt rejects an audio file.
-    """
-    from app.services.transcribe import transcribe_audio
-
-    # Save the uploaded file to a temp path for transcribe_audio
-    upload_dir = os.path.join(os.getenv("UPLOAD_DIR", "./uploads"), "transcribe")
-    os.makedirs(upload_dir, exist_ok=True)
-    audio_path = os.path.join(upload_dir, f"{current_user.id}_{file.filename or 'audio.mp3'}")
-
-    try:
-        contents = await file.read()
-        with open(audio_path, "wb") as f:
-            f.write(contents)
-        full_text, segments = await transcribe_audio(audio_path)
-        return {"text": full_text, "segments": segments or []}
-    except Exception as e:
-        logger.error(f"Transcription endpoint failed: {e}")
-        raise HTTPException(status_code=500, detail=f"Transcription failed: {str(e)}")
-    finally:
-        # Clean up temp file
-        try:
-            if os.path.exists(audio_path):
-                os.remove(audio_path)
-        except Exception:
-            pass

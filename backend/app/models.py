@@ -26,8 +26,6 @@ class Project(Base):
     default_model_mode = Column(String, default="auto")  # auto | pinned
     default_pinned_model = Column(String, nullable=True)
     target_assets = Column(Text, nullable=True)  # JSON array of asset types to generate, e.g. '["blog","thread","linkedin","clip"]'
-    puter_user_id = Column(String, nullable=True, index=True)  # Puter.js user UUID (null for guest users)
-    pipeline_mode = Column(String, default="backend")  # "backend" (guest pipeline) | "puter" (client-side pipeline)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
 

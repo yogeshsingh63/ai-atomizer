@@ -14,8 +14,6 @@ export interface Project {
   default_model_mode: 'auto' | 'pinned';
   default_pinned_model: string | null;
   target_assets: string | null; // JSON array string of asset types
-  puter_user_id: string | null; // Puter.js user UUID
-  pipeline_mode: 'backend' | 'puter'; // "backend" (guest pipeline) | "puter" (client-side Puter pipeline)
   created_at: string;
 }
 
@@ -151,15 +149,6 @@ const MOCK_MODELS: Model[] = [
   { id: 'anthropic/claude-3.5-sonnet', name: 'Claude 3.5 Sonnet (Paid)', pricing: { prompt: '0.003', completion: '0.015' }, is_free: false, provider: 'openrouter' },
   { id: 'google/gemini-2.5-pro', name: 'Gemini 2.5 Pro (Paid)', pricing: { prompt: '0.00125', completion: '0.00375' }, is_free: false, provider: 'openrouter' },
   { id: 'deepseek/deepseek-r1', name: 'DeepSeek R1 (Paid)', pricing: { prompt: '0.00055', completion: '0.00219' }, is_free: false, provider: 'openrouter' },
-  // Puter.js curated models (user-pays via their Puter account)
-  { id: 'gpt-5.4-mini', name: 'GPT 5.4 Mini (Recommended)', pricing: { prompt: '0.15', completion: '0.60' }, is_free: false, provider: 'puter' },
-  { id: 'gpt-5.4-nano', name: 'GPT 5.4 Nano (Fastest)', pricing: { prompt: '0.05', completion: '0.40' }, is_free: false, provider: 'puter' },
-  { id: 'gpt-5.4', name: 'GPT 5.4 (High Quality)', pricing: { prompt: '2.50', completion: '10.00' }, is_free: false, provider: 'puter' },
-  { id: 'claude-sonnet-4', name: 'Claude Sonnet 4 (Best for editing)', pricing: { prompt: '3.00', completion: '15.00' }, is_free: false, provider: 'puter' },
-  { id: 'claude-sonnet-4-5', name: 'Claude Sonnet 4.5 (Premium)', pricing: { prompt: '3.00', completion: '15.00' }, is_free: false, provider: 'puter' },
-  { id: 'gpt-4o-mini', name: 'GPT-4o Mini (Budget)', pricing: { prompt: '0.15', completion: '0.60' }, is_free: false, provider: 'puter' },
-  { id: 'gpt-4.1', name: 'GPT 4.1 (Reliable)', pricing: { prompt: '2.00', completion: '8.00' }, is_free: false, provider: 'puter' },
-  { id: 'gemini-2.5-flash-lite', name: 'Gemini 2.5 Flash Lite (Free tier)', pricing: { prompt: '0', completion: '0' }, is_free: true, provider: 'puter' },
 ];
 
 // Helper to check if backend is running
@@ -216,8 +205,6 @@ export async function createProject(data: {
   default_model_mode: 'auto' | 'pinned';
   default_pinned_model: string | null;
   target_assets?: string[]; // array of asset types to generate
-  puter_user_id?: string | null; // Puter.js user UUID
-  pipeline_mode?: 'backend' | 'puter'; // default "backend" (guest pipeline); "puter" for client-side Puter pipeline
   file?: File;
 }): Promise<{ project_id: number }> {
   // Demo mode only — no silent mock fallback on transient errors.
@@ -232,8 +219,6 @@ export async function createProject(data: {
       default_model_mode: data.default_model_mode,
       default_pinned_model: data.default_pinned_model,
       target_assets: data.target_assets ? JSON.stringify(data.target_assets) : null,
-      puter_user_id: data.puter_user_id || null,
-      pipeline_mode: data.pipeline_mode || 'backend',
       created_at: new Date().toISOString(),
     };
     mockProjects.push(newProject);
@@ -251,12 +236,7 @@ export async function createProject(data: {
   if (data.target_assets && data.target_assets.length > 0) {
     formData.append('target_assets', JSON.stringify(data.target_assets));
   }
-  if (data.puter_user_id) {
-    formData.append('puter_user_id', data.puter_user_id);
-  }
-  if (data.pipeline_mode) {
-    formData.append('pipeline_mode', data.pipeline_mode);
-  }
+
   if (data.file) formData.append('file', data.file);
 
   const res = await fetchWithRetry(
@@ -293,8 +273,6 @@ function getMockProject(id: number): Project {
     default_model_mode: 'auto',
     default_pinned_model: null,
     target_assets: null,
-    puter_user_id: null,
-    pipeline_mode: 'backend',
     created_at: new Date().toISOString(),
   };
   mockProjects.push(autoProj);
@@ -312,61 +290,7 @@ export async function getHighlights(id: number): Promise<Highlight[]> {
   return await res.json();
 }
 
-// Fetch the transcript full_text for a project (used by Puter client-side regen).
-export async function getTranscript(id: number): Promise<string> {
-  const res = await fetchWithRetry(
-    `${BACKEND_URL}/projects/${id}/transcript?t=${Date.now()}`,
-    { headers: getAuthHeaders() }
-  );
-  if (!res.ok) return "";
-  const data = await res.json();
-  return data?.full_text || "";
-}
 
-// Save client-side pipeline results (Puter.js users run the pipeline
-// in the browser and POST the results here for persistence).
-export async function saveClientPipelineResults(
-  projectId: number,
-  results: {
-    transcript: { full_text: string; segments: any[] };
-    highlights: Array<{ id: number; start_seconds: number; end_seconds: number; quote: string; reason: string }>;
-    assets: Array<{ asset_type: string; content: string; related_highlight_id: number | null; model_used: string }>;
-    puter_user_id?: string | null;
-  }
-): Promise<{ status: string; project_id: number }> {
-  const res = await fetchWithRetry(
-    `${BACKEND_URL}/projects/${projectId}/save-results`,
-    {
-      method: 'POST',
-      headers: getAuthHeaders('application/json'),
-      body: JSON.stringify(results),
-    }
-  );
-  if (!res.ok) throw new Error(`Failed to save results (HTTP ${res.status})`);
-  return await res.json();
-}
-
-/**
- * Update a single asset's content (for Puter.js client-side regeneration).
- * PUT /api/projects/{id}/assets/{assetId}
- */
-export async function updateAssetContent(
-  projectId: number,
-  assetId: number,
-  content: string,
-  modelUsed: string
-): Promise<GeneratedAsset> {
-  const res = await fetchWithRetry(
-    `${BACKEND_URL}/projects/${projectId}/assets/${assetId}/content`,
-    {
-      method: 'PUT',
-      headers: getAuthHeaders('application/json'),
-      body: JSON.stringify({ content, model_used: modelUsed }),
-    }
-  );
-  if (!res.ok) throw new Error(`Failed to update asset (HTTP ${res.status})`);
-  return await res.json();
-}
 
 export async function getAssets(id: number): Promise<GeneratedAsset[]> {
   if (isDemoMode()) return mockAssets[id] || [];

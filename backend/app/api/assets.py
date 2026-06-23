@@ -184,39 +184,4 @@ async def regenerate_single_asset(
         raise HTTPException(status_code=500, detail=f"Regeneration failed: {str(e)}")
 
 
-# --- Puter.js client-side regeneration: update asset content directly ---
-@router.put("/{id}/assets/{asset_id}/content", response_model=GeneratedAssetResponse)
-async def update_asset_content(
-    id: int,
-    asset_id: int,
-    payload: dict,
-    current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
-):
-    """
-    Updates an asset's content directly (used by Puter.js client-side
-    regeneration where the LLM call happens in the browser, not the backend).
-    """
-    # Validate project + asset ownership
-    project_res = await db.execute(select(Project).where(Project.id == id))
-    project = project_res.scalars().first()
-    if not project or project.user_id != current_user.id:
-        raise HTTPException(status_code=404, detail="Project not found.")
 
-    asset_res = await db.execute(
-        select(GeneratedAsset).where(
-            GeneratedAsset.project_id == id,
-            GeneratedAsset.id == asset_id,
-        )
-    )
-    asset = asset_res.scalars().first()
-    if not asset:
-        raise HTTPException(status_code=404, detail="Asset not found.")
-
-    asset.content = payload.get("content", asset.content)
-    if payload.get("model_used"):
-        asset.model_used = payload["model_used"]
-    asset.status = "done"
-    await db.commit()
-    await db.refresh(asset)
-    return asset
