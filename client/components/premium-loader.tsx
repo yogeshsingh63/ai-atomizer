@@ -5,18 +5,13 @@ import { Sparkles, Cpu, ShieldCheck, Terminal } from "lucide-react";
 import { PrismLogo } from "@/components/ui/prism-logo";
 
 const TERMINAL_LOGS = [
-  "system: init_handshake() called",
-  "gateway: ping request timed out (cold start)",
-  "gateway: sending wake-up signal to render host",
-  "host: container allocation in progress",
-  "host: mounting app engine workspace",
-  "database: validating pooler connection (session 5432)",
-  "system: checking environment tokens",
-  "system: synchronizing model routing matrix",
-  "pipeline: warming up groq whisper api handler",
-  "pipeline: loading critic prompts & templates",
-  "system: system_online() status resolved",
-  "gateway: connection established successfully"
+  "init: handshake call",
+  "ping: connection timeout (cold start)",
+  "wake: sending signal to host",
+  "host: container allocation",
+  "database: checking pooler (session 5432)",
+  "gateway: connection established",
+  "engine: sync complete"
 ];
 
 export const PremiumLoader = ({ onComplete }: { onComplete?: () => void }) => {
@@ -32,7 +27,7 @@ export const PremiumLoader = ({ onComplete }: { onComplete?: () => void }) => {
         setLogs((prev) => [...prev, `> ${TERMINAL_LOGS[logIdx]}`].slice(-5));
         logIdx++;
       } else {
-        setLogs((prev) => [...prev, `> Re-verifying handshake status...`].slice(-5));
+        setLogs((prev) => [...prev, `> re-verifying connection status...`].slice(-5));
         logIdx = 0;
       }
     }, 2400);
@@ -56,7 +51,7 @@ export const PremiumLoader = ({ onComplete }: { onComplete?: () => void }) => {
   }, []);
 
   return (
-    <div className="w-full max-w-md bg-transparent border-none flex flex-col items-center text-center gap-6 relative overflow-hidden animate-fade-in-up select-none">
+    <div className="w-[360px] bg-transparent border-none flex flex-col items-center text-center gap-6 relative overflow-hidden animate-fade-in-up select-none">
       
       {/* Orbit/Spinning Loader Animation */}
       <div className="relative w-20 h-20 flex items-center justify-center mt-2">
@@ -84,32 +79,32 @@ export const PremiumLoader = ({ onComplete }: { onComplete?: () => void }) => {
       </div>
 
       {/* Terminal Log Console */}
-      <div className="w-full bg-[#070709] border border-neutral-900 rounded-xl p-4 font-mono text-[10px] text-left text-neutral-400 flex flex-col gap-1 shadow-inner h-36 relative group">
+      <div className="w-full bg-[#070709] border border-neutral-900 rounded-xl p-4 font-mono text-[10px] text-left text-neutral-400 flex flex-col gap-1 shadow-inner h-36 relative overflow-hidden">
         {/* Console Header */}
         <div className="flex items-center justify-between border-b border-neutral-900/60 pb-2 mb-1.5">
           <span className="text-[9px] text-neutral-500 uppercase tracking-widest font-bold font-mono">system_boot.log</span>
           <div className="flex gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-neutral-800 group-hover:bg-red-500/50 transition-colors duration-300" />
-            <span className="w-1.5 h-1.5 rounded-full bg-neutral-800 group-hover:bg-yellow-500/50 transition-colors duration-300" />
-            <span className="w-1.5 h-1.5 rounded-full bg-neutral-800 group-hover:bg-green-500/50 transition-colors duration-300" />
+            <span className="w-1.5 h-1.5 rounded-full bg-[#ff5f56]" />
+            <span className="w-1.5 h-1.5 rounded-full bg-[#ffbd2e]" />
+            <span className="w-1.5 h-1.5 rounded-full bg-[#27c93f]" />
           </div>
         </div>
         
         {/* Logs list */}
-        <div className="flex-1 flex flex-col gap-1 justify-end font-mono leading-relaxed">
+        <div className="flex-1 flex flex-col gap-1 justify-end font-mono leading-relaxed overflow-hidden">
           {logs.map((log, index) => {
             let textColor = "text-neutral-500";
             if (log.startsWith("$")) {
               textColor = "text-brand font-bold";
-            } else if (log.includes("success") || log.includes("resolved")) {
+            } else if (log.includes("success") || log.includes("established") || log.includes("complete")) {
               textColor = "text-emerald-400/90";
-            } else if (log.includes("timed out") || log.includes("cold start")) {
+            } else if (log.includes("timeout") || log.includes("cold start")) {
               textColor = "text-amber-500/90";
             } else if (log.startsWith(">")) {
               textColor = "text-neutral-400";
             }
             return (
-              <p key={index} className={`${textColor} truncate font-mono`}>
+              <p key={index} className={`${textColor} truncate font-mono w-full`}>
                 {log}
               </p>
             );
