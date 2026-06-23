@@ -226,9 +226,10 @@ async def run_pipeline(project_id: int):
                 logger.info(f"Downloading audio from YouTube URL: {project.source_ref}...")
                 
                  # yt-dlp downloader configuration
-                # Android player client bypasses YouTube's "Sign in to confirm
-                # you're not a bot" block on datacenter IPs (Render, Heroku, etc.)
-                # more often than the default web client.
+                # iOS + Android player clients bypass YouTube's "Sign in to confirm
+                # you're not a bot" block more often than the default web client.
+                # For hard IP blocks on datacenter hosts (Render, Heroku), set the
+                # YOUTUBE_PROXY env var to a residential/mobile proxy URL.
                 ydl_opts = {
                     "format": "bestaudio/best",
                     "outtmpl": os.path.join(upload_dir, "audio.%(ext)s"),
@@ -240,9 +241,16 @@ async def run_pipeline(project_id: int):
                     "quiet": True,
                     "no_warnings": True,
                     "extractor_args": {
-                        "youtube": {"player_client": ["android", "web"]}
+                        "youtube": {"player_client": ["ios", "android", "web"]}
                     },
                 }
+
+                # Optional proxy — set YOUTUBE_PROXY env var on Render to route
+                # yt-dlp through a residential/mobile proxy (bypasses datacenter IP blocks).
+                proxy_url = os.getenv("YOUTUBE_PROXY")
+                if proxy_url:
+                    ydl_opts["proxy"] = proxy_url
+                    logger.info(f"Using proxy for yt-dlp: {proxy_url}")
                 
                 # Check for cookies file to prevent bot block on cloud platforms like Render
                 cookie_candidates = [
@@ -542,9 +550,22 @@ async def run_pipeline(project_id: int):
             logger.info(f"Pipeline completed successfully for project {project_id}.")
 
         except Exception as e:
+            error_str = str(e)
             logger.error(f"Pipeline execution failed for project {project_id}: {e}", exc_info=True)
             project.status = "failed"
             await db.commit()
+            
+            # YouTube bot block — give the user an actionable error message
+            if "Sign in to confirm" in error_str or "not a bot" in error_str:
+                user_friendly_msg = (
+                    "YouTube blocked this download (bot verification). Fix options: "
+                    "(1) Upload cookies.txt to /data/cookies.txt on Render — export from a browser "
+                    "signed into YouTube using a 'Get cookies.txt' extension. "
+                    "(2) Set YOUTUBE_PROXY env var to a residential/mobile proxy URL. "
+                    "(3) Use a file upload instead of a YouTube URL."
+                )
+            else:
+                user_friendly_msg = error_str
             
             # Find active stage and mark failed
             active_job_result = await db.execute(
@@ -552,6 +573,6 @@ async def run_pipeline(project_id: int):
             )
             active_job = active_job_result.scalars().first()
             if active_job:
-                await update_job_status(db, project_id, active_job.stage, "failed", error_message=str(e))
+                await update_job_status(db, project_id, active_job.stage, "failed", error_message=user_friendly_msg)
             else:
-                await update_job_status(db, project_id, "Ingesting Media", "failed", error_message=str(e))
+                await update_job_status(db, project_id, "Ingesting Media", "failed", error_message=user_friendly_msg)
