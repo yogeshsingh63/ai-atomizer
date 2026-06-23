@@ -29,9 +29,20 @@ logger = logging.getLogger(__name__)
 GENERATED_DIR = os.getenv("GENERATED_DIR", "./generated")
 UPLOAD_DIR = os.getenv("UPLOAD_DIR", "./uploads")
 
-# Ensure static directories exist
-os.makedirs(GENERATED_DIR, exist_ok=True)
-os.makedirs(UPLOAD_DIR, exist_ok=True)
+# Ensure static directories exist with resilient fallback
+try:
+    os.makedirs(GENERATED_DIR, exist_ok=True)
+except PermissionError:
+    logger.warning(f"Permission denied creating GENERATED_DIR at {GENERATED_DIR}. Falling back to local './generated'.")
+    GENERATED_DIR = "./generated"
+    os.makedirs(GENERATED_DIR, exist_ok=True)
+
+try:
+    os.makedirs(UPLOAD_DIR, exist_ok=True)
+except PermissionError:
+    logger.warning(f"Permission denied creating UPLOAD_DIR at {UPLOAD_DIR}. Falling back to local './uploads'.")
+    UPLOAD_DIR = "./uploads"
+    os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
