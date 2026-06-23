@@ -11,8 +11,9 @@ import { HoverBorderGradient } from "@/components/ui/hover-border-gradient";
 import { Dropzone } from "@/components/dropzone";
 import { ModelSelector } from "@/components/model-selector";
 import { AssetSelector, TargetAsset } from "@/components/asset-selector";
-import { createProject, SourceType, loginAsGuest, logout } from "@/lib/api";
+import { createProject, SourceType, loginAsGuest, isBackendOnline } from "@/lib/api";
 import { ProfileDropdown } from "@/components/profile-dropdown";
+import { PremiumLoader } from "@/components/premium-loader";
 
 import { BackgroundBeams } from "@/components/ui/background-beams";
 import { PrismLogo } from "@/components/ui/prism-logo";
@@ -20,9 +21,44 @@ import { PrismLogo } from "@/components/ui/prism-logo";
 export default function NewProjectPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [backendChecking, setBackendChecking] = useState(() => 
+    typeof window !== "undefined" ? !new URLSearchParams(window.location.search).has("demo") : true
+  );
   const [authChecking, setAuthChecking] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authLoading, setAuthLoading] = useState(false);
+
+  // Check if backend is online (handling cold starts)
+  useEffect(() => {
+    if (!backendChecking) return;
+
+    let active = true;
+    let pollInterval: NodeJS.Timeout;
+
+    const checkBackend = async () => {
+      const online = await isBackendOnline();
+      if (!active) return;
+      if (online) {
+        setBackendChecking(false);
+      } else {
+        // Poll every 2 seconds until online
+        pollInterval = setInterval(async () => {
+          const check = await isBackendOnline();
+          if (active && check) {
+            clearInterval(pollInterval);
+            setBackendChecking(false);
+          }
+        }, 2000);
+      }
+    };
+
+    checkBackend();
+
+    return () => {
+      active = false;
+      if (pollInterval) clearInterval(pollInterval);
+    };
+  }, [backendChecking]);
 
   // Form states
   const [title, setTitle] = useState("");
@@ -182,6 +218,17 @@ export default function NewProjectPage() {
       ),
     },
   ];
+
+  if (backendChecking) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-neutral-950 text-neutral-400 relative px-4">
+        <BackgroundBeams />
+        <div className="relative z-10">
+          <PremiumLoader />
+        </div>
+      </div>
+    );
+  }
 
   if (authChecking) {
     return (

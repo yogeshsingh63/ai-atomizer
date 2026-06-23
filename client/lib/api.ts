@@ -187,7 +187,7 @@ const MOCK_MODELS: Model[] = [
 ];
 
 // Helper to check if backend is running
-async function isBackendOnline(): Promise<boolean> {
+export async function isBackendOnline(): Promise<boolean> {
   try {
     const res = await fetch(`${BACKEND_BASE}/health`, { signal: AbortSignal.timeout(1000) });
     return res.status === 200;

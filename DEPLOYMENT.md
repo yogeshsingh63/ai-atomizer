@@ -33,12 +33,15 @@ Prism AI uses PostgreSQL in production.
 
 1. Create a free account on [Supabase](https://supabase.com/).
 2. Create a new project, select a database password, and choose your preferred hosting region.
-3. Go to **Project Settings** > **Database**:
-   - Scroll to **Connection string**.
-   - Select the **URI** tab.
-   - Copy the URI (it will start with `postgres://` or `postgresql://`).
-   - Replace `[YOUR-PASSWORD]` with the database password you chose.
-   - *Note: Our backend dynamically rewrites this string to use the required async driver (`postgresql+asyncpg://`), so you can copy the URI directly without editing the scheme.*
+3. **IMPORTANT FOR RENDER DEPLOYMENTS:** Render does not support outbound IPv6 connections. The direct Supabase connection URL uses IPv6 and will crash with `OSError: [Errno 101] Network is unreachable`. You **must** use the **Connection Pooler** endpoint instead, which is IPv4-compatible:
+   - Go to **Project Settings** > **Database** in the Supabase Dashboard.
+   - Scroll down to the **Connection pooler** section.
+   - Ensure the Mode is set to **Session** (or **Transaction** if you use a serverless setup, though **Session** is recommended on Port 5432 for persistent web services like FastAPI on Render).
+   - Copy the pooler connection string.
+   - Replace the username with `postgres.[your-project-ref]` and insert your database password.
+   - Example Pooler URI format:
+     `postgresql://postgres.oopurjqspujanllnqgin:[YOUR-PASSWORD]@aws-0-ap-south-1.pooler.supabase.com:5432/postgres`
+   - *Note: Our backend dynamically rewrites this string to use the required async driver (`postgresql+asyncpg://`), so you can copy this pooler URI directly without editing the scheme.*
 
 ---
 
@@ -57,9 +60,9 @@ Deploy the FastAPI server to Render:
    - **Start Command**: `python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT`
 5. Add the following **Environment Variables** in the Render dashboard:
 
-| Variable | Description | Example (Local Dev) |
+| Variable | Description | Example (Render / Supabase Connection Pooler) |
 |---|---|---|
-| `DATABASE_URL` | Supabase PostgreSQL Connection URI | `postgresql://postgres:pass@db.supabase.co:5432/postgres` |
+| `DATABASE_URL` | Supabase Connection Pooler URI (IPv4 Compatible) | `postgresql://postgres.oopurjqspujanllnqgin:your-password@aws-0-ap-south-1.pooler.supabase.com:5432/postgres` |
 | `JWT_SECRET` | Secure key to sign user sessions | `generate-a-long-random-string-here` |
 | `CLIENT_REDIRECT_URI` | The root URL of your frontend | `http://localhost:3000` (Local) / Vercel Domain (Prod) |
 | `GOOGLE_CLIENT_ID` | OAuth Client ID from Google Cloud Console | `123456-example.apps.googleusercontent.com` |

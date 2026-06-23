@@ -3,28 +3,70 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { 
-  FolderGit2, PlusCircle, Search, Sparkles, AlertCircle, 
-  Clock, CheckCircle2, XCircle, ArrowRight, Youtube, Upload, FileText
+  FolderGit2, PlusCircle, Search, CheckCircle2, XCircle, ArrowRight, Youtube, Upload, FileText
 } from "lucide-react";
-import { getUserProjects, Project } from "@/lib/api";
+import { getUserProjects, Project, isBackendOnline } from "@/lib/api";
 import { ProfileDropdown } from "@/components/profile-dropdown";
+import { PremiumLoader } from "@/components/premium-loader";
 import { PrismLogo } from "@/components/ui/prism-logo";
 import { BackgroundBeams } from "@/components/ui/background-beams";
 
 export default function DashboardPage() {
   const router = useRouter();
   const [projects, setProjects] = useState<Project[]>([]);
+  const [backendChecking, setBackendChecking] = useState(() => 
+    typeof window !== "undefined" ? !new URLSearchParams(window.location.search).has("demo") : true
+  );
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState<string>("all");
 
+  // Check if token exists on mount, redirect if not
   useEffect(() => {
-    // Check if token exists
     const token = typeof window !== "undefined" ? localStorage.getItem("prism_token") : null;
     if (!token) {
       router.replace("/new");
-      return;
     }
+  }, [router]);
+
+  // Check if backend is online (handling cold starts)
+  useEffect(() => {
+    if (!backendChecking) return;
+
+    let active = true;
+    let pollInterval: NodeJS.Timeout;
+
+    const checkBackend = async () => {
+      const online = await isBackendOnline();
+      if (!active) return;
+      if (online) {
+        setBackendChecking(false);
+      } else {
+        // Poll every 2 seconds until online
+        pollInterval = setInterval(async () => {
+          const check = await isBackendOnline();
+          if (active && check) {
+            clearInterval(pollInterval);
+            setBackendChecking(false);
+          }
+        }, 2000);
+      }
+    };
+
+    checkBackend();
+
+    return () => {
+      active = false;
+      if (pollInterval) clearInterval(pollInterval);
+    };
+  }, [backendChecking]);
+
+  // Fetch projects only once backend is online
+  useEffect(() => {
+    if (backendChecking) return;
+
+    const token = typeof window !== "undefined" ? localStorage.getItem("prism_token") : null;
+    if (!token) return;
 
     async function loadProjects() {
       try {
@@ -38,7 +80,7 @@ export default function DashboardPage() {
     }
 
     loadProjects();
-  }, [router]);
+  }, [backendChecking]);
 
   const formatDate = (dateStr: string) => {
     try {
@@ -102,6 +144,17 @@ export default function DashboardPage() {
     const matchesFilter = filterType === "all" || p.source_type === filterType;
     return matchesSearch && matchesFilter;
   });
+
+  if (backendChecking) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-neutral-950 text-neutral-400 relative px-4">
+        <BackgroundBeams />
+        <div className="relative z-10">
+          <PremiumLoader />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-neutral-950 relative overflow-hidden">
