@@ -17,6 +17,15 @@ export interface Project {
   created_at: string;
 }
 
+export interface UserProfile {
+  id: number;
+  email: string | null;
+  name: string;
+  avatar_url: string | null;
+  is_guest: boolean;
+  created_at: string;
+}
+
 export interface TranscriptSegment {
   start_seconds: number;
   end_seconds: number;
@@ -88,7 +97,7 @@ export function resolveImageUrl(path: string | null | undefined): string {
 }
 
 // Authentication helpers
-export async function loginAsGuest(): Promise<{ access_token: string; user: any }> {
+export async function loginAsGuest(): Promise<{ access_token: string; user: UserProfile }> {
   const res = await fetch(`${BACKEND_URL}/auth/guest`, {
     method: 'POST',
   });
@@ -115,7 +124,7 @@ export function logout() {
   }
 }
 
-export async function getCurrentUser(): Promise<any> {
+export async function getCurrentUser(): Promise<UserProfile> {
   if (isDemoMode()) {
     return { id: 1, email: "guest@example.com", name: "Guest User", avatar_url: null, is_guest: true };
   }
@@ -156,9 +165,9 @@ function getAuthHeaders(contentType?: string): HeadersInit {
 }
 
 // In-memory mock database state for frontend-only demo
-let mockProjects: Project[] = [];
-let mockAssets: Record<number, GeneratedAsset[]> = {};
-let mockHighlights: Record<number, Highlight[]> = {};
+const mockProjects: Project[] = [];
+const mockAssets: Record<number, GeneratedAsset[]> = {};
+const mockHighlights: Record<number, Highlight[]> = {};
 
 // Prepopulated models list (mirrors backend fallback, grouped by provider)
 const MOCK_MODELS: Model[] = [
@@ -618,7 +627,7 @@ Enjoy the fresh draft!`;
 
 function runMockPipelineFlow(
   projectId: number,
-  onEvent: (event: any) => void,
+  onEvent: (event: { stage: string; status: string; model_used: string | null; error_message: string | null }) => void,
   onComplete: () => void
 ) {
   const stages = [

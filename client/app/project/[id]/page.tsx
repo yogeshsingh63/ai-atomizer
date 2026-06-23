@@ -21,6 +21,7 @@ import {
   getProject, getAssets, getHighlights, regenerateAsset, resolveImageUrl 
 } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { ProfileDropdown } from "@/components/profile-dropdown";
 
 const DEFAULT_THUMBNAIL_PLACEHOLDER = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=600&auto=format&fit=crop";
 
@@ -393,13 +394,16 @@ export default function ProjectDashboardPage() {
 
       {/* Header Bar */}
       <div className="max-w-7xl mx-auto w-full flex flex-col gap-6 mb-10 relative z-10">
-        <button
-          onClick={() => router.push("/")}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-neutral-900 bg-neutral-950/40 hover:bg-neutral-900 text-xs font-semibold text-neutral-400 hover:text-neutral-200 transition-all w-fit cursor-pointer group active:scale-95 duration-150"
-        >
-          <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform text-neutral-500 group-hover:text-brand" />
-          <span>Back to Dashboard</span>
-        </button>
+        <div className="flex items-center justify-between gap-4 w-full">
+          <button
+            onClick={() => router.push("/dashboard")}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-neutral-900 bg-neutral-950/40 hover:bg-neutral-900 text-xs font-semibold text-neutral-400 hover:text-neutral-200 transition-all w-fit cursor-pointer group active:scale-95 duration-150"
+          >
+            <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform text-neutral-500 group-hover:text-brand" />
+            <span>Back to Dashboard</span>
+          </button>
+          <ProfileDropdown />
+        </div>
 
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-[#1a1a20] pb-8">
           <div className="flex flex-col gap-2">

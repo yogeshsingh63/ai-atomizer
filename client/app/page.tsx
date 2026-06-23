@@ -14,6 +14,7 @@ import { BackgroundBeams } from "@/components/ui/background-beams";
 import { LinkedInPreview, TwitterPreview, BlogPreview } from "@/components/post-preview";
 import { XIcon } from "@/components/ui/x-icon";
 import { PrismLogo } from "@/components/ui/prism-logo";
+import { ProfileDropdown } from "@/components/profile-dropdown";
 
 // Mock Repurposing Content for Live Simulator
 const MOCK_SOURCE_VIDEO = {
@@ -284,12 +285,7 @@ export default function LandingPage() {
             <a href="#features" className="hover:text-brand hover:scale-[1.02] active:scale-[0.98] transition-all duration-150">Features System</a>
           </nav>
 
-          <Link 
-            href="/new" 
-            className="text-xs font-semibold text-neutral-300 hover:text-white bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 px-4 py-2 rounded-lg transition-all duration-200 active:scale-95"
-          >
-            Launch Engine
-          </Link>
+          <ProfileDropdown />
         </div>
       </header>
 

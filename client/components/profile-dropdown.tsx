@@ -2,12 +2,20 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { FolderGit2, LogOut, ChevronDown, PlusCircle, Sparkles, User } from "lucide-react";
+import { FolderGit2, LogOut, ChevronDown, PlusCircle, Sparkles } from "lucide-react";
 import { getCurrentUser, logout } from "@/lib/api";
+
+interface ProfileUser {
+  id: number;
+  name: string;
+  email?: string | null;
+  avatar_url?: string | null;
+  is_guest: boolean;
+}
 
 export const ProfileDropdown = () => {
   const router = useRouter();
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<ProfileUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);

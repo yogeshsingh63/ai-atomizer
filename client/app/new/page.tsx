@@ -12,6 +12,7 @@ import { Dropzone } from "@/components/dropzone";
 import { ModelSelector } from "@/components/model-selector";
 import { AssetSelector, TargetAsset } from "@/components/asset-selector";
 import { createProject, SourceType, loginAsGuest, logout } from "@/lib/api";
+import { ProfileDropdown } from "@/components/profile-dropdown";
 
 import { BackgroundBeams } from "@/components/ui/background-beams";
 import { PrismLogo } from "@/components/ui/prism-logo";
@@ -52,14 +53,14 @@ export default function NewProjectPage() {
         localStorage.setItem("prism_token", token);
         const newUrl = window.location.pathname;
         window.history.replaceState({}, document.title, newUrl);
-        setIsAuthenticated(true);
+        setTimeout(() => setIsAuthenticated(true), 0);
       } else {
         const storedToken = localStorage.getItem("prism_token");
         if (storedToken) {
-          setIsAuthenticated(true);
+          setTimeout(() => setIsAuthenticated(true), 0);
         }
       }
-      setAuthChecking(false);
+      setTimeout(() => setAuthChecking(false), 0);
     }
   }, []);
 
@@ -74,11 +75,6 @@ export default function NewProjectPage() {
     } finally {
       setAuthLoading(false);
     }
-  };
-
-  const handleLogout = () => {
-    logout();
-    setIsAuthenticated(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -223,14 +219,7 @@ export default function NewProjectPage() {
             </div>
           </div>
 
-          {isAuthenticated && (
-            <button
-              onClick={handleLogout}
-              className="text-[10px] uppercase font-bold text-neutral-500 hover:text-brand border border-neutral-900 hover:border-brand/30 bg-neutral-950/40 px-3 py-1.5 rounded-xl transition-all cursor-pointer active:scale-95 duration-150"
-            >
-              Sign Out
-            </button>
-          )}
+          <ProfileDropdown />
         </div>
       </header>
 
@@ -272,8 +261,46 @@ export default function NewProjectPage() {
               </div>
 
               <div className="flex flex-col gap-3">
+                {/* Google Sign In */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
+                    window.location.href = `${backendUrl}/api/auth/google/login`;
+                  }}
+                  disabled={authLoading}
+                  className="w-full flex items-center justify-center gap-2.5 py-3 rounded-xl border border-neutral-800 bg-neutral-950 hover:bg-neutral-900 text-xs font-bold text-neutral-200 transition-all cursor-pointer active:scale-95 duration-150 disabled:opacity-50"
+                >
+                  <svg className="w-4 h-4 mr-0.5 shrink-0" viewBox="0 0 24 24">
+                    <path
+                      fill="#EA4335"
+                      d="M5.266 9.765A7.077 7.077 0 0 1 12 4.909c1.69 0 3.218.6 4.418 1.582l3.51-3.51C17.745 1.027 14.99 0 12 0 7.354 0 3.307 2.69 1.34 6.6l3.926 3.165z"
+                    />
+                    <path
+                      fill="#4285F4"
+                      d="M23.49 12.275c0-.825-.075-1.62-.215-2.385H12v4.51h6.46a5.523 5.523 0 0 1-2.4 3.62l3.765 2.92c2.2-2.03 3.465-5.02 3.465-8.665z"
+                    />
+                    <path
+                      fill="#FBBC05"
+                      d="M5.266 14.235L1.34 17.4A11.942 11.942 0 0 0 12 24c2.936 0 5.645-.968 7.677-2.61l-3.765-2.92a7.073 7.073 0 0 1-9.646-4.235z"
+                    />
+                    <path
+                      fill="#34A853"
+                      d="M12 4.909c1.9 0 3.61.65 4.95 1.93l3.51-3.51C17.745 1.027 14.99 0 12 0A11.942 11.942 0 0 0 1.34 6.6l3.926 3.165A7.073 7.073 0 0 1 12 4.909z"
+                    />
+                  </svg>
+                  Sign In with Google
+                </button>
+
+                <div className="flex items-center my-1">
+                  <div className="h-px bg-neutral-800 flex-1" />
+                  <span className="text-[9px] uppercase font-bold text-neutral-600 px-3 tracking-widest">or</span>
+                  <div className="h-px bg-neutral-800 flex-1" />
+                </div>
+
                 {/* Guest — no account, free fallback chain, session is temporary */}
                 <button
+                  type="button"
                   onClick={handleGuestLogin}
                   disabled={authLoading}
                   className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-brand-border bg-gradient-to-r from-brand-muted to-brand/20 hover:from-brand/30 hover:to-brand/30 text-xs font-bold text-neutral-100 transition-all cursor-pointer active:scale-95 duration-150 disabled:opacity-50"
