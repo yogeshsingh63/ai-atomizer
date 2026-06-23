@@ -98,7 +98,7 @@ export const ProfileDropdown = () => {
     <div className="relative" ref={containerRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 p-1 pr-2 rounded-xl bg-neutral-950 hover:bg-neutral-900 border border-neutral-900 focus:outline-none focus:ring-1 focus:ring-brand/30 transition-all select-none cursor-pointer active:scale-95"
+        className="flex items-center gap-2 p-1 pr-2 rounded-xl bg-neutral-900 border border-neutral-800 hover:border-neutral-700 transition-all select-none cursor-pointer active:scale-95"
       >
         {user.avatar_url ? (
           <img
@@ -121,7 +121,7 @@ export const ProfileDropdown = () => {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2.5 w-60 rounded-2xl border border-neutral-900 bg-neutral-950/95 backdrop-blur-md p-2 shadow-2xl z-50 animate-fade-in-up">
+        <div className="absolute right-0 mt-2.5 w-60 rounded-2xl border border-neutral-800 bg-neutral-900 shadow-2xl p-1.5 z-50 animate-fade-in-up">
           {/* User info panel */}
           <div className="p-3 pb-2 flex flex-col gap-1">
             <div className="flex items-center justify-between gap-2">
@@ -141,7 +141,7 @@ export const ProfileDropdown = () => {
             )}
           </div>
 
-          <div className="h-px bg-neutral-900 my-1.5" />
+          <div className="h-px bg-neutral-800 my-1.5" />
 
           {/* Actions */}
           <div className="flex flex-col gap-0.5">
@@ -150,7 +150,7 @@ export const ProfileDropdown = () => {
                 setIsOpen(false);
                 router.push("/dashboard");
               }}
-              className="flex items-center gap-2.5 w-full text-left px-3 py-2 rounded-xl text-xs font-semibold text-neutral-400 hover:text-neutral-100 hover:bg-neutral-900/60 transition-colors cursor-pointer"
+              className="flex items-center gap-2.5 w-full text-left px-3 py-2 rounded-xl text-xs font-semibold text-neutral-400 hover:text-neutral-200 hover:bg-neutral-800/80 transition-colors cursor-pointer"
             >
               <FolderGit2 className="w-4 h-4 text-neutral-500" />
               My Projects
@@ -161,14 +161,14 @@ export const ProfileDropdown = () => {
                 setIsOpen(false);
                 router.push("/new");
               }}
-              className="flex items-center gap-2.5 w-full text-left px-3 py-2 rounded-xl text-xs font-semibold text-neutral-400 hover:text-neutral-100 hover:bg-neutral-900/60 transition-colors cursor-pointer"
+              className="flex items-center gap-2.5 w-full text-left px-3 py-2 rounded-xl text-xs font-semibold text-neutral-400 hover:text-neutral-200 hover:bg-neutral-800/80 transition-colors cursor-pointer"
             >
               <PlusCircle className="w-4 h-4 text-neutral-500" />
               New Project
             </button>
           </div>
 
-          <div className="h-px bg-neutral-900 my-1.5" />
+          <div className="h-px bg-neutral-800 my-1.5" />
 
           {/* Logout */}
           <button

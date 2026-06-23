@@ -151,7 +151,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Search and Filters Bar */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-neutral-900/40 border border-neutral-850 p-4 rounded-2xl">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-neutral-900/40 border border-neutral-800 p-4 rounded-2xl">
           <div className="w-full sm:max-w-md relative">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500" />
             <input
@@ -186,11 +186,10 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Projects Listing */}
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 py-12">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-44 rounded-2xl bg-neutral-900/40 border border-neutral-850 p-5 flex flex-col gap-4 animate-pulse">
+              <div key={i} className="h-44 rounded-2xl bg-neutral-900/40 border border-neutral-800 p-5 flex flex-col gap-4 animate-pulse">
                 <div className="w-1/3 h-3 bg-neutral-800 rounded" />
                 <div className="w-3/4 h-5 bg-neutral-800 rounded" />
                 <div className="w-full h-3 bg-neutral-800 rounded mt-auto" />
@@ -224,7 +223,7 @@ export default function DashboardPage() {
               <div 
                 key={p.id}
                 onClick={() => router.push(`/project/${p.id}`)}
-                className="group relative bg-neutral-900/30 hover:bg-neutral-900/60 border border-neutral-900 hover:border-brand-border/40 p-5 rounded-2xl flex flex-col justify-between gap-5 transition-all duration-300 shadow-lg cursor-pointer hover:-translate-y-0.5 active:scale-[0.99]"
+                className="group relative bg-neutral-900/30 hover:bg-neutral-900/60 border border-neutral-800 hover:border-brand-border/40 p-5 rounded-2xl flex flex-col justify-between gap-5 transition-all duration-300 shadow-lg cursor-pointer hover:-translate-y-0.5 active:scale-[0.99]"
               >
                 <div className="absolute -inset-px bg-gradient-to-r from-brand-border/5 to-brand/5 rounded-2xl -z-10 opacity-0 group-hover:opacity-100 transition-opacity" />
 
