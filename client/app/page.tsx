@@ -305,15 +305,16 @@ export default function LandingPage() {
         </p>
 
         <div className="flex flex-col sm:flex-row items-center gap-3 mt-8 sm:mt-10 w-full max-w-xs sm:max-w-none mx-auto justify-center px-4">
-          <HoverBorderGradient
-            as="button"
-            onClick={() => router.push("/new")}
-            containerClassName="w-full sm:w-auto py-3 px-8 rounded-xl font-bold text-xs shadow-lg bg-neutral-100 hover:bg-white active:scale-[0.98] transition-all duration-200"
-            className="flex items-center justify-center gap-2 text-neutral-950 text-xs"
-          >
-            Get Started
-            <ArrowRight className="w-3.5 h-3.5 text-neutral-950" />
-          </HoverBorderGradient>
+          <Link href="/new" className="w-full sm:w-auto">
+            <HoverBorderGradient
+              as="div"
+              containerClassName="w-full py-3 px-8 rounded-xl font-bold text-xs shadow-lg bg-neutral-100 hover:bg-white active:scale-[0.98] transition-all duration-200"
+              className="flex items-center justify-center gap-2 text-neutral-950 text-xs"
+            >
+              Get Started
+              <ArrowRight className="w-3.5 h-3.5 text-neutral-950" />
+            </HoverBorderGradient>
+          </Link>
           
           <a
             href="#simulator"
@@ -458,13 +459,13 @@ export default function LandingPage() {
           <p className="text-xs text-neutral-400 max-w-sm leading-relaxed">
             Stop manually scripting separate updates. Transform your first transcript in less than 90 seconds.
           </p>
-          <button 
-            onClick={() => router.push("/new")}
+          <Link 
+            href="/new"
             className="text-xs font-bold text-neutral-950 bg-neutral-100 hover:bg-white px-6 py-3 rounded-lg flex items-center gap-2 transition-all cursor-pointer active:scale-95 duration-150"
           >
             Create Your First Project
             <ArrowRight className="w-3.5 h-3.5" />
-          </button>
+          </Link>
         </div>
       </section>
 
