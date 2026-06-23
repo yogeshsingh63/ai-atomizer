@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { 
   FileText, Linkedin, Video, Image as ImageIcon, 
@@ -393,15 +394,15 @@ export default function ProjectDashboardPage() {
       <BackgroundBeams />
 
       {/* Header Bar */}
-      <div className="max-w-7xl mx-auto w-full flex flex-col gap-6 mb-10 relative z-10">
+      <div className="max-w-7xl mx-auto w-full flex flex-col gap-6 mb-10 relative z-40">
         <div className="flex items-center justify-between gap-4 w-full">
-          <button
-            onClick={() => router.push("/dashboard")}
+          <Link
+            href="/dashboard"
             className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-neutral-900 bg-neutral-950/40 hover:bg-neutral-900 text-xs font-semibold text-neutral-400 hover:text-neutral-200 transition-all w-fit cursor-pointer group active:scale-95 duration-150"
           >
             <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform text-neutral-500 group-hover:text-brand" />
             <span>Back to Dashboard</span>
-          </button>
+          </Link>
           <ProfileDropdown />
         </div>
 

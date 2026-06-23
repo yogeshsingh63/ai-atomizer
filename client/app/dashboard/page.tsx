@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { 
-  FolderGit2, PlusCircle, Search, CheckCircle2, XCircle, ArrowRight, Youtube, Upload, FileText
+  FolderGit2, PlusCircle, Search, CheckCircle2, XCircle, ArrowRight, Youtube, Upload, FileText, ArrowRight as ArrowRightIcon
 } from "lucide-react";
 import { getUserProjects, Project, isBackendOnline } from "@/lib/api";
 import { ProfileDropdown } from "@/components/profile-dropdown";
@@ -161,23 +162,23 @@ export default function DashboardPage() {
       <BackgroundBeams />
 
       {/* Header Bar */}
-      <header className="relative z-10 border-b border-neutral-900/80 bg-neutral-950/80 backdrop-blur-md">
+      <header className="relative z-40 border-b border-neutral-900/80 bg-neutral-950/80 backdrop-blur-md">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2 cursor-pointer" onClick={() => router.push("/")}>
+          <Link className="flex items-center gap-2 cursor-pointer" href="/">
             <PrismLogo size={24} />
             <span className="font-extrabold text-sm tracking-tight text-neutral-200">
               Prism <span className="text-brand">AI</span>
             </span>
-          </div>
+          </Link>
 
           <div className="flex items-center gap-4">
-            <button
-              onClick={() => router.push("/new")}
+            <Link
+              href="/new"
               className="hidden sm:flex items-center gap-1.5 text-xs font-bold text-neutral-950 bg-neutral-100 hover:bg-white px-3.5 py-1.5 rounded-xl transition-all cursor-pointer active:scale-95 duration-150"
             >
               <PlusCircle className="w-3.5 h-3.5" />
               New Project
-            </button>
+            </Link>
             <ProfileDropdown />
           </div>
         </div>
@@ -199,13 +200,13 @@ export default function DashboardPage() {
             </p>
           </div>
 
-          <button
-            onClick={() => router.push("/new")}
+          <Link
+            href="/new"
             className="sm:hidden w-full flex items-center justify-center gap-1.5 text-xs font-bold text-neutral-950 bg-neutral-100 hover:bg-white px-4 py-2.5 rounded-xl transition-all cursor-pointer active:scale-95 duration-150"
           >
             <PlusCircle className="w-4 h-4" />
             New Project
-          </button>
+          </Link>
         </div>
 
         {/* Search and Filters Bar */}
@@ -267,20 +268,20 @@ export default function DashboardPage() {
                   : "You haven't repurposed any content yet. Start your first project now."}
               </p>
             </div>
-            <button
-              onClick={() => router.push("/new")}
+            <Link
+              href="/new"
               className="text-xs font-bold text-neutral-950 bg-neutral-100 hover:bg-white px-5 py-2.5 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 active:scale-95 duration-150 mt-2"
             >
               Create New Project
               <ArrowRight className="w-3.5 h-3.5" />
-            </button>
+            </Link>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredProjects.map((p) => (
-              <div 
+              <Link 
                 key={p.id}
-                onClick={() => router.push(`/project/${p.id}`)}
+                href={`/project/${p.id}`}
                 className="group relative bg-neutral-900/30 hover:bg-neutral-900/60 border border-neutral-800 hover:border-brand-border/40 p-5 rounded-2xl flex flex-col justify-between gap-5 transition-all duration-300 shadow-lg cursor-pointer hover:-translate-y-0.5 active:scale-[0.99]"
               >
                 <div className="absolute -inset-px bg-gradient-to-r from-brand-border/5 to-brand/5 rounded-2xl -z-10 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -308,7 +309,7 @@ export default function DashboardPage() {
                   <span>Created {formatDate(p.created_at)}</span>
                   <ArrowRight className="w-3.5 h-3.5 text-neutral-600 group-hover:text-brand group-hover:translate-x-0.5 transition-all" />
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         )}

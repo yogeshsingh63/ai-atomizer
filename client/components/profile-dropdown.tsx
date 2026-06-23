@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FolderGit2, LogOut, ChevronDown, PlusCircle, Sparkles } from "lucide-react";
 import { getCurrentUser, logout } from "@/lib/api";
@@ -145,27 +146,23 @@ export const ProfileDropdown = () => {
 
           {/* Actions */}
           <div className="flex flex-col gap-0.5">
-            <button
-              onClick={() => {
-                setIsOpen(false);
-                router.push("/dashboard");
-              }}
+            <Link
+              href="/dashboard"
+              onClick={() => setIsOpen(false)}
               className="flex items-center gap-2.5 w-full text-left px-3 py-2 rounded-xl text-xs font-semibold text-neutral-400 hover:text-neutral-200 hover:bg-neutral-800/80 transition-colors cursor-pointer"
             >
               <FolderGit2 className="w-4 h-4 text-neutral-500" />
               My Projects
-            </button>
+            </Link>
 
-            <button
-              onClick={() => {
-                setIsOpen(false);
-                router.push("/new");
-              }}
+            <Link
+              href="/new"
+              onClick={() => setIsOpen(false)}
               className="flex items-center gap-2.5 w-full text-left px-3 py-2 rounded-xl text-xs font-semibold text-neutral-400 hover:text-neutral-200 hover:bg-neutral-800/80 transition-colors cursor-pointer"
             >
               <PlusCircle className="w-4 h-4 text-neutral-500" />
               New Project
-            </button>
+            </Link>
           </div>
 
           <div className="h-px bg-neutral-800 my-1.5" />

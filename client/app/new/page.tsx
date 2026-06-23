@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { 
   Youtube, Upload, FileText, ArrowRight, Sparkles,
@@ -97,6 +98,16 @@ export default function NewProjectPage() {
         }
       }
       setTimeout(() => setAuthChecking(false), 0);
+
+      // Keep authentication state in sync with localStorage events
+      const handleStorage = () => {
+        const storedToken = localStorage.getItem("prism_token");
+        setIsAuthenticated(!!storedToken);
+      };
+      window.addEventListener("storage", handleStorage);
+      return () => {
+        window.removeEventListener("storage", handleStorage);
+      };
     }
   }, []);
 
@@ -247,16 +258,16 @@ export default function NewProjectPage() {
       <BackgroundBeams />
 
       {/* Header Bar */}
-      <header className="relative z-10 border-b border-neutral-900/80 bg-neutral-950/80 backdrop-blur-md">
+      <header className="relative z-40 border-b border-neutral-900/80 bg-neutral-950/80 backdrop-blur-md">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <button
-              onClick={() => router.push("/")}
+            <Link
+              href="/"
               className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-neutral-900 bg-neutral-950 hover:bg-neutral-900 text-xs font-semibold text-neutral-400 hover:text-neutral-200 transition-all cursor-pointer group active:scale-95 duration-150"
             >
               <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform text-neutral-500 group-hover:text-brand" />
               <span>Back</span>
-            </button>
+            </Link>
             <div className="h-5 w-px bg-neutral-900" />
             <div className="flex items-center gap-2">
               <PrismLogo size={24} />
