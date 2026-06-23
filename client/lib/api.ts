@@ -23,7 +23,7 @@ export interface UserProfile {
   name: string;
   avatar_url: string | null;
   is_guest: boolean;
-  created_at: string;
+  created_at?: string;
 }
 
 export interface TranscriptSegment {
