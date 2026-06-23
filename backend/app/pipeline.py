@@ -225,7 +225,7 @@ async def run_pipeline(project_id: int):
                 await update_job_status(db, project_id, "Ingesting Media", "running")
                 logger.info(f"Downloading audio from YouTube URL: {project.source_ref}...")
                 
-                # yt-dlp downloader configuration
+                 # yt-dlp downloader configuration
                 ydl_opts = {
                     "format": "bestaudio/best",
                     "outtmpl": os.path.join(upload_dir, "audio.%(ext)s"),
@@ -238,6 +238,19 @@ async def run_pipeline(project_id: int):
                     "no_warnings": True
                 }
                 
+                # Check for cookies file to prevent bot block on cloud platforms like Render
+                cookie_candidates = [
+                    os.getenv("YOUTUBE_COOKIES_FILE"),
+                    "/data/cookies.txt",
+                    "./cookies.txt",
+                    "cookies.txt"
+                ]
+                for path in cookie_candidates:
+                    if path and os.path.exists(path):
+                        ydl_opts["cookiefile"] = path
+                        logger.info(f"Using cookies file for yt-dlp: {path}")
+                        break
+
                 # Run download in worker thread (to_thread avoids deprecated get_event_loop)
                 def download():
                     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
